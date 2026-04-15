@@ -1,0 +1,25 @@
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .sidebar-desktop {
+    display: none;
+  }
+}
+
+/* Animations */
+@keyframes slideInFromBottom {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Canvas responsive */
+canvas {
+  max-width: 100%;
+  height: auto;
+}
+

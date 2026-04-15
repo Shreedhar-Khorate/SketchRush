@@ -1,0 +1,55 @@
+# ================================
+# SketchRush - Root .gitignore
+# ================================
+
+# ─── Environment Variables ───────
+.env
+.env.local
+.env.*.local
+
+# ─── Python / Backend ────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+*.so
+.venv/
+venv/
+env/
+ENV/
+*.log
+*.pot
+*.pyc
+
+# ─── Node / Frontend ─────────────
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.vite/
+*.local
+
+# ─── IDE & Editor ────────────────
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.DS_Store
+Thumbs.db
+
+# ─── OS ──────────────────────────
+desktop.ini
+.DS_Store
+
+# ─── Misc ────────────────────────
+*.bak
+*.tmp
+*.swp
