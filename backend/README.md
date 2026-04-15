@@ -1,11 +1,34 @@
 # SketchRush Backend
 
-Real-time multiplayer drawing and guessing game backend built with FastAPI and Socket.IO.
+Real-time multiplayer drawing and guessing game backend built with FastAPI and Socket.IO with gesture-controlled air canvas support.
+
+## Features
+
+✨ **Real-time Multiplayer Gaming**
+
+- Live drawing synchronization via Socket.IO
+- Chat system for guessing
+- Turn-based gameplay
+
+🎨 **Air Canvas Gesture Recognition**
+
+- MediaPipe hand detection
+- 5 gesture types: Draw, Move, Erase, Clear, None
+- Real-time MJPEG webcam feed with canvas overlay
+- Support for 12+ colors and adjustable brush sizes
+- Eraser tool with larger brush
+
+💾 **Canvas Management**
+
+- Save drawings as PNG files
+- Canvas snapshots as JPEG
+- Static file serving for saved sketches
 
 ## Requirements
 
 - Python 3.8+
 - pip
+- Webcam (for gesture mode)
 
 ## Setup
 
@@ -45,14 +68,75 @@ The server will be available at `http://localhost:8000`
 
 ## API Endpoints
 
-### Health Check
+### General
 
-- **GET** `/health` - Check if server is running
+- **GET** `/` - Health check
+- **GET** `/health` - Health check with version
 
-### Rooms
+### Game Rooms
 
 - **GET** `/rooms` - List all active rooms
 - **GET** `/rooms/{room_code}` - Get room details and player list
+
+### Gesture API (Air Canvas)
+
+#### Control
+
+- **POST** `/gesture/start` - Start webcam capture and gesture recognition
+- **POST** `/gesture/stop` - Stop webcam capture
+- **POST** `/gesture/clear` - Clear the canvas
+- **POST** `/gesture/save` - Save canvas as PNG file
+
+#### Settings
+
+- **POST** `/gesture/set_color?color={hex_color}` - Set brush color
+- **POST** `/gesture/set_brush_size?size={1-60}` - Set brush thickness
+- **POST** `/gesture/set_eraser?enabled={true|false}` - Toggle eraser mode
+
+#### Streaming & Status
+
+- **GET** `/gesture/feed` - Real-time MJPEG stream (webcam + canvas)
+- **GET** `/gesture/status` - Get current gesture mode status
+- **GET** `/gesture/canvas` - Get current canvas as JPEG image
+
+### Static Files
+
+- **GET** `/static/saved_sketches/{filename}` - Access saved sketch images
+
+## Gesture Recognition
+
+The system supports 5 hand gestures:
+
+| Gesture   | Hand Position           | Action                   |
+| --------- | ----------------------- | ------------------------ |
+| **DRAW**  | Index finger extended   | Draw on canvas           |
+| **MOVE**  | Index + middle extended | Move cursor (no drawing) |
+| **ERASE** | Thumb + index pinched   | Erase (stop drawing)     |
+| **CLEAR** | Fist (all fingers down) | Clear entire canvas      |
+| **NONE**  | Unrecognized            | No action                |
+
+## Gesture API Documentation
+
+For detailed gesture API documentation, see [API_GESTURES.md](./API_GESTURES.md)
+
+### Quick Start with Gesture Mode
+
+```bash
+# 1. Start the server
+uvicorn main:app --reload
+
+# 2. Start gesture mode via API
+curl -X POST http://localhost:8000/gesture/start
+
+# 3. Set a color
+curl -X POST "http://localhost:8000/gesture/set_color?color=%23ff4d6d"
+
+# 4. View the stream in a browser
+# Open: http://localhost:8000/gesture/feed (as an img src)
+
+# 5. Save your drawing
+curl -X POST http://localhost:8000/gesture/save
+```
 
 ## Socket.IO Events
 

@@ -1,62 +1,151 @@
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 
-const MOCK_PLAYERS = [
-  { id: 1, name: 'You', avatar: '🦊', score: 450, isCurrentPlayer: true, isDrawing: false },
-  { id: 2, name: 'Alice', avatar: '🐱', score: 380, isCurrentPlayer: false, isDrawing: true },
-  { id: 3, name: 'Bob', avatar: '🐉', score: 320, isCurrentPlayer: false, isDrawing: false },
-  { id: 4, name: 'Carlos', avatar: '🤖', score: 280, isCurrentPlayer: false, isDrawing: false },
-]
+const RANK_ICONS  = ['👑', '🥈', '🥉']
+const RANK_COLORS = ['#ffd166', '#c0c0c0', '#cd7f32']
 
-export default function PlayerList({ currentPlayer = 'You', currentAvatar = '🦊' }) {
-  const sortedPlayers = [...MOCK_PLAYERS].sort((a, b) => b.score - a.score)
+export default function PlayerList({ players = [], currentPlayerId = null }) {
+  const sorted = [...players].sort((a, b) => b.score - a.score)
+  const maxScore = sorted[0]?.score || 1
 
   return (
-    <div className="w-full h-full glass-panel p-4 flex flex-col gap-3 overflow-y-auto">
-      <h2 className="text-sm font-bold text-foreground mb-2">Players</h2>
+    <div
+      style={{
+        width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
+        borderRadius: '16px', overflow: 'hidden',
+        background: 'rgba(11,15,35,0.75)',
+        backdropFilter: 'blur(16px)',
+        border: '1px solid var(--border-subtle)',
+      }}
+    >
+      {/* Header */}
+      <div style={{
+        padding: '10px 14px', flexShrink: 0,
+        borderBottom: '1px solid var(--border-subtle)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ fontSize: '14px' }}>👥</span>
+          <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>Players</span>
+        </div>
+        <span className="badge badge-brand">{players.length}/8</span>
+      </div>
 
-      {sortedPlayers.map((player, index) => (
-        <motion.div
-          key={player.id}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: index * 0.1 }}
-          className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
-            player.isDrawing
-              ? 'bg-primary/20 border border-primary neon-glow-blue'
-              : player.isCurrentPlayer
-              ? 'bg-card border border-border'
-              : 'bg-card/50 border border-border'
-          }`}
-        >
-          {/* Avatar */}
-          <div className="text-2xl">{player.avatar}</div>
+      {/* List */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '10px', display: 'flex', flexDirection: 'column', gap: '6px', minHeight: 0 }}>
+        <AnimatePresence>
+          {sorted.map((player, index) => {
+            const isMe       = player.id === currentPlayerId
+            const isTop      = index === 0 && player.score > 0
+            const scoreRatio = player.score / maxScore
 
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">
-              {player.name}
-              {player.isCurrentPlayer && (
-                <span className="text-xs text-muted-foreground ml-1">(you)</span>
-              )}
-            </p>
-            <p className="text-xs text-muted-foreground">{player.score} pts</p>
-          </div>
-
-          {/* Badges */}
-          <div className="flex gap-2 items-center">
-            {index === 0 && <span className="text-lg">👑</span>}
-            {player.isDrawing && (
-              <motion.span
-                animate={{ opacity: [1, 0.5, 1] }}
-                transition={{ repeat: Infinity, duration: 1 }}
-                className="text-lg"
+            return (
+              <motion.div
+                key={player.id}
+                layout
+                initial={{ opacity: 0, x: 12 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{  opacity: 0, x: -12 }}
+                transition={{ duration: 0.35, ease: [0.22,1,0.36,1], delay: index * 0.05 }}
+                style={{
+                  position: 'relative',
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  background: player.is_drawing
+                    ? 'rgba(99,120,255,0.13)'
+                    : isMe
+                    ? 'rgba(99,120,255,0.07)'
+                    : 'rgba(22,28,53,0.5)',
+                  border: player.is_drawing
+                    ? '1px solid rgba(99,120,255,0.4)'
+                    : isMe
+                    ? '1px solid rgba(99,120,255,0.2)'
+                    : '1px solid var(--border-subtle)',
+                  boxShadow: player.is_drawing ? '0 0 14px rgba(99,120,255,0.15)' : 'none',
+                }}
               >
-                ✏️
-              </motion.span>
-            )}
+                {/* Score bar */}
+                <div style={{
+                  position: 'absolute', bottom: 0, left: 0,
+                  height: '2px',
+                  width: `${scoreRatio * 100}%`,
+                  background: isTop
+                    ? 'linear-gradient(90deg, #ffd16666, #ffd166)'
+                    : 'linear-gradient(90deg, var(--brand-dark), var(--brand))',
+                  opacity: 0.7,
+                  transition: 'width 0.7s ease',
+                }} />
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px' }}>
+                  {/* Rank */}
+                  <span style={{
+                    width: '20px', textAlign: 'center', flexShrink: 0,
+                    fontSize: index < 3 ? '16px' : '11px',
+                    fontWeight: 800,
+                    color: RANK_COLORS[index] || 'var(--text-muted)',
+                  }}>
+                    {index < 3 ? RANK_ICONS[index] : `#${index+1}`}
+                  </span>
+
+                  {/* Avatar */}
+                  <div style={{
+                    position: 'relative', width: '36px', height: '36px',
+                    borderRadius: '10px', flexShrink: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '20px',
+                    background: 'rgba(22,28,53,0.8)',
+                    border: player.is_drawing
+                      ? '1.5px solid rgba(99,120,255,0.5)'
+                      : '1.5px solid var(--border-subtle)',
+                  }}>
+                    {player.avatar}
+                    {player.is_drawing && (
+                      <motion.div
+                        animate={{ scale: [1, 1.25, 1] }}
+                        transition={{ repeat: Infinity, duration: 1 }}
+                        style={{
+                          position: 'absolute', top: '-6px', right: '-6px',
+                          width: '16px', height: '16px', borderRadius: '50%',
+                          background: 'var(--brand)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '9px',
+                        }}
+                      >✏</motion.div>
+                    )}
+                  </div>
+
+                  {/* Info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                      <span style={{
+                        fontSize: '13px', fontWeight: 600,
+                        color: 'var(--text-primary)',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      }}>
+                        {player.name}
+                      </span>
+                      {isMe && (
+                        <span className="badge badge-brand" style={{ fontSize: '9px', padding: '1px 5px' }}>you</span>
+                      )}
+                    </div>
+                    <span style={{ fontSize: '11px', fontWeight: 700 }}>
+                      <span style={{ color: isTop ? '#ffd166' : 'var(--brand-light)' }}>
+                        {player.score.toLocaleString()}
+                      </span>
+                      <span style={{ color: 'var(--text-muted)' }}> pts</span>
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            )
+          })}
+        </AnimatePresence>
+
+        {players.length === 0 && (
+          <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', marginTop: '16px' }}>
+            Waiting for players to join…
           </div>
-        </motion.div>
-      ))}
+        )}
+      </div>
     </div>
   )
 }
