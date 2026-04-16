@@ -12,7 +12,7 @@ Handles:
 import random
 import string
 import asyncio
-from typing import Dict, List, Optional, Callable
+from typing import Dict, List, Optional, Callable, Tuple
 from datetime import datetime
 
 from app.models.models import Room, Player, GameState
@@ -253,11 +253,11 @@ class GameManager:
         for p in room.players:
             p.is_drawing = p.id == drawer.id if drawer else False
 
-    def next_turn(self, room_code: str) -> bool:
-        """Advance to the next drawer / round. Returns False if game is over."""
+    def next_turn(self, room_code: str) -> Tuple[bool, bool]:
+        """Advance to the next drawer / round. Returns (can_continue, round_completed)."""
         room = self.get_room(room_code)
         if not room:
-            return False
+            return False, False
 
         self._cancel_timer(room_code)
 
@@ -267,16 +267,17 @@ class GameManager:
             p.is_drawing = False
 
         room.current_drawer_index += 1
+        round_completed = (room.current_drawer_index % len(room.players) == 0)
 
         # Check if all players have drawn this round
-        if room.current_drawer_index % len(room.players) == 0:
+        if round_completed:
             room.round_number += 1
             if room.round_number > room.max_rounds:
                 room.game_state = GameState.GAME_END
-                return False
+                return False, True
 
         room.game_state = GameState.DRAWING
-        return True
+        return True, round_completed
 
     def get_leaderboard(self, room_code: str) -> List[Player]:
         room = self.get_room(room_code)

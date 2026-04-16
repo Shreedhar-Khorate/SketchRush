@@ -17,6 +17,7 @@ export default function GameHeader({
   isHost      = false,
   gameState   = 'waiting',
   onStartGame = null,
+  selectedRounds = null,
 }) {
   const totalTime  = 60
   const isCritical = timeLeft <= 10
@@ -89,21 +90,47 @@ export default function GameHeader({
                 Waiting for players…
               </span>
               {isHost && (
-                <motion.button
-                  onClick={onStartGame}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.96 }}
-                  className="btn-primary"
-                  style={{ padding: '6px 20px', fontSize: '13px', borderRadius: '999px' }}
-                >
-                  🚀 Start Game
-                </motion.button>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                    {selectedRounds ? `Rounds: ${selectedRounds}` : 'Select rounds to start'}
+                  </span>
+                  <motion.button
+                    onClick={onStartGame}
+                    whileHover={{ scale: selectedRounds ? 1.05 : 1 }}
+                    whileTap={{ scale: selectedRounds ? 0.96 : 1 }}
+                    className="btn-primary"
+                    style={{
+                      padding: '6px 20px',
+                      fontSize: '13px',
+                      borderRadius: '999px',
+                      opacity: selectedRounds ? 1 : 0.5,
+                      cursor: selectedRounds ? 'pointer' : 'not-allowed',
+                    }}
+                    disabled={!selectedRounds}
+                  >
+                    🚀 Start Game
+                  </motion.button>
+                </div>
               )}
             </div>
           ) : gameState === 'round_end' || gameState === 'game_end' ? (
             <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--orange)' }}>
               {gameState === 'game_end' ? '🏆 Game Over!' : '⏱️ Round Over!'}
             </span>
+          ) : gameState === 'choosing_word' ? (
+            /* Drawer is picking a word */
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                Round {round}/{maxRounds}
+              </span>
+              <motion.span
+                animate={{ opacity: [1, 0.5, 1] }}
+                transition={{ repeat: Infinity, duration: 1.4, ease: 'easeInOut' }}
+                style={{ fontSize: '13px', fontWeight: 700, color: 'var(--brand-light)' }}
+              >
+                {drawerAvatar} {drawerName} is choosing a word…
+              </motion.span>
+            </div>
           ) : (
             <>
               {/* Round indicator dots */}

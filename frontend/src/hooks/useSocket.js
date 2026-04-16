@@ -84,23 +84,28 @@ export function useSocket({ roomCode, playerName, avatar }) {
 
     // ── Game events ──────────────────────────────────────────────────────────
     sub('game_started', () => {
+      console.log('[useSocket] Game started event received')
       setGameState('playing')
       setRoundResult(null)
       setGameResult(null)
     })
 
     sub('turn_started', (data) => {
+      console.log('[useSocket] Turn started event received', data)
       setCurrentDrawerId(data.drawer_id)
-      setWordHint(data.hint)
-      setCurrentWord(null)             // cleared for guessers
+      setWordHint('')
+      setCurrentWord(null)             // cleared for all players
+      setWordChoices(null)             // clear any stale choices
       setRound(data.round)
       setMaxRounds(data.max_rounds)
       setTimeLeft(data.time)
-      setRoundResult(null)
-      setGameState('drawing')
+      setRoundResult(null)             // dismiss round end modal
+      setRoundCountdown(null)
+      // Server signals choosing_word state; drawer will get word_choices event
+      setGameState('choosing_word')
     })
 
-    // Word sent only to the drawer
+    // Word sent only to the drawer after they select it
     sub('word_to_draw', ({ word }) => {
       setCurrentWord(word)
       setWordHint(word.split('').map(() => '_').join(' '))
@@ -112,9 +117,9 @@ export function useSocket({ roomCode, playerName, avatar }) {
       setGameState('choosing_word')
     })
 
-    // Word has been selected, drawing can begin
+    // Word has been selected by drawer, drawing phase begins
     sub('word_selected', ({ hint }) => {
-      setWordChoices(null)
+      setWordChoices(null)             // dismiss word choice modal
       setWordHint(hint)
       setGameState('drawing')
     })
@@ -136,9 +141,12 @@ export function useSocket({ roomCode, playerName, avatar }) {
     })
 
     sub('round_countdown', ({ countdown }) => {
-      setRoundCountdown(countdown)
       if (countdown === 0) {
+        // Countdown finished — clear modal, canvas will be fresh
+        setRoundResult(null)
         setRoundCountdown(null)
+      } else {
+        setRoundCountdown(countdown)
       }
     })
 
@@ -173,6 +181,7 @@ export function useSocket({ roomCode, playerName, avatar }) {
 
     // Error
     sub('error', ({ message }) => {
+      console.error('[useSocket] Error event:', message)
       addMessage({ type: 'system', content: `⚠️ ${message}` })
     })
 
@@ -195,6 +204,8 @@ export function useSocket({ roomCode, playerName, avatar }) {
   const sendGuess  = useCallback((word) => socketManager.sendGuess(word), [])
   const sendMessage = useCallback((text) => socketManager.sendMessage(text), [])
   const startGame  = useCallback(() => socketManager.startGame(), [])
+  const startGameWithRounds = useCallback((maxRounds) => socketManager.startGameWithRounds(maxRounds), [])
+  const restartGame = useCallback((maxRounds) => socketManager.restartGame(maxRounds), [])
 
   const startGesture = useCallback((color, size, eraser) => {
     socketManager.setGestureColor(color)
@@ -224,6 +235,6 @@ export function useSocket({ roomCode, playerName, avatar }) {
     onRemoteDraw, onRemoteClear,
     // Actions
     sendDraw, sendClear, sendGuess, sendMessage,
-    startGame, startGesture, stopGesture, syncGestureParams, selectWord,
+    startGame, startGameWithRounds, restartGame, startGesture, stopGesture, syncGestureParams, selectWord,
   }
 }

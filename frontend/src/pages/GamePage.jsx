@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -166,8 +166,105 @@ function RoundEndModal({ result, countdown, onDismiss }) {
   )
 }
 
+// ── Select Rounds Modal ───────────────────────────────────────────────────────
+function SelectRoundsModal({ isHost, initialRounds = 3, onConfirmRounds }) {
+  const [selectedRounds, setSelectedRounds] = useState(initialRounds)
+  
+  if (!isHost) return null
+  
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 70,
+      background: 'rgba(6,9,24,0.9)', backdropFilter: 'blur(12px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '20px',
+    }}>
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        style={{
+          background: 'rgba(17,22,40,0.98)',
+          border: '2px solid rgba(99,120,255,0.4)',
+          borderRadius: '28px',
+          padding: '40px',
+          maxWidth: '500px',
+          width: '100%',
+          boxShadow: '0 0 80px rgba(99,120,255,0.3)',
+          textAlign: 'center',
+        }}
+      >
+        <h1 style={{ fontSize: '32px', fontWeight: 900, marginBottom: '12px', color: 'var(--text-primary)' }}>
+          🎮 How Many Rounds?
+        </h1>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: '28px' }}>
+          Select the number of rounds to play in this game
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', marginBottom: '24px' }}>
+          {[1, 2, 3, 4, 5].map((num) => (
+            <motion.button
+              key={num}
+              onClick={() => setSelectedRounds(num)}
+              whileHover={{ scale: 1.05, translateY: -2 }}
+              whileTap={{ scale: 0.97 }}
+              style={{
+                padding: '16px 12px',
+                borderRadius: '14px',
+                background: selectedRounds === num ? 'rgba(99,120,255,0.25)' : 'rgba(99,120,255,0.12)',
+                border: selectedRounds === num ? '2px solid rgba(99,120,255,0.8)' : '2px solid rgba(99,120,255,0.25)',
+                color: 'var(--text-primary)',
+                fontWeight: 700,
+                fontSize: '20px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {num}
+            </motion.button>
+          ))}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', marginBottom: '28px' }}>
+          {[6, 7, 8, 9, 10].map((num) => (
+            <motion.button
+              key={num}
+              onClick={() => setSelectedRounds(num)}
+              whileHover={{ scale: 1.05, translateY: -2 }}
+              whileTap={{ scale: 0.97 }}
+              style={{
+                padding: '16px 12px',
+                borderRadius: '14px',
+                background: selectedRounds === num ? 'rgba(99,120,255,0.25)' : 'rgba(99,120,255,0.12)',
+                border: selectedRounds === num ? '2px solid rgba(99,120,255,0.8)' : '2px solid rgba(99,120,255,0.25)',
+                color: 'var(--text-primary)',
+                fontWeight: 700,
+                fontSize: '20px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {num}
+            </motion.button>
+          ))}
+        </div>
+
+        <motion.button
+          onClick={() => onConfirmRounds(selectedRounds)}
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.97 }}
+          className="btn-primary"
+          style={{ width: '100%', padding: '14px', fontSize: '16px', borderRadius: '12px', fontWeight: 700 }}
+        >
+          Confirm {selectedRounds} Round{selectedRounds !== 1 ? 's' : ''}
+        </motion.button>
+      </motion.div>
+    </div>
+  )
+}
+
 // ── Game End Overlay ──────────────────────────────────────────────────────────
-function GameEndModal({ result, onPlayAgain }) {
+function GameEndModal({ result, isHost, onPlayAgain, onBackToLobby }) {
   if (!result) return null
   return (
     <div style={{
@@ -219,15 +316,31 @@ function GameEndModal({ result, onPlayAgain }) {
             </span>
           </div>
         ))}
-        <motion.button
-          onClick={onPlayAgain}
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.97 }}
-          className="btn-primary"
-          style={{ marginTop: '20px', width: '100%', padding: '14px', fontSize: '15px', borderRadius: '12px' }}
-        >
-          🔄 Play Again
-        </motion.button>
+        <div style={{ display: 'grid', gridTemplateColumns: isHost ? '1fr 1fr' : '1fr', gap: '12px', marginTop: '24px' }}>
+          {isHost && (
+            <motion.button
+              onClick={onPlayAgain}
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
+              style={{
+                padding: '12px', fontSize: '14px', fontWeight: 700, borderRadius: '12px',
+                background: 'rgba(99,120,255,0.15)', border: '2px solid rgba(99,120,255,0.4)',
+                color: 'var(--text-primary)', cursor: 'pointer',
+              }}
+            >
+              🔄 Play Again
+            </motion.button>
+          )}
+          <motion.button
+            onClick={onBackToLobby}
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.97 }}
+            className="btn-primary"
+            style={{ padding: '12px', fontSize: '14px', borderRadius: '12px' }}
+          >
+            🚀 Back to Lobby
+          </motion.button>
+        </div>
       </motion.div>
     </div>
   )
@@ -256,6 +369,7 @@ export default function GamePage() {
   const [gestureMode,     setGestureMode]     = useState(false)
   const [showGesture,     setShowGesture]     = useState(false)
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
+  const [selectedRounds,  setSelectedRounds]  = useState(null)  // Track if host selected rounds
 
   // ── Socket ───────────────────────────────────────────────────────────────
   const {
@@ -269,9 +383,14 @@ export default function GamePage() {
     onRemoteDraw, onRemoteClear,
     sendDraw, sendClear,
     sendGuess, sendMessage,
-    startGame,
+    startGame, startGameWithRounds, restartGame,
     startGesture, stopGesture, syncGestureParams, selectWord,
   } = useSocket({ roomCode: roomId, playerName, avatar: playerAvatar })
+
+  // ── Debug logging for game state ───────────────────────────────────────────
+  useEffect(() => {
+    console.log('[GamePage] Game state changed to:', gameState, '| Drawer:', currentDrawerId, '| isDrawing:', isDrawing)
+  }, [gameState, currentDrawerId, isDrawing])
 
   // ── Sync gesture params whenever toolbar changes ──────────────────────────
   useEffect(() => {
@@ -299,6 +418,24 @@ export default function GamePage() {
     setIsEraser(state)
   }
 
+  const handleConfirmRounds = (rounds) => {
+    setSelectedRounds(rounds)
+  }
+
+  const handleStartGame = () => {
+    if (!selectedRounds) return
+    startGameWithRounds(selectedRounds)
+  }
+
+  const handlePlayAgain = () => {
+    setSelectedRounds(null)
+    restartGame(maxRounds)  // Use the same maxRounds as the previous game
+  }
+
+  const handleBackToLobby = () => {
+    navigate('/')
+  }
+
   const handleSendMessage = (text) => {
     // If game is running, treat as guess; otherwise plain message
     if (gameState === 'drawing' && !isDrawing) {
@@ -308,16 +445,21 @@ export default function GamePage() {
     }
   }
 
-  // Stop gesture mode when round ends
+  // Stop gesture mode when round ends or when we're no longer the drawer
   useEffect(() => {
-    if (gameState === 'round_end') {
-      // Immediately stop gesture mode and close gesture window
+    if (!isDrawing && gestureMode) {
       setGestureMode(false)
       setShowGesture(false)
-      // Send stop signal to backend
-      if (gestureMode) {
-        stopGesture()
-      }
+      stopGesture()
+    }
+  }, [isDrawing, gestureMode, stopGesture])
+
+  // Also stop on round_end / game_end game states
+  useEffect(() => {
+    if ((gameState === 'round_end' || gameState === 'game_end') && gestureMode) {
+      setGestureMode(false)
+      setShowGesture(false)
+      stopGesture()
     }
   }, [gameState, gestureMode, stopGesture])
 
@@ -346,7 +488,8 @@ export default function GamePage() {
         connected={connected}
         isHost={isHost}
         gameState={gameState}
-        onStartGame={startGame}
+        onStartGame={handleStartGame}
+        selectedRounds={selectedRounds}
       />
 
       {/* Toolbar — only show for the drawer */}
@@ -380,15 +523,6 @@ export default function GamePage() {
             onRemoteDraw={onRemoteDraw}
             onRemoteClear={onRemoteClear}
           />
-
-          {/* Gesture overlay (absolute, centered on canvas) */}
-          {showGesture && (
-            <GestureOverlay
-              active={gestureActive}
-              gesture={gestureDetected}
-              onClose={() => { setShowGesture(false); handleToggleGesture(false) }}
-            />
-          )}
         </div>
 
         {/* Desktop sidebar */}
@@ -475,16 +609,30 @@ export default function GamePage() {
         )}
       </AnimatePresence>
 
+      {/* Select rounds modal (only for host in waiting state) */}
+      {gameState === 'waiting' && isHost && selectedRounds === null && (
+        <SelectRoundsModal isHost={isHost} onConfirmRounds={handleConfirmRounds} />
+      )}
+
       {/* Word choice modal (only for drawer when choosing word) */}
-      {isDrawing && wordChoices && (
+      {isDrawing && wordChoices && gameState === 'choosing_word' && (
         <WordChoiceModal choices={wordChoices} onSelect={selectWord} />
       )}
 
-      {/* Round end modal */}
-      <RoundEndModal result={roundResult} countdown={roundCountdown} onDismiss={() => {}} />
+      {/* Round end modal — show during round_end state */}
+      {gameState === 'round_end' && roundResult && (
+        <RoundEndModal result={roundResult} countdown={roundCountdown} onDismiss={() => {}} />
+      )}
+
+      {/* Gesture overlay — fixed position, covers entire viewport */}
+      <GestureOverlay
+        active={gestureMode && gestureActive}
+        gesture={gestureDetected}
+        onClose={() => handleToggleGesture(false)}
+      />
 
       {/* Game end modal */}
-      <GameEndModal result={gameResult} onPlayAgain={() => navigate('/')} />
+      <GameEndModal result={gameResult} isHost={isHost} onPlayAgain={handlePlayAgain} onBackToLobby={handleBackToLobby} />
     </div>
   )
 }

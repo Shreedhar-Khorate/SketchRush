@@ -88,6 +88,14 @@ class SocketManager {
     this.emit('start_game', {})
   }
 
+  startGameWithRounds(maxRounds) {
+    this.emit('start_game', { max_rounds: maxRounds })
+  }
+
+  restartGame(maxRounds) {
+    this.emit('restart_game', { max_rounds: maxRounds })
+  }
+
   selectWord(word) {
     this.emit('select_word', { word })
   }
