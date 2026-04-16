@@ -53,13 +53,30 @@ def fingers_up(landmarks) -> list[int]:
 
 def detect_gesture(landmarks) -> str:
     """
-    Simplified gesture detection for pure drawing mode.
-    Only detects if index finger is extended (draw) or not (idle).
+    Gesture detection for draw/move/clear/erase.
     """
     up = fingers_up(landmarks)
-    # Index finger only: draw
-    if up[1] == 1 and up[2] == 0:
+
+    thumb_tip = landmarks[FINGER_TIPS[0]]
+    index_tip = landmarks[FINGER_TIPS[1]]
+    pinch_dist = ((thumb_tip[0] - index_tip[0]) ** 2 + (thumb_tip[1] - index_tip[1]) ** 2) ** 0.5
+
+    # Pinch: erase
+    if pinch_dist < 30:
+        return GESTURE_ERASE
+
+    # Fist: clear
+    if sum(up) == 0:
+        return GESTURE_CLEAR
+
+    # Index only: draw
+    if up[1] == 1 and up[2] == 0 and up[3] == 0 and up[4] == 0:
         return GESTURE_DRAW
+
+    # Index + middle: move (pause)
+    if up[1] == 1 and up[2] == 1 and up[3] == 0 and up[4] == 0:
+        return GESTURE_MOVE
+
     return GESTURE_NONE
 
 
@@ -108,6 +125,12 @@ class AirCanvas:
         # Gesture state
         self._prev_gesture = GESTURE_NONE
         self._last_point: Optional[Tuple[int,int]] = None
+        self._smoothed_point: Optional[Tuple[int,int]] = None
+
+        # Smoothing and interpolation
+        self._smoothing_alpha = 0.25  # higher = more responsive, lower = smoother
+        self._min_draw_dist = 2.0     # ignore jitter under this distance (px)
+        self._interp_step = 2.0       # interpolate points every N pixels
 
         # Frame buffer for MJPEG streaming
         self._combined_frame = np.ones((480, 1280, 3), dtype=np.uint8) * 30
@@ -122,7 +145,8 @@ class AirCanvas:
         self._hands = self._mp_hands.Hands(
             max_num_hands=1,
             min_detection_confidence=0.7,
-            min_tracking_confidence=0.6,
+            min_tracking_confidence=0.7,
+            model_complexity=1,
         )
         self._mp_draw = mp.solutions.drawing_utils
 
@@ -226,6 +250,41 @@ class AirCanvas:
             return (255, 255, 255)
         return self.COLORS_BGR.get(self.color_hex, (0, 0, 0))
 
+    def _smooth_point(self, point: Tuple[int, int]) -> Tuple[int, int]:
+        """Apply exponential moving average smoothing to reduce jitter."""
+        if self._smoothed_point is None:
+            self._smoothed_point = point
+            return point
+        prev_x, prev_y = self._smoothed_point
+        new_x = int(prev_x * (1.0 - self._smoothing_alpha) + point[0] * self._smoothing_alpha)
+        new_y = int(prev_y * (1.0 - self._smoothing_alpha) + point[1] * self._smoothing_alpha)
+        self._smoothed_point = (new_x, new_y)
+        return self._smoothed_point
+
+    def _append_smooth_point(self, point: Tuple[int, int]):
+        """Append a smoothed point with interpolation for smoother strokes."""
+        smoothed = self._smooth_point(point)
+
+        if self._last_point is None:
+            self._strokes[self._idx].appendleft(smoothed)
+            self._last_point = smoothed
+            return
+
+        dx = smoothed[0] - self._last_point[0]
+        dy = smoothed[1] - self._last_point[1]
+        dist = (dx * dx + dy * dy) ** 0.5
+        if dist < self._min_draw_dist:
+            return
+
+        steps = max(1, int(dist / self._interp_step))
+        for i in range(1, steps + 1):
+            t = i / steps
+            ix = int(self._last_point[0] + dx * t)
+            iy = int(self._last_point[1] + dy * t)
+            self._strokes[self._idx].appendleft((ix, iy))
+
+        self._last_point = smoothed
+
     def _capture_loop(self):
         """Main loop: read frames, detect gesture, update canvas."""
         while self.active and self.cap and self.cap.isOpened():
@@ -256,25 +315,28 @@ class AirCanvas:
                     gesture = detect_gesture(lm)
                     index_tip = (lm[8][0], lm[8][1])
 
+                    prev_gesture = self._prev_gesture
+
                     # Fire gesture callback
                     if gesture != self._prev_gesture and self.on_gesture:
                         self.on_gesture(gesture)
-                    self._prev_gesture = gesture
 
                     # No gesture label overlay - keep it clean
                     
                     # Draw professional cursor ring
                     bgr = self._get_bgr()
+                    effective_eraser = self.is_eraser or (gesture == GESTURE_ERASE)
                     cv2.circle(frame, index_tip,
                                self.brush_size + 2,
                                bgr, 1)  # Thin outline
 
                     with self._lock:
-                        if gesture == GESTURE_DRAW:
-                            # Draw: add point to current stroke
-                            self._strokes[self._idx].appendleft(index_tip)
+                        if gesture == GESTURE_CLEAR and prev_gesture != GESTURE_CLEAR:
+                            self._do_clear()
+                        elif gesture == GESTURE_DRAW:
+                            # Draw: add smoothed point to current stroke
+                            self._append_smooth_point(index_tip)
                             self._redraw_canvas()
-                            self._last_point = index_tip
 
                             # Fire external callback (normalized coords)
                             if self.on_draw_point:
@@ -283,7 +345,7 @@ class AirCanvas:
                                     index_tip[1] / h,
                                     self.color_hex,
                                     self.brush_size,
-                                    self.is_eraser,
+                                    effective_eraser,
                                 )
                         else:
                             # Not drawing: start new stroke for next gesture
@@ -294,6 +356,9 @@ class AirCanvas:
                                 self._stroke_eraser.append(self.is_eraser)
                                 self._idx = len(self._strokes) - 1
                             self._last_point = None
+                            self._smoothed_point = None
+
+                    self._prev_gesture = gesture
             else:
                 # No hand: break stroke
                 with self._lock:
@@ -305,6 +370,7 @@ class AirCanvas:
                         self._idx = len(self._strokes) - 1
                 self._prev_gesture = GESTURE_NONE
                 self._last_point = None
+                self._smoothed_point = None
 
             # Combine webcam + canvas side-by-side for the MJPEG stream
             with self._lock:
@@ -342,8 +408,8 @@ class AirCanvas:
             for j in range(1, len(pts)):
                 if pts[j-1] is None or pts[j] is None:
                     continue
-                cv2.line(self.canvas, pts[j-1], pts[j], draw_color, thickness)
-                cv2.circle(self.canvas, pts[j], thickness // 2 + 1, draw_color, -1)
+                cv2.line(self.canvas, pts[j-1], pts[j], draw_color, thickness, lineType=cv2.LINE_AA)
+                cv2.circle(self.canvas, pts[j], thickness // 2 + 1, draw_color, -1, lineType=cv2.LINE_AA)
 
     def generate_frames(self):
         """Generator for MJPEG streaming (webcam + canvas combined)."""

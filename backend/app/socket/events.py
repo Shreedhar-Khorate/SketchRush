@@ -46,6 +46,7 @@ round_correct: dict[str, set] = {}
 room_time_left: dict[str, int] = {}
 
 ROUND_DURATION = 60  # seconds
+LEAVE_BONUS_POINTS = 50
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -73,12 +74,92 @@ async def _broadcast_players(room_code: str):
     )
 
 
+async def _handle_player_leave(room_code: str, player_name: str, was_host: bool, was_drawer: bool):
+    room = game_manager.get_room(room_code)
+    if not room:
+        return
+
+    # Reassign host if needed
+    if was_host and room.players:
+        new_host = room.players[0]
+        room.host_id = new_host.id
+        await sio.emit("host_changed", {"host_id": new_host.id}, room=room_code)
+        await sio.emit(
+            "chat_message",
+            {"type": "system", "content": f"👑 {new_host.name} is now the host."},
+            room=room_code,
+        )
+
+    # If fewer than 2 players remain, pause the game
+    if len(room.players) < 2:
+        room.game_state = GameState.WAITING
+        await sio.emit(
+            "chat_message",
+            {"type": "system", "content": "⏸️ Not enough players — waiting for more to join."},
+            room=room_code,
+        )
+        await _broadcast_players(room_code)
+        return
+
+    # Award same bonus points to remaining players
+    if room.players:
+        for p in room.players:
+            p.score += LEAVE_BONUS_POINTS
+        await sio.emit(
+            "chat_message",
+            {
+                "type": "system",
+                "content": f"⚖️ {player_name} left — everyone gets {LEAVE_BONUS_POINTS} pts.",
+            },
+            room=room_code,
+        )
+        await _broadcast_players(room_code)
+
+    # If the drawer left mid-turn, skip to the next drawer immediately
+    if was_drawer and room.players and room.game_state in (GameState.DRAWING, GameState.CHOOSING_WORD):
+        air_canvas.stop_capture()
+        air_canvas.on_draw_point = None
+        air_canvas.on_clear = None
+        air_canvas.on_gesture = None
+
+        await sio.emit("canvas_cleared", {}, room=room_code)
+
+        advanced, _ = game_manager.next_turn(room_code)
+        if advanced:
+            await _start_turn(room_code)
+        else:
+            room.game_state = GameState.GAME_END
+            final_board = [
+                {"id": p.id, "name": p.name, "avatar": p.avatar, "score": p.score}
+                for p in game_manager.get_leaderboard(room_code)
+            ]
+            await sio.emit(
+                "game_ended",
+                {"leaderboard": final_board, "winner": final_board[0] if final_board else None},
+                room=room_code,
+            )
+            await sio.emit(
+                "chat_message",
+                {"type": "system", "content": "🏆 Game over! Thanks for playing SketchRush!"},
+                room=room_code,
+            )
+
+
 async def _start_turn(room_code: str):
     """Set up a new drawing turn and notify all clients to choose a word."""
     logger.info(f"[_start_turn] Starting turn for room {room_code}")
     room = game_manager.get_room(room_code)
     if not room:
         logger.error(f"[_start_turn] Room {room_code} not found")
+        return
+    if len(room.players) < 2:
+        room.game_state = GameState.WAITING
+        await sio.emit(
+            "chat_message",
+            {"type": "system", "content": "⏸️ Waiting for at least 2 players to start."},
+            room=room_code,
+        )
+        await _broadcast_players(room_code)
         return
 
     # Generate 4 word choices for the drawer
@@ -119,6 +200,24 @@ async def _start_turn(room_code: str):
         logger.warning(f"[_start_turn] Drawer SID not found, auto-selecting word")
         if word_choices:
             game_manager.select_word_from_choices(room_code, word_choices[0])
+            selected_word = room.current_word
+            hint = game_manager.build_hint(selected_word, reveal_count=0)
+
+            # Notify all players that word was selected and drawing can begin
+            await sio.emit(
+                "word_selected",
+                {
+                    "hint": hint,
+                    "word_length": len(selected_word),
+                    "drawer_id": drawer.id,
+                },
+                room=room_code,
+            )
+
+            # Start the round timer (async task — calls _end_round on timeout)
+            game_manager.start_round_timer(room_code, ROUND_DURATION)
+
+            # Also run timer tick coroutine for UI countdown
             asyncio.create_task(_tick_timer(room_code, ROUND_DURATION))
 
     # System chat message
@@ -253,10 +352,15 @@ def create_socket_app():
         if room_code:
             room = game_manager.get_room(room_code)
             player_name = "Unknown"
+            was_host = False
+            was_drawer = False
             if room:
                 player = game_manager.get_player(room_code, player_id)
                 if player:
                     player_name = player.name
+                was_host = room.host_id == player_id
+                drawer = game_manager.get_current_drawer(room_code)
+                was_drawer = drawer is not None and drawer.id == player_id
 
             game_manager.remove_player_from_room(room_code, player_id)
 
@@ -271,7 +375,7 @@ def create_socket_app():
                 {"type": "system", "content": f"👋 {player_name} left the game."},
                 room=room_code,
             )
-            await _broadcast_players(room_code)
+            await _handle_player_leave(room_code, player_name, was_host, was_drawer)
 
         logger.info(f"Client disconnected: sid={sid}")
 
@@ -343,6 +447,10 @@ def create_socket_app():
         if room_code and player_id:
             player = game_manager.get_player(room_code, player_id)
             name = player.name if player else "Player"
+            room = game_manager.get_room(room_code)
+            was_host = room.host_id == player_id if room else False
+            drawer = game_manager.get_current_drawer(room_code) if room else None
+            was_drawer = drawer is not None and drawer.id == player_id
             game_manager.remove_player_from_room(room_code, player_id)
             await sio.leave_room(sid, room_code)
             await sio.emit("player_left", {"player_id": player_id}, room=room_code)
@@ -351,7 +459,7 @@ def create_socket_app():
                 {"type": "system", "content": f"👋 {name} left the game."},
                 room=room_code,
             )
-            await _broadcast_players(room_code)
+            await _handle_player_leave(room_code, name, was_host, was_drawer)
 
     # ── Game ──────────────────────────────────────────────────────────────────
 

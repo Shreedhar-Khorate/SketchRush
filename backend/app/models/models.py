@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime
 from enum import Enum
@@ -28,7 +28,7 @@ class Player(BaseModel):
 class Room(BaseModel):
     code: str
     host_id: str
-    players: List[Player] = []
+    players: List[Player] = Field(default_factory=list)
     current_drawer_index: int = 0
     current_word: Optional[str] = None
     word_choices: Optional[List[str]] = None

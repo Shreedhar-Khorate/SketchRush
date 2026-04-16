@@ -125,7 +125,6 @@ export default function DrawingCanvas({
   useEffect(() => {
     if (clearSignal < 1) return
     _clearCanvas()
-    if (onClearCanvas) onClearCanvas()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clearSignal])
 

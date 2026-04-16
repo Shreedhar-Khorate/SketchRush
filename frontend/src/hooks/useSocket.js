@@ -31,6 +31,8 @@ export function useSocket({ roomCode, playerName, avatar }) {
   const [gestureActive, setGestureActive] = useState(false)
   const [roundCountdown, setRoundCountdown] = useState(null) // 5, 4, 3, 2, 1, null
 
+  const playerIdRef = useRef(null)
+
   // Callbacks for drawing — set by DrawingCanvas
   const onRemoteDraw   = useRef(null)
   const onRemoteClear  = useRef(null)
@@ -58,6 +60,7 @@ export function useSocket({ roomCode, playerName, avatar }) {
     // Server assigned player_id
     sub('connected', ({ player_id }) => {
       setPlayerId(player_id)
+      playerIdRef.current = player_id
       // Now join the room
       socketManager.joinRoom(roomCode, playerName, avatar)
     })
@@ -65,10 +68,15 @@ export function useSocket({ roomCode, playerName, avatar }) {
     // Room joined — initial state
     sub('room_joined', (data) => {
       setPlayerId(data.player_id)
+      playerIdRef.current = data.player_id
       setIsHost(data.is_host)
       setPlayers(data.players || [])
       setGameState(data.game_state || 'waiting')
       addMessage({ type: 'system', content: `✅ Joined room #${data.room_code}` })
+    })
+
+    sub('host_changed', ({ host_id }) => {
+      setIsHost(host_id === playerIdRef.current)
     })
 
     // Player joined / left
