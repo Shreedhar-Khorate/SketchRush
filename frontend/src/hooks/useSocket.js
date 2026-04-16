@@ -70,7 +70,7 @@ export function useSocket({ roomCode, playerName, avatar }) {
       setPlayerId(data.player_id)
       playerIdRef.current = data.player_id
       setIsHost(data.is_host)
-      setPlayers(data.players || [])
+      setPlayers(Array.isArray(data.players) ? data.players.filter(Boolean) : [])
       setGameState(data.game_state || 'waiting')
       addMessage({ type: 'system', content: `✅ Joined room #${data.room_code}` })
     })
@@ -88,7 +88,9 @@ export function useSocket({ roomCode, playerName, avatar }) {
     })
 
     // Players list update
-    sub('players_update', ({ players }) => setPlayers(players))
+    sub('players_update', ({ players }) => {
+      setPlayers(Array.isArray(players) ? players.filter(Boolean) : [])
+    })
 
     // ── Game events ──────────────────────────────────────────────────────────
     sub('game_started', () => {
@@ -203,8 +205,8 @@ export function useSocket({ roomCode, playerName, avatar }) {
 
   // ── Derived ────────────────────────────────────────────────────────────────
   const isDrawing   = playerId && playerId === currentDrawerId
-  const drawerName  = players.find(p => p.id === currentDrawerId)?.name || ''
-  const drawerAvatar = players.find(p => p.id === currentDrawerId)?.avatar || ''
+  const drawerName  = players.find(p => p && p.id === currentDrawerId)?.name || ''
+  const drawerAvatar = players.find(p => p && p.id === currentDrawerId)?.avatar || ''
 
   // ── Actions ───────────────────────────────────────────────────────────────
   const sendDraw   = useCallback((data) => socketManager.sendDraw(data), [])

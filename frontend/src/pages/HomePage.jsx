@@ -71,75 +71,42 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Floating orbs */}
-      <motion.div
-        className="absolute top-1/4 left-1/6 w-64 h-64 rounded-full pointer-events-none"
-        style={{
-          background: 'radial-gradient(circle, rgba(99,120,255,0.12) 0%, transparent 70%)',
-          filter: 'blur(40px)',
-        }}
-        animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
-        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-      />
-      <motion.div
-        className="absolute bottom-1/4 right-1/6 w-72 h-72 rounded-full pointer-events-none"
-        style={{
-          background: 'radial-gradient(circle, rgba(199,125,255,0.1) 0%, transparent 70%)',
-          filter: 'blur(40px)',
-        }}
-        animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0.7, 0.4] }}
-        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-      />
-
+    <div className="min-h-screen w-full flex items-start sm:items-center justify-center px-4 py-10 relative">
       <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="w-full max-w-[480px] relative z-10"
+        className="w-full max-w-[520px] relative z-10"
       >
         {/* Logo Section */}
         <motion.div variants={itemVariants} className="text-center mb-8">
           <motion.div
-            className="inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-4 relative"
+            className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl mb-3 sm:mb-4 relative"
             style={{
-              background: 'linear-gradient(135deg, rgba(99,120,255,0.2) 0%, rgba(199,125,255,0.2) 100%)',
-              border: '1px solid rgba(99,120,255,0.35)',
+              background: 'var(--surface-raised)',
+              border: '1px solid var(--border)',
             }}
-            animate={{ y: [0, -6, 0] }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+            animate={{ y: [0, -4, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
           >
-            <span className="text-4xl">⚡</span>
-            <motion.div
-              className="absolute inset-0 rounded-2xl"
-              style={{ border: '1px solid rgba(99,120,255,0.4)' }}
-              animate={{ opacity: [0.4, 1, 0.4] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
+            <span className="text-3xl sm:text-4xl">⚡</span>
           </motion.div>
 
           <h1
-            className="text-5xl font-black tracking-tight mb-2"
-            style={{
-              fontFamily: "'Space Grotesk', 'Inter', sans-serif",
-              background: 'linear-gradient(135deg, #8fa0ff 0%, #6378ff 40%, #c77dff 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              textShadow: 'none',
-            }}
+            className="text-3xl sm:text-4xl font-bold tracking-tight mb-2"
+            style={{ color: 'var(--text)' }}
           >
             SketchRush
           </h1>
-          <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
-            Draw Fast.{' '}
-            <span style={{ color: 'var(--green)', textShadow: '0 0 12px var(--green-glow)' }}>
+          <p className="text-[13px] sm:text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
+            Draw Fast.{" "}
+            <span style={{ color: 'var(--amber)' }}>
               Guess Faster.
             </span>
           </p>
 
           {/* Feature pills */}
-          <div className="flex items-center justify-center gap-2 mt-4 flex-wrap">
+          <div className="flex items-center justify-center gap-2.5 mt-5 flex-wrap">
             {FEATURES.map((f) => (
               <span key={f.text} className="badge badge-brand">
                 {f.icon} {f.text}
@@ -151,16 +118,16 @@ export default function HomePage() {
         {/* Main Card */}
         <motion.div
           variants={itemVariants}
-          className="glass-heavy p-6 space-y-5"
-          style={{ borderRadius: 'var(--radius-xl)' }}
+          className="glass p-6 sm:p-8 space-y-6"
+          style={{ borderRadius: 'var(--radius-lg)' }}
         >
           {/* Name Input */}
           <div>
             <label
-              className="block text-xs font-semibold uppercase tracking-widest mb-2"
-              style={{ color: 'var(--text-secondary)' }}
+              className="block text-xs font-semibold mb-2"
+              style={{ color: 'var(--text-muted)' }}
             >
-              Your Name
+              Your name
             </label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm">🎮</span>
@@ -175,7 +142,7 @@ export default function HomePage() {
               />
               <span
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold tabular-nums"
-                style={{ color: playerName.length > 12 ? 'var(--orange)' : 'var(--text-muted)' }}
+                style={{ color: playerName.length > 12 ? 'var(--amber-warn)' : 'var(--text-faint)' }}
               >
                 {playerName.length}/16
               </span>
@@ -185,33 +152,26 @@ export default function HomePage() {
           {/* Avatar Picker */}
           <div>
             <label
-              className="block text-xs font-semibold uppercase tracking-widest mb-3"
-              style={{ color: 'var(--text-secondary)' }}
+              className="block text-xs font-semibold mb-3"
+              style={{ color: 'var(--text-muted)' }}
             >
-              Choose Avatar
+              Choose avatar
             </label>
-            <div className="grid grid-cols-6 gap-2">
+            <div className="grid grid-cols-4 sm:grid-cols-6 gap-2.5">
               {AVATARS.map((avatar) => (
                 <motion.button
                   key={avatar.emoji}
                   onClick={() => setSelectedAvatar(avatar)}
-                  whileHover={{ scale: 1.12, y: -2 }}
-                  whileTap={{ scale: 0.92 }}
+                  whileHover={{ scale: 1.06, y: -1 }}
+                  whileTap={{ scale: 0.95 }}
                   title={avatar.label}
                   className="relative aspect-square rounded-xl text-2xl flex items-center justify-center transition-all"
                   style={{
-                    background:
-                      selectedAvatar.emoji === avatar.emoji
-                        ? 'linear-gradient(135deg, rgba(99,120,255,0.3), rgba(199,125,255,0.2))'
-                        : 'rgba(22, 28, 53, 0.6)',
+                    background: 'var(--surface-raised)',
                     border:
                       selectedAvatar.emoji === avatar.emoji
-                        ? '1.5px solid rgba(99,120,255,0.6)'
-                        : '1.5px solid rgba(99,120,255,0.1)',
-                    boxShadow:
-                      selectedAvatar.emoji === avatar.emoji
-                        ? '0 0 16px rgba(99,120,255,0.3), 0 0 4px rgba(99,120,255,0.2) inset'
-                        : 'none',
+                        ? '2px solid var(--amber)'
+                        : '1px solid var(--border)',
                   }}
                 >
                   {avatar.emoji}
@@ -219,7 +179,7 @@ export default function HomePage() {
                     <motion.div
                       layoutId="avatar-ring"
                       className="absolute inset-0 rounded-xl"
-                      style={{ border: '2px solid rgba(99,120,255,0.8)' }}
+                      style={{ border: '2px solid var(--amber)' }}
                       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                     />
                   )}
@@ -233,15 +193,15 @@ export default function HomePage() {
             layout
             className="flex items-center gap-4 p-4 rounded-xl"
             style={{
-              background: 'rgba(11,15,35,0.5)',
-              border: '1px solid var(--border-subtle)',
+              background: 'var(--surface-raised)',
+              border: '1px solid var(--border)',
             }}
           >
             <motion.div
               className="w-14 h-14 rounded-xl flex items-center justify-center text-3xl shrink-0"
               style={{
-                background: 'linear-gradient(135deg, rgba(99,120,255,0.25), rgba(199,125,255,0.15))',
-                border: '1.5px solid rgba(99,120,255,0.3)',
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
               }}
               key={selectedAvatar.emoji}
               initial={{ scale: 0.8, rotate: -10 }}
@@ -254,13 +214,13 @@ export default function HomePage() {
               <p className="font-bold text-base truncate" style={{ color: 'var(--text-primary)' }}>
                 {playerName || 'Your Name'}
               </p>
-              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                 Playing as {selectedAvatar.label}
               </p>
               <div className="flex items-center gap-1 mt-1">
                 <span
                   className="w-2 h-2 rounded-full"
-                  style={{ background: 'var(--green)', boxShadow: '0 0 6px var(--green-glow)' }}
+                  style={{ background: 'var(--green)' }}
                 />
                 <span className="text-xs" style={{ color: 'var(--green)' }}>Ready to play</span>
               </div>
@@ -270,34 +230,26 @@ export default function HomePage() {
           {/* Join Mode Tabs */}
           <div>
             <div
-              className="flex rounded-xl p-1 gap-1 mb-4"
-              style={{ background: 'rgba(11,15,35,0.6)', border: '1px solid var(--border-subtle)' }}
+              className="flex mb-4 p-1 rounded-xl"
+              style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)' }}
             >
-              {['quick', 'private'].map((mode) => (
-                <motion.button
-                  key={mode}
-                  onClick={() => { setJoinMode(mode); setRoomCode(''); setError('') }}
-                  className="flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all relative"
-                  style={{
-                    color: joinMode === mode ? 'var(--text-primary)' : 'var(--text-muted)',
-                  }}
-                >
-                  {joinMode === mode && (
-                    <motion.div
-                      layoutId="tab-pill"
-                      className="absolute inset-0 rounded-lg"
-                      style={{
-                        background: 'linear-gradient(135deg, rgba(99,120,255,0.3), rgba(199,125,255,0.2))',
-                        border: '1px solid rgba(99,120,255,0.3)',
-                      }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-                    />
-                  )}
-                  <span className="relative z-10">
+              {['quick', 'private'].map((mode) => {
+                const active = joinMode === mode
+                return (
+                  <motion.button
+                    key={mode}
+                    onClick={() => { setJoinMode(mode); setRoomCode(''); setError('') }}
+                    className="flex-1 py-2 px-3 text-sm font-semibold transition-all rounded-lg"
+                    style={{
+                      background: active ? 'var(--surface)' : 'transparent',
+                      border: active ? '1px solid var(--border)' : '1px solid transparent',
+                      color: active ? 'var(--text)' : 'var(--text-muted)',
+                    }}
+                  >
                     {mode === 'quick' ? '⚡ Quick Play' : '🔒 Private Room'}
-                  </span>
-                </motion.button>
-              ))}
+                  </motion.button>
+                )
+              })}
             </div>
 
             <AnimatePresence mode="wait">
@@ -310,11 +262,11 @@ export default function HomePage() {
                   transition={{ duration: 0.2 }}
                   className="rounded-xl p-4 text-center"
                   style={{
-                    background: 'rgba(99,120,255,0.06)',
-                    border: '1px dashed rgba(99,120,255,0.2)',
+                    background: 'var(--surface-raised)',
+                    border: '1px dashed var(--border)',
                   }}
                 >
-                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                     🎲 A random room will be created for you
                   </p>
                 </motion.div>
@@ -334,10 +286,10 @@ export default function HomePage() {
                     onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
                     placeholder="ENTER CODE"
                     style={{
-                      fontFamily: "'Space Grotesk', monospace",
+                      fontFamily: "'Fira Code', monospace",
                       fontWeight: 700,
-                      fontSize: '20px',
-                      letterSpacing: '0.3em',
+                      fontSize: '18px',
+                      letterSpacing: '0.2em',
                       textAlign: 'center',
                       textTransform: 'uppercase',
                     }}
@@ -356,8 +308,8 @@ export default function HomePage() {
                 exit={{ opacity: 0, height: 0 }}
                 className="rounded-xl p-3 flex items-center gap-2"
                 style={{
-                  background: 'rgba(255,77,109,0.1)',
-                  border: '1px solid rgba(255,77,109,0.25)',
+                  background: 'var(--red-bg)',
+                  border: '1px solid rgba(248,81,73,0.4)',
                 }}
               >
                 <span>⚠️</span>

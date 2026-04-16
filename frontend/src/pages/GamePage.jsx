@@ -27,7 +27,7 @@ function WordChoiceModal({ choices, onSelect }) {
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 70,
-      background: 'rgba(6,9,24,0.9)', backdropFilter: 'blur(12px)',
+      background: 'rgba(13,17,23,0.9)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '20px',
     }}>
@@ -36,20 +36,19 @@ function WordChoiceModal({ choices, onSelect }) {
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         style={{
-          background: 'rgba(17,22,40,0.98)',
-          border: '2px solid rgba(99,120,255,0.4)',
-          borderRadius: '28px',
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: '16px',
           padding: '40px',
           maxWidth: '500px',
           width: '100%',
-          boxShadow: '0 0 80px rgba(99,120,255,0.3)',
           textAlign: 'center',
         }}
       >
-        <h1 style={{ fontSize: '32px', fontWeight: 900, marginBottom: '12px', color: 'var(--text-primary)' }}>
+        <h1 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '12px', color: 'var(--text)' }}>
           🎯 Choose a Word
         </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: '28px' }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '28px' }}>
           Select which word you want to draw
         </p>
 
@@ -65,30 +64,30 @@ function WordChoiceModal({ choices, onSelect }) {
               transition={{ delay: idx * 0.08 }}
               style={{
                 padding: '16px 20px',
-                borderRadius: '14px',
-                background: 'rgba(99,120,255,0.12)',
-                border: '2px solid rgba(99,120,255,0.25)',
-                color: 'var(--text-primary)',
-                fontWeight: 700,
-                fontSize: '15px',
+                borderRadius: '12px',
+                background: 'var(--surface-raised)',
+                border: '1px solid var(--border)',
+                color: 'var(--text)',
+                fontWeight: 600,
+                fontSize: '14px',
                 cursor: 'pointer',
                 textTransform: 'capitalize',
                 transition: 'all 0.2s ease',
               }}
               onMouseEnter={(e) => {
-                e.target.style.background = 'rgba(99,120,255,0.2)'
-                e.target.style.borderColor = 'rgba(99,120,255,0.5)'
+                e.target.style.background = 'var(--amber-bg)'
+                e.target.style.borderColor = 'var(--amber)'
               }}
               onMouseLeave={(e) => {
-                e.target.style.background = 'rgba(99,120,255,0.12)'
-                e.target.style.borderColor = 'rgba(99,120,255,0.25)'
+                e.target.style.background = 'var(--surface-raised)'
+                e.target.style.borderColor = 'var(--border)'
               }}
             >
               {word}
             </motion.button>
           ))}
         </div>
-        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '16px' }}>
+        <p style={{ fontSize: '12px', color: 'var(--text-faint)', marginTop: '16px' }}>
           One of these is very hard! 😈
         </p>
       </motion.div>
@@ -102,29 +101,28 @@ function RoundEndModal({ result, countdown, onDismiss }) {
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 60,
-      background: 'rgba(6,9,24,0.75)', backdropFilter: 'blur(8px)',
+      background: 'rgba(13,17,23,0.75)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
       <motion.div
         initial={{ scale: 0.88, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         style={{
-          background: 'rgba(17,22,40,0.95)',
-          border: '1px solid var(--border-muted)',
-          borderRadius: '24px',
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: '16px',
           padding: '32px 36px',
           minWidth: '320px', maxWidth: '440px',
-          boxShadow: '0 0 60px rgba(99,120,255,0.2)',
           textAlign: 'center',
         }}
       >
         <div style={{ fontSize: '48px', marginBottom: '10px' }}>⏱️</div>
-        <h2 style={{ fontSize: '22px', fontWeight: 800, marginBottom: '4px', color: 'var(--text-primary)' }}>
+        <h2 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '4px', color: 'var(--text)' }}>
           Round Over!
         </h2>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '20px' }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '20px' }}>
           The word was{' '}
-          <span style={{ fontWeight: 800, color: 'var(--brand-light)', fontFamily: "'Space Grotesk', monospace" }}>
+          <span style={{ fontWeight: 700, color: 'var(--amber)', fontFamily: "'Fira Code', monospace" }}>
             "{result.word}"
           </span>
         </p>
@@ -132,21 +130,21 @@ function RoundEndModal({ result, countdown, onDismiss }) {
           <div key={p.id} style={{
             display: 'flex', alignItems: 'center', gap: '10px',
             padding: '8px 10px', borderRadius: '10px',
-            background: i === 0 ? 'rgba(255,209,102,0.08)' : 'rgba(22,28,53,0.5)',
-            border: i === 0 ? '1px solid rgba(255,209,102,0.2)' : '1px solid var(--border-subtle)',
+            background: i === 0 ? 'var(--amber-bg)' : 'var(--surface-raised)',
+            border: i === 0 ? '1px solid rgba(240,165,0,0.3)' : '1px solid var(--border-subtle)',
             marginBottom: '6px',
           }}>
             <span style={{ width: '22px', fontSize: i === 0 ? '18px' : '12px', color: ['#ffd166','#c0c0c0','#cd7f32'][i] || 'var(--text-muted)' }}>
               {['👑','🥈','🥉'][i] || `#${i+1}`}
             </span>
             <span style={{ fontSize: '18px' }}>{p.avatar}</span>
-            <span style={{ flex: 1, fontSize: '13px', fontWeight: 600, textAlign: 'left', color: 'var(--text-primary)' }}>{p.name}</span>
-            <span style={{ fontSize: '13px', fontWeight: 800, color: i === 0 ? '#ffd166' : 'var(--brand-light)' }}>
+            <span style={{ flex: 1, fontSize: '13px', fontWeight: 600, textAlign: 'left', color: 'var(--text)' }}>{p.name}</span>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: i === 0 ? 'var(--amber)' : 'var(--amber)' }}>
               {p.score} pts
             </span>
           </div>
         ))}
-        <p style={{ marginTop: '16px', fontSize: '12px', color: 'var(--text-muted)' }}>
+        <p style={{ marginTop: '16px', fontSize: '12px', color: 'var(--text-faint)' }}>
           {countdown ? (
             <motion.span
               key={countdown}
@@ -175,7 +173,7 @@ function SelectRoundsModal({ isHost, initialRounds = 3, onConfirmRounds }) {
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 70,
-      background: 'rgba(6,9,24,0.9)', backdropFilter: 'blur(12px)',
+      background: 'rgba(13,17,23,0.9)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '20px',
     }}>
@@ -184,20 +182,19 @@ function SelectRoundsModal({ isHost, initialRounds = 3, onConfirmRounds }) {
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         style={{
-          background: 'rgba(17,22,40,0.98)',
-          border: '2px solid rgba(99,120,255,0.4)',
-          borderRadius: '28px',
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: '16px',
           padding: '40px',
           maxWidth: '500px',
           width: '100%',
-          boxShadow: '0 0 80px rgba(99,120,255,0.3)',
           textAlign: 'center',
         }}
       >
-        <h1 style={{ fontSize: '32px', fontWeight: 900, marginBottom: '12px', color: 'var(--text-primary)' }}>
+        <h1 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '12px', color: 'var(--text)' }}>
           🎮 How Many Rounds?
         </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: '28px' }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '28px' }}>
           Select the number of rounds to play in this game
         </p>
 
@@ -210,12 +207,12 @@ function SelectRoundsModal({ isHost, initialRounds = 3, onConfirmRounds }) {
               whileTap={{ scale: 0.97 }}
               style={{
                 padding: '16px 12px',
-                borderRadius: '14px',
-                background: selectedRounds === num ? 'rgba(99,120,255,0.25)' : 'rgba(99,120,255,0.12)',
-                border: selectedRounds === num ? '2px solid rgba(99,120,255,0.8)' : '2px solid rgba(99,120,255,0.25)',
-                color: 'var(--text-primary)',
-                fontWeight: 700,
-                fontSize: '20px',
+                borderRadius: '12px',
+                background: selectedRounds === num ? 'var(--amber-bg)' : 'var(--surface-raised)',
+                border: selectedRounds === num ? '2px solid var(--amber)' : '1px solid var(--border)',
+                color: 'var(--text)',
+                fontWeight: 600,
+                fontSize: '18px',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
               }}
@@ -234,12 +231,12 @@ function SelectRoundsModal({ isHost, initialRounds = 3, onConfirmRounds }) {
               whileTap={{ scale: 0.97 }}
               style={{
                 padding: '16px 12px',
-                borderRadius: '14px',
-                background: selectedRounds === num ? 'rgba(99,120,255,0.25)' : 'rgba(99,120,255,0.12)',
-                border: selectedRounds === num ? '2px solid rgba(99,120,255,0.8)' : '2px solid rgba(99,120,255,0.25)',
-                color: 'var(--text-primary)',
-                fontWeight: 700,
-                fontSize: '20px',
+                borderRadius: '12px',
+                background: selectedRounds === num ? 'var(--amber-bg)' : 'var(--surface-raised)',
+                border: selectedRounds === num ? '2px solid var(--amber)' : '1px solid var(--border)',
+                color: 'var(--text)',
+                fontWeight: 600,
+                fontSize: '18px',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
               }}
@@ -254,7 +251,7 @@ function SelectRoundsModal({ isHost, initialRounds = 3, onConfirmRounds }) {
           whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.97 }}
           className="btn-primary"
-          style={{ width: '100%', padding: '14px', fontSize: '16px', borderRadius: '12px', fontWeight: 700 }}
+          style={{ width: '100%', padding: '14px', fontSize: '14px', borderRadius: '12px', fontWeight: 600 }}
         >
           Confirm {selectedRounds} Round{selectedRounds !== 1 ? 's' : ''}
         </motion.button>
@@ -269,18 +266,17 @@ function GameEndModal({ result, isHost, onPlayAgain, onBackToLobby }) {
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 60,
-      background: 'rgba(6,9,24,0.82)', backdropFilter: 'blur(10px)',
+      background: 'rgba(13,17,23,0.82)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
       <motion.div
         initial={{ scale: 0.88, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         style={{
-          background: 'rgba(17,22,40,0.97)',
-          border: '1px solid rgba(255,209,102,0.25)',
-          borderRadius: '28px', padding: '36px 40px',
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: '16px', padding: '36px 40px',
           minWidth: '340px', maxWidth: '480px',
-          boxShadow: '0 0 80px rgba(255,209,102,0.12), 0 24px 48px rgba(0,0,0,0.6)',
           textAlign: 'center',
         }}
       >
@@ -289,29 +285,29 @@ function GameEndModal({ result, isHost, onPlayAgain, onBackToLobby }) {
           transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }}
           style={{ fontSize: '56px', marginBottom: '12px' }}
         >🏆</motion.div>
-        <h2 style={{ fontSize: '26px', fontWeight: 900, color: '#ffd166', marginBottom: '6px' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--amber)', marginBottom: '6px' }}>
           Game Over!
         </h2>
         {result.winner && (
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '20px' }}>
-            🎉 <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{result.winner.name}</span> wins with{' '}
-            <span style={{ color: '#ffd166', fontWeight: 800 }}>{result.winner.score} pts</span>
+          <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '20px' }}>
+            🎉 <span style={{ fontWeight: 700, color: 'var(--text)' }}>{result.winner.name}</span> wins with{' '}
+            <span style={{ color: 'var(--amber)', fontWeight: 700 }}>{result.winner.score} pts</span>
           </p>
         )}
         {result.leaderboard?.map((p, i) => (
           <div key={p.id} style={{
             display: 'flex', alignItems: 'center', gap: '10px',
             padding: '10px 12px', borderRadius: '12px',
-            background: i === 0 ? 'rgba(255,209,102,0.1)' : 'rgba(22,28,53,0.5)',
-            border: i === 0 ? '1px solid rgba(255,209,102,0.25)' : '1px solid var(--border-subtle)',
+            background: i === 0 ? 'var(--amber-bg)' : 'var(--surface-raised)',
+            border: i === 0 ? '1px solid rgba(240,165,0,0.3)' : '1px solid var(--border-subtle)',
             marginBottom: '8px',
           }}>
             <span style={{ width: '24px', fontSize: i === 0 ? '20px' : '13px', color: ['#ffd166','#c0c0c0','#cd7f32'][i] || 'var(--text-muted)' }}>
               {['👑','🥈','🥉'][i] || `#${i+1}`}
             </span>
             <span style={{ fontSize: '20px' }}>{p.avatar}</span>
-            <span style={{ flex: 1, fontSize: '14px', fontWeight: 700, textAlign: 'left', color: 'var(--text-primary)' }}>{p.name}</span>
-            <span style={{ fontSize: '15px', fontWeight: 900, color: i === 0 ? '#ffd166' : 'var(--brand-light)' }}>
+            <span style={{ flex: 1, fontSize: '14px', fontWeight: 700, textAlign: 'left', color: 'var(--text)' }}>{p.name}</span>
+            <span style={{ fontSize: '15px', fontWeight: 700, color: i === 0 ? 'var(--amber)' : 'var(--amber)' }}>
               {p.score} pts
             </span>
           </div>
@@ -324,8 +320,8 @@ function GameEndModal({ result, isHost, onPlayAgain, onBackToLobby }) {
               whileTap={{ scale: 0.97 }}
               style={{
                 padding: '12px', fontSize: '14px', fontWeight: 700, borderRadius: '12px',
-                background: 'rgba(99,120,255,0.15)', border: '2px solid rgba(99,120,255,0.4)',
-                color: 'var(--text-primary)', cursor: 'pointer',
+                background: 'var(--surface-raised)', border: '1px solid var(--border)',
+                color: 'var(--text)', cursor: 'pointer',
               }}
             >
               🔄 Play Again
@@ -362,7 +358,7 @@ export default function GamePage() {
   }, [playerName, navigate])
 
   // ── Drawing tool state ───────────────────────────────────────────────────
-  const [selectedColor,   setSelectedColor]   = useState('#1a1a2e')
+  const [selectedColor,   setSelectedColor]   = useState('#0D1117')
   const [brushSize,       setBrushSize]       = useState(5)
   const [isEraser,        setIsEraser]        = useState(false)
   const [clearSignal,     setClearSignal]     = useState(0)
@@ -552,9 +548,8 @@ export default function GamePage() {
           style={{
             position: 'fixed', bottom: '24px', right: '24px',
             width: '56px', height: '56px', borderRadius: '50%',
-            background: 'linear-gradient(135deg, var(--brand), var(--brand-dark))',
-            boxShadow: '0 8px 24px var(--brand-glow)',
-            color: '#fff', fontSize: '22px',
+            background: 'var(--amber)',
+            color: 'var(--bg)', fontSize: '22px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             zIndex: 30, border: 'none', cursor: 'pointer',
           }}
@@ -571,7 +566,7 @@ export default function GamePage() {
               onClick={() => setMobileDrawerOpen(false)}
               style={{
                 position: 'fixed', inset: 0, zIndex: 40,
-                background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+                background: 'rgba(0,0,0,0.6)',
               }}
             />
             <motion.div
@@ -581,22 +576,21 @@ export default function GamePage() {
               style={{
                 position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
                 height: '70vh',
-                background: 'rgba(11,15,35,0.97)',
-                backdropFilter: 'blur(24px)',
-                borderTop: '1px solid var(--border-muted)',
-                borderRadius: '24px 24px 0 0',
+                background: 'var(--surface)',
+                borderTop: '1px solid var(--border)',
+                borderRadius: '16px 16px 0 0',
                 display: 'flex', flexDirection: 'column',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 4px' }}>
-                <div style={{ width: '36px', height: '4px', borderRadius: '99px', background: 'var(--border-muted)' }} />
+                <div style={{ width: '36px', height: '4px', borderRadius: '99px', background: 'var(--border)' }} />
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 16px 8px' }}>
-                <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>Players & Chat</span>
+                <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text)' }}>Players & Chat</span>
                 <button onClick={() => setMobileDrawerOpen(false)} style={{
                   width: '30px', height: '30px', borderRadius: '8px',
-                  background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)',
-                  color: 'var(--text-secondary)', fontSize: '14px', cursor: 'pointer',
+                  background: 'var(--surface-raised)', border: '1px solid var(--border)',
+                  color: 'var(--text-muted)', fontSize: '14px', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>✕</button>
               </div>

@@ -4,7 +4,8 @@ const RANK_ICONS  = ['👑', '🥈', '🥉']
 const RANK_COLORS = ['#ffd166', '#c0c0c0', '#cd7f32']
 
 export default function PlayerList({ players = [], currentPlayerId = null }) {
-  const sorted = [...players].sort((a, b) => b.score - a.score)
+  const safePlayers = Array.isArray(players) ? players.filter(Boolean) : []
+  const sorted = [...safePlayers].sort((a, b) => (b?.score ?? 0) - (a?.score ?? 0))
   const maxScore = sorted[0]?.score || 1
 
   return (
@@ -12,15 +13,14 @@ export default function PlayerList({ players = [], currentPlayerId = null }) {
       style={{
         width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
         borderRadius: '16px', overflow: 'hidden',
-        background: 'rgba(11,15,35,0.75)',
-        backdropFilter: 'blur(16px)',
-        border: '1px solid var(--border-subtle)',
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
       }}
     >
       {/* Header */}
       <div style={{
         padding: '10px 14px', flexShrink: 0,
-        borderBottom: '1px solid var(--border-subtle)',
+        borderBottom: '1px solid var(--border)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -51,16 +51,15 @@ export default function PlayerList({ players = [], currentPlayerId = null }) {
                   borderRadius: '12px',
                   overflow: 'hidden',
                   background: player.is_drawing
-                    ? 'rgba(99,120,255,0.13)'
+                    ? 'var(--blue-bg)'
                     : isMe
-                    ? 'rgba(99,120,255,0.07)'
-                    : 'rgba(22,28,53,0.5)',
+                    ? 'rgba(47,129,247,0.06)'
+                    : 'var(--surface-raised)',
                   border: player.is_drawing
-                    ? '1px solid rgba(99,120,255,0.4)'
+                    ? '1px solid rgba(47,129,247,0.5)'
                     : isMe
-                    ? '1px solid rgba(99,120,255,0.2)'
+                    ? '1px solid rgba(47,129,247,0.2)'
                     : '1px solid var(--border-subtle)',
-                  boxShadow: player.is_drawing ? '0 0 14px rgba(99,120,255,0.15)' : 'none',
                 }}
               >
                 {/* Score bar */}
@@ -69,8 +68,8 @@ export default function PlayerList({ players = [], currentPlayerId = null }) {
                   height: '2px',
                   width: `${scoreRatio * 100}%`,
                   background: isTop
-                    ? 'linear-gradient(90deg, #ffd16666, #ffd166)'
-                    : 'linear-gradient(90deg, var(--brand-dark), var(--brand))',
+                    ? 'var(--amber)'
+                    : 'var(--amber)',
                   opacity: 0.7,
                   transition: 'width 0.7s ease',
                 }} />
@@ -92,12 +91,12 @@ export default function PlayerList({ players = [], currentPlayerId = null }) {
                     borderRadius: '10px', flexShrink: 0,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '20px',
-                    background: 'rgba(22,28,53,0.8)',
+                    background: 'var(--surface)',
                     border: player.is_drawing
-                      ? '1.5px solid rgba(99,120,255,0.5)'
-                      : '1.5px solid var(--border-subtle)',
+                      ? '1.5px solid rgba(47,129,247,0.6)'
+                      : '1.5px solid var(--border)',
                   }}>
-                    {player.avatar}
+                    {player.avatar || '🙂'}
                     {player.is_drawing && (
                       <motion.div
                         animate={{ scale: [1, 1.25, 1] }}
@@ -105,7 +104,7 @@ export default function PlayerList({ players = [], currentPlayerId = null }) {
                         style={{
                           position: 'absolute', top: '-6px', right: '-6px',
                           width: '16px', height: '16px', borderRadius: '50%',
-                          background: 'var(--brand)',
+                          background: 'var(--blue)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           fontSize: '9px',
                         }}
@@ -121,15 +120,15 @@ export default function PlayerList({ players = [], currentPlayerId = null }) {
                         color: 'var(--text-primary)',
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                       }}>
-                        {player.name}
+                        {player.name || 'Player'}
                       </span>
                       {isMe && (
                         <span className="badge badge-brand" style={{ fontSize: '9px', padding: '1px 5px' }}>you</span>
                       )}
                     </div>
                     <span style={{ fontSize: '11px', fontWeight: 700 }}>
-                      <span style={{ color: isTop ? '#ffd166' : 'var(--brand-light)' }}>
-                        {player.score.toLocaleString()}
+                      <span style={{ color: isTop ? 'var(--amber)' : 'var(--amber)' }}>
+                        {(player.score ?? 0).toLocaleString()}
                       </span>
                       <span style={{ color: 'var(--text-muted)' }}> pts</span>
                     </span>

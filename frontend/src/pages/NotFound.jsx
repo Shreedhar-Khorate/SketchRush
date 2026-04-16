@@ -5,15 +5,7 @@ export default function NotFound() {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center relative overflow-hidden">
-      {/* Background glow */}
-      <div
-        className="absolute w-80 h-80 rounded-full pointer-events-none"
-        style={{
-          background: 'radial-gradient(circle, rgba(99,120,255,0.15) 0%, transparent 70%)',
-          filter: 'blur(60px)',
-        }}
-      />
+    <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center relative">
 
       <motion.div
         initial={{ opacity: 0, y: 32 }}
@@ -33,11 +25,8 @@ export default function NotFound() {
           <h1
             className="text-8xl font-black"
             style={{
-              fontFamily: "'Space Grotesk', sans-serif",
-              background: 'linear-gradient(135deg, #8fa0ff, #6378ff, #c77dff)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
+              fontFamily: "'Inter', sans-serif",
+              color: 'var(--text)',
             }}
           >
             404

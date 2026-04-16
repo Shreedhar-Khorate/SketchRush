@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export default function DrawingCanvas({
-  color = '#1a1a2e',
+  color = '#0D1117',
   brushSize = 5,
   isEraser = false,
   clearSignal = 0,
@@ -26,7 +26,7 @@ export default function DrawingCanvas({
       if (!canvas) return
       const ctx = canvas.getContext('2d')
       if (!ctx) return
-      ctx.fillStyle = '#ffffff'
+      ctx.fillStyle = '#FFFFFF'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
       setShowClearFx(true)
       setTimeout(() => setShowClearFx(false), 500)
@@ -37,7 +37,7 @@ export default function DrawingCanvas({
 
   const _drawSegment = useCallback((
     canvas, x0, y0, x1, y1,
-    strokeColor = '#1a1a2e', strokeSize = 5, eraser = false
+    strokeColor = '#0D1117', strokeSize = 5, eraser = false
   ) => {
     try {
       if (!canvas) return
@@ -53,14 +53,14 @@ export default function DrawingCanvas({
       ctx.beginPath()
       ctx.moveTo(x0, y0)
       ctx.lineTo(x1, y1)
-      ctx.strokeStyle = eraser ? '#ffffff' : strokeColor
+      ctx.strokeStyle = eraser ? '#FFFFFF' : strokeColor
       ctx.lineWidth   = eraser ? strokeSize * 3 : strokeSize
       ctx.lineCap     = 'round'
       ctx.lineJoin    = 'round'
       ctx.stroke()
       ctx.beginPath()
       ctx.arc(x1, y1, (eraser ? strokeSize * 3 : strokeSize) / 2, 0, Math.PI * 2)
-      ctx.fillStyle = eraser ? '#ffffff' : strokeColor
+      ctx.fillStyle = eraser ? '#FFFFFF' : strokeColor
       ctx.fill()
       ctx.restore()
     } catch (err) {
@@ -91,7 +91,7 @@ export default function DrawingCanvas({
         canvas,
         toAbs(prevX ?? x, w), toAbs(prevY ?? y, h),
         toAbs(x, w),          toAbs(y, h),
-        c || '#1a1a2e', size || 5, erase || false
+        c || '#0D1117', size || 5, erase || false
       )
     } catch (err) {
       console.error('[DrawingCanvas] Error in _applyRemoteDraw:', err)
@@ -113,7 +113,7 @@ export default function DrawingCanvas({
       }
       canvas.width  = 800
       canvas.height = 600
-      ctx.fillStyle = '#ffffff'
+      ctx.fillStyle = '#FFFFFF'
       ctx.fillRect(0, 0, 800, 600)
       console.log('[DrawingCanvas] Canvas initialized: 800x600')
     } catch (err) {
@@ -215,17 +215,16 @@ export default function DrawingCanvas({
   // ── Render ────────────────────────────────────────────────────────────────
   const cursorSize = isEraser ? brushSize * 3 + 8 : brushSize + 6
   const cursorBorder = isEraser
-    ? '2px dashed rgba(255,77,109,0.8)'
-    : `2px solid ${color === '#f8faff' ? '#333' : color}`
+    ? '2px dashed rgba(248,81,73,0.8)'
+    : `2px solid ${color === '#E6EDF3' || color === '#FFFFFF' ? '#30363D' : color}`
 
   return (
     <div className="w-full h-full flex items-stretch relative" style={{ minHeight: 0 }}>
       <div
         className="flex-1 relative rounded-2xl overflow-hidden"
         style={{
-          background: 'var(--bg-elevated)',
-          border: '1px solid var(--border-subtle)',
-          boxShadow: '0 0 40px rgba(99,120,255,0.08), 0 8px 32px rgba(0,0,0,0.4)',
+          background: '#FFFFFF',
+          border: '1px solid var(--border)',
         }}
       >
         {/* Clear flash */}
@@ -238,7 +237,7 @@ export default function DrawingCanvas({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4 }}
               className="absolute inset-0 z-10 pointer-events-none"
-              style={{ background: 'rgba(99,120,255,0.18)' }}
+              style={{ background: 'var(--amber-bg)' }}
             />
           )}
         </AnimatePresence>
@@ -252,10 +251,10 @@ export default function DrawingCanvas({
         ].map(({ pos, r }, i) => (
           <div key={i} className={`absolute ${pos} w-5 h-5 pointer-events-none z-10`}
             style={{
-              borderTop:    i < 2   ? '2px solid rgba(99,120,255,0.4)' : 'none',
-              borderBottom: i >= 2  ? '2px solid rgba(99,120,255,0.4)' : 'none',
-              borderLeft:   i % 2 === 0 ? '2px solid rgba(99,120,255,0.4)' : 'none',
-              borderRight:  i % 2 !== 0 ? '2px solid rgba(99,120,255,0.4)' : 'none',
+              borderTop:    i < 2   ? '2px solid var(--border)' : 'none',
+              borderBottom: i >= 2  ? '2px solid var(--border)' : 'none',
+              borderLeft:   i % 2 === 0 ? '2px solid var(--border)' : 'none',
+              borderRight:  i % 2 !== 0 ? '2px solid var(--border)' : 'none',
               borderRadius: r,
             }}
           />
@@ -293,7 +292,7 @@ export default function DrawingCanvas({
             aspectRatio: '4/3',
             touchAction: 'none',
             cursor: 'none',
-            background: '#ffffff',
+            background: '#FFFFFF',
           }}
         />
 
@@ -309,7 +308,7 @@ export default function DrawingCanvas({
               height: `${cursorSize}px`,
               border: cursorBorder,
               borderRadius: isEraser ? '4px' : '50%',
-              boxShadow: isEraser ? 'none' : `0 0 8px ${color}88`,
+              boxShadow: 'none',
               transition: 'width 0.1s, height 0.1s',
             }}
           />

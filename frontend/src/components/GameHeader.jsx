@@ -24,27 +24,24 @@ export default function GameHeader({
   const isWarning  = timeLeft <= 20
   const progress   = (timeLeft / totalTime) * 100
 
-  const timerColor = isCritical ? 'var(--red)'    : isWarning ? 'var(--orange)'    : 'var(--green)'
-  const timerGlow  = isCritical ? 'var(--red-glow)': isWarning ? 'var(--orange-glow)': 'var(--green-glow)'
+  const timerColor = isCritical ? 'var(--red)' : isWarning ? 'var(--amber-warn)' : 'var(--amber)'
 
   return (
     <header
       style={{
-        background: 'rgba(11,15,35,0.92)',
-        backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid var(--border-subtle)',
+        background: 'var(--surface)',
+        borderBottom: '1px solid var(--border)',
         position: 'relative',
         zIndex: 20,
         flexShrink: 0,
       }}
     >
       {/* Timer progress bar */}
-      <div style={{ height: '3px', background: 'var(--bg-elevated)' }}>
+      <div style={{ height: '4px', background: 'var(--border-subtle)' }}>
         <motion.div
           style={{
             height: '100%',
-            background: `linear-gradient(90deg, ${timerColor}cc, ${timerColor})`,
-            boxShadow: `0 0 8px ${timerGlow}`,
+            background: timerColor,
           }}
           animate={{ width: `${progress}%` }}
           transition={{ duration: 0.95, ease: 'linear' }}
@@ -58,13 +55,10 @@ export default function GameHeader({
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
           <span style={{ fontSize: '20px' }}>⚡</span>
           <span style={{
-            fontFamily: "'Space Grotesk', sans-serif",
-            fontWeight: 800,
+            fontFamily: "'Inter', sans-serif",
+            fontWeight: 700,
             fontSize: '17px',
-            background: 'linear-gradient(135deg, #8fa0ff, #6378ff)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
+            color: 'var(--text)',
             display: 'none',
           }}
             className="sm:block"
@@ -73,7 +67,6 @@ export default function GameHeader({
             style={{
               width: '7px', height: '7px', borderRadius: '50%',
               background: connected ? 'var(--green)' : 'var(--red)',
-              boxShadow: connected ? '0 0 6px var(--green-glow)' : '0 0 6px var(--red-glow)',
               display: 'inline-block',
             }}
             title={connected ? 'Connected' : 'Disconnected'}
@@ -86,12 +79,12 @@ export default function GameHeader({
           {gameState === 'waiting' ? (
             /* Lobby / waiting state */
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+              <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
                 Waiting for players…
               </span>
               {isHost && (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                  <span style={{ fontSize: '11px', color: 'var(--text-faint)', fontWeight: 600 }}>
                     {selectedRounds ? `Rounds: ${selectedRounds}` : 'Select rounds to start'}
                   </span>
                   <motion.button
@@ -114,19 +107,19 @@ export default function GameHeader({
               )}
             </div>
           ) : gameState === 'round_end' || gameState === 'game_end' ? (
-            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--orange)' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--amber-warn)' }}>
               {gameState === 'game_end' ? '🏆 Game Over!' : '⏱️ Round Over!'}
             </span>
           ) : gameState === 'choosing_word' ? (
             /* Drawer is picking a word */
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-faint)', fontWeight: 600 }}>
                 Round {round}/{maxRounds}
               </span>
               <motion.span
                 animate={{ opacity: [1, 0.5, 1] }}
                 transition={{ repeat: Infinity, duration: 1.4, ease: 'easeInOut' }}
-                style={{ fontSize: '13px', fontWeight: 700, color: 'var(--brand-light)' }}
+                style={{ fontSize: '13px', fontWeight: 700, color: 'var(--blue)' }}
               >
                 {drawerAvatar} {drawerName} is choosing a word…
               </motion.span>
@@ -135,7 +128,7 @@ export default function GameHeader({
             <>
               {/* Round indicator dots */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-faint)', fontWeight: 600 }}>
                   Round {round}/{maxRounds}
                 </span>
                 <div style={{ display: 'flex', gap: '3px' }}>
@@ -144,8 +137,7 @@ export default function GameHeader({
                       height: '4px',
                       width: i < round ? '18px' : '7px',
                       borderRadius: '99px',
-                      background: i < round ? 'var(--brand)' : 'var(--bg-elevated)',
-                      boxShadow: i < round ? '0 0 4px var(--brand-glow)' : 'none',
+                      background: i < round ? 'var(--amber)' : 'var(--border-subtle)',
                       transition: 'all 0.4s ease',
                     }} />
                   ))}
@@ -168,11 +160,10 @@ export default function GameHeader({
                       letterSpacing: '0.08em',
                     }}>Draw:</span>
                     <span style={{
-                      fontFamily: "'Space Grotesk', monospace",
+                      fontFamily: "'Fira Code', monospace",
                       fontWeight: 800,
                       fontSize: '18px',
-                      color: 'var(--text-primary)',
-                      textShadow: '0 0 20px var(--brand-glow)',
+                      color: 'var(--text)',
                       letterSpacing: '0.05em',
                     }}>{currentWord}</span>
                   </motion.div>
@@ -188,13 +179,13 @@ export default function GameHeader({
                         display: 'inline-block',
                         width: '18px',
                         height: '24px',
-                        borderBottom: '2.5px solid var(--brand)',
+                        borderBottom: '2px solid var(--amber)',
                         textAlign: 'center',
                         fontSize: '14px',
                         fontWeight: 700,
                         lineHeight: '22px',
-                        color: 'var(--text-primary)',
-                        fontFamily: "'Space Grotesk', monospace",
+                        color: 'var(--text)',
+                        fontFamily: "'Fira Code', monospace",
                         margin: '0 1px',
                       }}>
                         {ch !== '_' ? ch : ''}
@@ -206,8 +197,8 @@ export default function GameHeader({
 
               {/* Drawer info */}
               {drawerName && (
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                  {drawerAvatar} <span style={{ color: 'var(--brand-light)' }}>{drawerName}</span> is drawing
+                <span style={{ fontSize: '11px', color: 'var(--text-faint)' }}>
+                  {drawerAvatar} <span style={{ color: 'var(--blue)' }}>{drawerName}</span> is drawing
                 </span>
               )}
             </>
@@ -221,13 +212,13 @@ export default function GameHeader({
             display: 'none',
             alignItems: 'center', gap: '4px',
             padding: '5px 10px', borderRadius: '8px',
-            background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)',
+            background: 'var(--surface-raised)', border: '1px solid var(--border)',
           }} className="md:flex">
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>#</span>
             <code style={{
-              fontFamily: "'Space Grotesk', monospace",
+              fontFamily: "'Fira Code', monospace",
               fontWeight: 700, fontSize: '13px',
-              color: 'var(--brand-light)',
+              color: 'var(--amber)',
               letterSpacing: '0.15em',
             }}>{roomCode}</code>
           </div>
@@ -236,10 +227,10 @@ export default function GameHeader({
           <div style={{
             display: 'flex', alignItems: 'center', gap: '4px',
             padding: '5px 10px', borderRadius: '8px',
-            background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)',
+            background: 'var(--surface-raised)', border: '1px solid var(--border)',
           }}>
             <span style={{ fontSize: '13px' }}>👥</span>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>
               {playerCount}/{maxPlayers}
             </span>
           </div>
@@ -252,9 +243,8 @@ export default function GameHeader({
               style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
                 padding: '5px 12px', borderRadius: '10px',
-                background: `rgba(${isCritical ? '255,77,109' : isWarning ? '255,140,66' : '0,229,160'},0.12)`,
-                border: `1.5px solid ${timerColor}55`,
-                boxShadow: `0 0 10px ${timerGlow}`,
+                background: isCritical ? 'var(--red-bg)' : isWarning ? 'rgba(210,153,34,0.1)' : 'var(--amber-bg)',
+                border: `1px solid ${timerColor}`,
               }}
             >
               <span style={{ fontSize: '13px' }}>⏱</span>
@@ -265,7 +255,7 @@ export default function GameHeader({
                 style={{
                   fontSize: '15px', fontWeight: 900,
                   color: timerColor,
-                  fontFamily: "'Space Grotesk', monospace",
+                  fontFamily: "'Fira Code', monospace",
                   minWidth: '2ch', textAlign: 'center',
                   tabularNums: true,
                 }}

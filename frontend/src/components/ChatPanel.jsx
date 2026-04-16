@@ -22,14 +22,13 @@ export default function ChatPanel({ messages = [], playerName = 'Player', onSend
     <div style={{
       width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
       borderRadius: '16px', overflow: 'hidden',
-      background: 'rgba(11,15,35,0.75)',
-      backdropFilter: 'blur(16px)',
-      border: '1px solid var(--border-subtle)',
+      background: 'var(--surface)',
+      border: '1px solid var(--border)',
     }}>
       {/* Header */}
       <div style={{
         padding: '10px 14px', flexShrink: 0,
-        borderBottom: '1px solid var(--border-subtle)',
+        borderBottom: '1px solid var(--border)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -42,7 +41,6 @@ export default function ChatPanel({ messages = [], playerName = 'Player', onSend
           <span style={{
             width: '7px', height: '7px', borderRadius: '50%',
             background: 'var(--green)',
-            boxShadow: '0 0 6px var(--green-glow)',
             display: 'inline-block',
             animation: 'pulse 2s infinite',
           }} />
@@ -64,9 +62,9 @@ export default function ChatPanel({ messages = [], playerName = 'Player', onSend
                 <div style={{ display: 'flex', justifyContent: 'center', margin: '3px 0' }}>
                   <span style={{
                     fontSize: '11px', padding: '3px 10px', borderRadius: '99px',
-                    background: 'rgba(99,120,255,0.1)',
-                    border: '1px solid rgba(99,120,255,0.2)',
-                    color: 'var(--brand-light)',
+                    background: 'var(--amber-bg)',
+                    border: '1px solid rgba(240,165,0,0.3)',
+                    color: 'var(--amber)',
                   }}>{msg.content}</span>
                 </div>
               ) : msg.type === 'correct' ? (
@@ -76,9 +74,8 @@ export default function ChatPanel({ messages = [], playerName = 'Player', onSend
                   style={{
                     display: 'flex', alignItems: 'flex-start', gap: '7px',
                     padding: '8px 10px', borderRadius: '10px',
-                    background: 'rgba(0,229,160,0.09)',
-                    border: '1px solid rgba(0,229,160,0.22)',
-                    boxShadow: '0 0 10px rgba(0,229,160,0.08)',
+                    background: 'var(--green-bg)',
+                    border: '1px solid rgba(63,185,80,0.3)',
                   }}
                 >
                   <span style={{ fontSize: '16px', flexShrink: 0 }}>{msg.avatar}</span>
@@ -103,7 +100,7 @@ export default function ChatPanel({ messages = [], playerName = 'Player', onSend
                     {msg.avatar || '💬'}
                   </span>
                   <p style={{ fontSize: '12px', lineHeight: '1.4', margin: 0 }}>
-                    <span style={{ fontWeight: 700, color: 'var(--brand-light)' }}>
+                    <span style={{ fontWeight: 700, color: 'var(--blue)' }}>
                       {msg.player}:
                     </span>
                     {' '}
@@ -120,7 +117,7 @@ export default function ChatPanel({ messages = [], playerName = 'Player', onSend
       {/* Input */}
       <div style={{
         padding: '10px 12px', flexShrink: 0,
-        borderTop: '1px solid var(--border-subtle)',
+        borderTop: '1px solid var(--border)',
       }}>
         {isDrawing ? (
           <p style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center', margin: 0 }}>
@@ -147,13 +144,10 @@ export default function ChatPanel({ messages = [], playerName = 'Player', onSend
                   flexShrink: 0,
                   width: '38px', height: '38px',
                   borderRadius: '10px',
-                  background: input.trim()
-                    ? 'linear-gradient(135deg, var(--brand), var(--brand-dark))'
-                    : 'var(--bg-elevated)',
-                  border: input.trim() ? 'none' : '1px solid var(--border-subtle)',
-                  boxShadow: input.trim() ? '0 4px 12px var(--brand-glow)' : 'none',
+                  background: input.trim() ? 'var(--amber)' : 'var(--surface-raised)',
+                  border: input.trim() ? '1px solid var(--amber)' : '1px solid var(--border)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#fff',
+                  color: input.trim() ? 'var(--bg)' : 'var(--text-muted)',
                   cursor: input.trim() ? 'pointer' : 'not-allowed',
                   opacity: input.trim() ? 1 : 0.4,
                   fontSize: '16px',

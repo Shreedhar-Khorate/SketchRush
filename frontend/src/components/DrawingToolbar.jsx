@@ -1,18 +1,18 @@
 import { motion } from 'framer-motion'
 
 const COLORS = [
-  { name: 'Black', hex: '#1a1a2e' },
-  { name: 'White', hex: '#f8faff' },
-  { name: 'Red', hex: '#ff4d6d' },
-  { name: 'Orange', hex: '#ff8c42' },
-  { name: 'Yellow', hex: '#ffd166' },
-  { name: 'Green', hex: '#00e5a0' },
-  { name: 'Cyan', hex: '#00d4ff' },
-  { name: 'Blue', hex: '#6378ff' },
-  { name: 'Purple', hex: '#c77dff' },
-  { name: 'Pink', hex: '#ff6eb4' },
-  { name: 'Brown', hex: '#a0522d' },
-  { name: 'Gray', hex: '#6b7280' },
+  { name: 'Black', hex: '#0D1117' },
+  { name: 'White', hex: '#FFFFFF' },
+  { name: 'Gray', hex: '#8B949E' },
+  { name: 'Red', hex: '#F85149' },
+  { name: 'Orange', hex: '#F0A500' },
+  { name: 'Yellow', hex: '#D29922' },
+  { name: 'Green', hex: '#3FB950' },
+  { name: 'Teal', hex: '#39D353' },
+  { name: 'Blue', hex: '#2F81F7' },
+  { name: 'Indigo', hex: '#6E40C9' },
+  { name: 'Purple', hex: '#A371F7' },
+  { name: 'Pink', hex: '#F778BA' },
 ]
 
 const BRUSH_SIZES = [
@@ -37,9 +37,8 @@ export default function DrawingToolbar({
     <div
       className="w-full px-4 py-3"
       style={{
-        background: 'rgba(11,15,35,0.8)',
-        backdropFilter: 'blur(16px)',
-        borderBottom: '1px solid var(--border-subtle)',
+        background: 'var(--surface-raised)',
+        borderBottom: '1px solid var(--border)',
       }}
     >
       <div className="flex flex-wrap items-center gap-4 justify-between">
@@ -50,11 +49,8 @@ export default function DrawingToolbar({
           <div
             className="w-9 h-9 rounded-xl shrink-0 relative"
             style={{
-              background: isEraser ? 'rgba(255,77,109,0.2)' : selectedColor,
-              border: '2px solid rgba(255,255,255,0.15)',
-              boxShadow: isEraser
-                ? '0 0 12px rgba(255,77,109,0.4)'
-                : `0 0 16px ${selectedColor}88, 0 2px 8px rgba(0,0,0,0.4)`,
+              background: isEraser ? 'var(--red-bg)' : selectedColor,
+              border: '1px solid var(--border)',
               cursor: 'default',
             }}
             title={isEraser ? 'Eraser' : `Current: ${selectedColor}`}
@@ -79,11 +75,8 @@ export default function DrawingToolbar({
                   height: '24px',
                   background: color.hex,
                   border: selectedColor === color.hex && !isEraser
-                    ? '2px solid rgba(255,255,255,0.9)'
-                    : '2px solid rgba(255,255,255,0.08)',
-                  boxShadow: selectedColor === color.hex && !isEraser
-                    ? `0 0 10px ${color.hex}aa`
-                    : 'none',
+                    ? '2px solid var(--text)'
+                    : '1px solid var(--border)',
                   transition: 'all 0.15s ease',
                 }}
               >
@@ -91,7 +84,7 @@ export default function DrawingToolbar({
                   <motion.div
                     layoutId="color-ring"
                     className="absolute -inset-1 rounded-xl"
-                    style={{ border: `2px solid ${color.hex}`, boxShadow: `0 0 8px ${color.hex}88` }}
+                    style={{ border: `2px solid var(--text)` }}
                     transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                   />
                 )}
@@ -110,7 +103,7 @@ export default function DrawingToolbar({
           </span>
           <div
             className="flex items-center gap-1 p-1 rounded-xl"
-            style={{ background: 'rgba(11,15,35,0.6)', border: '1px solid var(--border-subtle)' }}
+            style={{ background: 'var(--surface)', border: '1px solid var(--border-subtle)' }}
           >
             {BRUSH_SIZES.map((size) => (
               <motion.button
@@ -120,8 +113,8 @@ export default function DrawingToolbar({
                 whileTap={{ scale: 0.92 }}
                 className="relative w-9 h-9 rounded-lg flex items-center justify-center transition-all"
                 style={{
-                  background: brushSize === size.value ? 'rgba(99,120,255,0.25)' : 'transparent',
-                  border: brushSize === size.value ? '1px solid rgba(99,120,255,0.4)' : '1px solid transparent',
+                  background: brushSize === size.value ? 'var(--amber-bg)' : 'transparent',
+                  border: brushSize === size.value ? '1px solid rgba(240,165,0,0.4)' : '1px solid transparent',
                 }}
                 title={`Brush ${size.label} (${size.value}px)`}
               >
@@ -130,7 +123,7 @@ export default function DrawingToolbar({
                   style={{
                     width: `${size.dotSize}px`,
                     height: `${size.dotSize}px`,
-                    background: brushSize === size.value ? 'var(--brand-light)' : 'var(--text-muted)',
+                    background: brushSize === size.value ? 'var(--amber)' : 'var(--text-muted)',
                     transition: 'all 0.15s ease',
                   }}
                 />
@@ -151,14 +144,9 @@ export default function DrawingToolbar({
             whileTap={{ scale: 0.95 }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
             style={{
-              background: isEraser
-                ? 'rgba(255,77,109,0.2)'
-                : 'rgba(11,15,35,0.6)',
-              border: isEraser
-                ? '1px solid rgba(255,77,109,0.4)'
-                : '1px solid var(--border-subtle)',
-              color: isEraser ? 'var(--red)' : 'var(--text-secondary)',
-              boxShadow: isEraser ? '0 0 12px rgba(255,77,109,0.2)' : 'none',
+              background: isEraser ? 'var(--red-bg)' : 'var(--surface)',
+              border: isEraser ? '1px solid rgba(248,81,73,0.5)' : '1px solid var(--border)',
+              color: isEraser ? 'var(--red)' : 'var(--text-muted)',
             }}
             title="Eraser"
           >
@@ -172,9 +160,9 @@ export default function DrawingToolbar({
             whileTap={{ scale: 0.95 }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold"
             style={{
-              background: 'rgba(11,15,35,0.6)',
-              border: '1px solid var(--border-subtle)',
-              color: 'var(--text-secondary)',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              color: 'var(--text-muted)',
             }}
             title="Clear Canvas"
           >
@@ -188,14 +176,9 @@ export default function DrawingToolbar({
             whileTap={{ scale: 0.95 }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
             style={{
-              background: gestureMode
-                ? 'rgba(0,229,160,0.15)'
-                : 'rgba(11,15,35,0.6)',
-              border: gestureMode
-                ? '1px solid rgba(0,229,160,0.35)'
-                : '1px solid var(--border-subtle)',
-              color: gestureMode ? 'var(--green)' : 'var(--text-secondary)',
-              boxShadow: gestureMode ? '0 0 12px var(--green-glow)' : 'none',
+              background: gestureMode ? 'var(--green-bg)' : 'var(--surface)',
+              border: gestureMode ? '1px solid rgba(63,185,80,0.5)' : '1px solid var(--border)',
+              color: gestureMode ? 'var(--green)' : 'var(--text-muted)',
             }}
             title="Toggle Gesture Drawing"
           >
@@ -203,7 +186,7 @@ export default function DrawingToolbar({
             {gestureMode && (
               <span
                 className="w-1.5 h-1.5 rounded-full ml-1 animate-pulse"
-                style={{ background: 'var(--green)', boxShadow: '0 0 6px var(--green-glow)' }}
+                style={{ background: 'var(--green)' }}
               />
             )}
           </motion.button>
