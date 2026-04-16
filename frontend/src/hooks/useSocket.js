@@ -17,10 +17,11 @@ export function useSocket({ roomCode, playerName, avatar }) {
   const [connected, setConnected]       = useState(false)
   const [players, setPlayers]           = useState([])
   const [messages, setMessages]         = useState([])
-  const [gameState, setGameState]       = useState('waiting') // waiting | drawing | round_end | game_end
+  const [gameState, setGameState]       = useState('waiting') // waiting | drawing | round_end | game_end | choosing_word
   const [currentDrawerId, setCurrentDrawerId] = useState(null)
   const [currentWord, setCurrentWord]   = useState(null)   // only set for the drawer
   const [wordHint, setWordHint]         = useState('')
+  const [wordChoices, setWordChoices]   = useState(null)   // [word1, word2, word3, word4] - only for drawer
   const [timeLeft, setTimeLeft]         = useState(ROUND_DURATION)
   const [round, setRound]               = useState(1)
   const [maxRounds, setMaxRounds]       = useState(5)
@@ -28,6 +29,7 @@ export function useSocket({ roomCode, playerName, avatar }) {
   const [gameResult, setGameResult]     = useState(null)   // { leaderboard, winner }
   const [gestureDetected, setGestureDetected] = useState(null)
   const [gestureActive, setGestureActive] = useState(false)
+  const [roundCountdown, setRoundCountdown] = useState(null) // 5, 4, 3, 2, 1, null
 
   // Callbacks for drawing — set by DrawingCanvas
   const onRemoteDraw   = useRef(null)
@@ -104,6 +106,19 @@ export function useSocket({ roomCode, playerName, avatar }) {
       setWordHint(word.split('').map(() => '_').join(' '))
     })
 
+    // Word choices sent to drawer for selection
+    sub('word_choices', ({ choices }) => {
+      setWordChoices(choices)
+      setGameState('choosing_word')
+    })
+
+    // Word has been selected, drawing can begin
+    sub('word_selected', ({ hint }) => {
+      setWordChoices(null)
+      setWordHint(hint)
+      setGameState('drawing')
+    })
+
     sub('hint_update', ({ hint }) => setWordHint(hint))
 
     sub('timer_tick', ({ time }) => setTimeLeft(time))
@@ -118,6 +133,13 @@ export function useSocket({ roomCode, playerName, avatar }) {
     sub('game_ended', (data) => {
       setGameResult(data)
       setGameState('game_end')
+    })
+
+    sub('round_countdown', ({ countdown }) => {
+      setRoundCountdown(countdown)
+      if (countdown === 0) {
+        setRoundCountdown(null)
+      }
     })
 
     // ── Drawing events ────────────────────────────────────────────────────────
@@ -186,6 +208,7 @@ export function useSocket({ roomCode, playerName, avatar }) {
     socketManager.setGestureBrushSize(size)
     socketManager.setGestureEraser(eraser)
   }, [])
+  const selectWord = useCallback((word) => socketManager.selectWord(word), [])
 
   return {
     // State
@@ -193,14 +216,14 @@ export function useSocket({ roomCode, playerName, avatar }) {
     players, messages,
     gameState, round, maxRounds,
     currentDrawerId, drawerName, drawerAvatar,
-    currentWord, wordHint,
-    timeLeft, roundResult, gameResult,
+    currentWord, wordHint, wordChoices,
+    timeLeft, roundResult, gameResult, roundCountdown,
     isDrawing,
     gestureDetected, gestureActive,
     // Drawing callbacks (set by DrawingCanvas via ref)
     onRemoteDraw, onRemoteClear,
     // Actions
     sendDraw, sendClear, sendGuess, sendMessage,
-    startGame, startGesture, stopGesture, syncGestureParams,
+    startGame, startGesture, stopGesture, syncGestureParams, selectWord,
   }
 }

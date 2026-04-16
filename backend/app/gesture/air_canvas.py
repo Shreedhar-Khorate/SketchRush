@@ -17,6 +17,7 @@ import base64
 import logging
 import os
 from datetime import datetime
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -51,21 +52,12 @@ def fingers_up(landmarks) -> list[int]:
 
 
 def detect_gesture(landmarks) -> str:
-    """Map hand landmark positions to a gesture name."""
+    """
+    Simplified gesture detection for pure drawing mode.
+    Only detects if index finger is extended (draw) or not (idle).
+    """
     up = fingers_up(landmarks)
-    # Fist: all fingers down
-    if sum(up) == 0:
-        return GESTURE_CLEAR
-    # Pinch: thumb + index close together
-    thumb_tip  = np.array(landmarks[4])
-    index_tip  = np.array(landmarks[8])
-    dist = np.linalg.norm(thumb_tip - index_tip)
-    if dist < 40:
-        return GESTURE_ERASE
-    # Two fingers up (index + middle): move cursor
-    if up[1] == 1 and up[2] == 1 and up[3] == 0 and up[4] == 0:
-        return GESTURE_MOVE
-    # Index only: draw
+    # Index finger only: draw
     if up[1] == 1 and up[2] == 0:
         return GESTURE_DRAW
     return GESTURE_NONE
@@ -269,29 +261,17 @@ class AirCanvas:
                         self.on_gesture(gesture)
                     self._prev_gesture = gesture
 
-                    # Overlay gesture label
-                    label_color = (0, 229, 160) if gesture == GESTURE_DRAW else (255, 120, 99)
-                    cv2.putText(frame, gesture.upper(), (10, 40),
-                                cv2.FONT_HERSHEY_SIMPLEX, 1.0, label_color, 2)
-
-                    # Draw cursor ring
+                    # No gesture label overlay - keep it clean
+                    
+                    # Draw professional cursor ring
                     bgr = self._get_bgr()
                     cv2.circle(frame, index_tip,
-                               self.brush_size + 4 if not self.is_eraser else 20,
-                               bgr if not self.is_eraser else (200, 100, 100), 2)
+                               self.brush_size + 2,
+                               bgr, 1)  # Thin outline
 
                     with self._lock:
-                        if gesture == GESTURE_CLEAR:
-                            self._do_clear()
-                        elif gesture == GESTURE_ERASE or gesture == GESTURE_NONE or gesture == GESTURE_MOVE:
-                            # Start new stroke next time
-                            self._strokes.append(deque(maxlen=2048))
-                            self._stroke_colors.append(self._get_bgr())
-                            self._stroke_sizes.append(self.brush_size)
-                            self._stroke_eraser.append(self.is_eraser)
-                            self._idx = len(self._strokes) - 1
-                            self._last_point = None
-                        elif gesture == GESTURE_DRAW:
+                        if gesture == GESTURE_DRAW:
+                            # Draw: add point to current stroke
                             self._strokes[self._idx].appendleft(index_tip)
                             self._redraw_canvas()
                             self._last_point = index_tip
@@ -305,6 +285,15 @@ class AirCanvas:
                                     self.brush_size,
                                     self.is_eraser,
                                 )
+                        else:
+                            # Not drawing: start new stroke for next gesture
+                            if self._strokes[self._idx]:
+                                self._strokes.append(deque(maxlen=2048))
+                                self._stroke_colors.append(self._get_bgr())
+                                self._stroke_sizes.append(self.brush_size)
+                                self._stroke_eraser.append(self.is_eraser)
+                                self._idx = len(self._strokes) - 1
+                            self._last_point = None
             else:
                 # No hand: break stroke
                 with self._lock:
@@ -359,9 +348,14 @@ class AirCanvas:
     def generate_frames(self):
         """Generator for MJPEG streaming (webcam + canvas combined)."""
         self._combined_frame = np.ones((480, 1280, 3), dtype=np.uint8) * 30
+        frame_time = 1.0 / 30.0  # Target 30 FPS
+        
         while self.active:
+            frame_start = time.time()
+            
             with self._lock:
                 frame = self._combined_frame.copy()
+            
             _, buf = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 75])
             yield (
                 b'--frame\r\n'
@@ -369,6 +363,12 @@ class AirCanvas:
                 + buf.tobytes()
                 + b'\r\n'
             )
+            
+            # Frame rate control: sleep to maintain ~30 FPS
+            elapsed = time.time() - frame_start
+            sleep_time = frame_time - elapsed
+            if sleep_time > 0:
+                time.sleep(sleep_time)
 
 
 # Singleton instance shared across the app

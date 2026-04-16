@@ -88,6 +88,10 @@ class SocketManager {
     this.emit('start_game', {})
   }
 
+  selectWord(word) {
+    this.emit('select_word', { word })
+  }
+
   requestNextTurn() {
     this.emit('request_next_turn', {})
   }

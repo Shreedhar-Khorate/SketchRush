@@ -21,8 +21,83 @@ function useIsDesktop() {
   return isDesktop
 }
 
+// ── Word Choice Modal ─────────────────────────────────────────────────────────
+function WordChoiceModal({ choices, onSelect }) {
+  if (!choices || choices.length === 0) return null
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 70,
+      background: 'rgba(6,9,24,0.9)', backdropFilter: 'blur(12px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '20px',
+    }}>
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        style={{
+          background: 'rgba(17,22,40,0.98)',
+          border: '2px solid rgba(99,120,255,0.4)',
+          borderRadius: '28px',
+          padding: '40px',
+          maxWidth: '500px',
+          width: '100%',
+          boxShadow: '0 0 80px rgba(99,120,255,0.3)',
+          textAlign: 'center',
+        }}
+      >
+        <h1 style={{ fontSize: '32px', fontWeight: 900, marginBottom: '12px', color: 'var(--text-primary)' }}>
+          🎯 Choose a Word
+        </h1>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: '28px' }}>
+          Select which word you want to draw
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '4px' }}>
+          {choices.map((word, idx) => (
+            <motion.button
+              key={word}
+              onClick={() => onSelect(word)}
+              whileHover={{ scale: 1.05, translateY: -2 }}
+              whileTap={{ scale: 0.97 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.08 }}
+              style={{
+                padding: '16px 20px',
+                borderRadius: '14px',
+                background: 'rgba(99,120,255,0.12)',
+                border: '2px solid rgba(99,120,255,0.25)',
+                color: 'var(--text-primary)',
+                fontWeight: 700,
+                fontSize: '15px',
+                cursor: 'pointer',
+                textTransform: 'capitalize',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = 'rgba(99,120,255,0.2)'
+                e.target.style.borderColor = 'rgba(99,120,255,0.5)'
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'rgba(99,120,255,0.12)'
+                e.target.style.borderColor = 'rgba(99,120,255,0.25)'
+              }}
+            >
+              {word}
+            </motion.button>
+          ))}
+        </div>
+        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '16px' }}>
+          One of these is very hard! 😈
+        </p>
+      </motion.div>
+    </div>
+  )
+}
+
 // ── Round End Overlay ─────────────────────────────────────────────────────────
-function RoundEndModal({ result, onDismiss }) {
+function RoundEndModal({ result, countdown, onDismiss }) {
   if (!result) return null
   return (
     <div style={{
@@ -72,7 +147,19 @@ function RoundEndModal({ result, onDismiss }) {
           </div>
         ))}
         <p style={{ marginTop: '16px', fontSize: '12px', color: 'var(--text-muted)' }}>
-          Next round starting…
+          {countdown ? (
+            <motion.span
+              key={countdown}
+              initial={{ scale: 1.2, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              Next round in {countdown} second{countdown !== 1 ? 's' : ''}...
+            </motion.span>
+          ) : (
+            'Next round starting…'
+          )}
         </p>
       </motion.div>
     </div>
@@ -175,15 +262,15 @@ export default function GamePage() {
     connected, playerId, isHost,
     players, messages, gameState,
     round, maxRounds, drawerName, drawerAvatar,
-    currentDrawerId, currentWord, wordHint,
-    timeLeft, roundResult, gameResult,
+    currentDrawerId, currentWord, wordHint, wordChoices,
+    timeLeft, roundResult, gameResult, roundCountdown,
     isDrawing,
     gestureDetected, gestureActive,
     onRemoteDraw, onRemoteClear,
     sendDraw, sendClear,
     sendGuess, sendMessage,
     startGame,
-    startGesture, stopGesture, syncGestureParams,
+    startGesture, stopGesture, syncGestureParams, selectWord,
   } = useSocket({ roomCode: roomId, playerName, avatar: playerAvatar })
 
   // ── Sync gesture params whenever toolbar changes ──────────────────────────
@@ -220,6 +307,19 @@ export default function GamePage() {
       sendMessage(text)
     }
   }
+
+  // Stop gesture mode when round ends
+  useEffect(() => {
+    if (gameState === 'round_end') {
+      // Immediately stop gesture mode and close gesture window
+      setGestureMode(false)
+      setShowGesture(false)
+      // Send stop signal to backend
+      if (gestureMode) {
+        stopGesture()
+      }
+    }
+  }, [gameState, gestureMode, stopGesture])
 
   if (!playerName) return null
 
@@ -375,8 +475,13 @@ export default function GamePage() {
         )}
       </AnimatePresence>
 
+      {/* Word choice modal (only for drawer when choosing word) */}
+      {isDrawing && wordChoices && (
+        <WordChoiceModal choices={wordChoices} onSelect={selectWord} />
+      )}
+
       {/* Round end modal */}
-      <RoundEndModal result={roundResult} onDismiss={() => {}} />
+      <RoundEndModal result={roundResult} countdown={roundCountdown} onDismiss={() => {}} />
 
       {/* Game end modal */}
       <GameEndModal result={gameResult} onPlayAgain={() => navigate('/')} />

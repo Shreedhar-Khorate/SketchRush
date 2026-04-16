@@ -5,27 +5,41 @@
  * from /gesture/feed (webcam left, painted canvas right).
  * Gesture label is shown on top.
  */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000'
 
 const GESTURE_LABELS = {
-  draw:  { icon: '☝️', label: 'Drawing',  color: 'var(--green)' },
-  move:  { icon: '✌️', label: 'Hovering', color: 'var(--brand-light)' },
-  clear: { icon: '✊', label: 'Clear!',   color: 'var(--red)' },
-  erase: { icon: '🤏', label: 'Eraser',   color: 'var(--orange)' },
-  none:  { icon: '🖐️', label: 'Idle',    color: 'var(--text-muted)' },
+  draw:  { icon: '✏️', label: 'Drawing', color: 'var(--green)' },
+  none:  { icon: '✋', label: 'Ready', color: 'var(--text-muted)' },
 }
 
 export default function GestureOverlay({ active = false, gesture = null, onClose = null }) {
   const [imageError, setImageError] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const imgRef = useRef(null)
 
   useEffect(() => {
     if (active) {
       setImageError(false)
       setIsLoading(true)
+    }
+  }, [active])
+
+  // Cleanup MJPEG stream when overlay is closed or unmounted
+  useEffect(() => {
+    return () => {
+      if (imgRef.current) {
+        imgRef.current.src = '' // Stop the MJPEG stream
+      }
+    }
+  }, [])
+
+  // Stop stream when active becomes false
+  useEffect(() => {
+    if (!active && imgRef.current) {
+      imgRef.current.src = '' // Immediately stop the stream
     }
   }, [active])
 
@@ -63,7 +77,7 @@ export default function GestureOverlay({ active = false, gesture = null, onClose
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ fontSize: '18px' }}>✋</span>
               <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text-primary)' }}>
-                Air Canvas — Gesture Mode
+                Air Canvas Drawing
               </span>
               <span style={{
                 width: '7px', height: '7px', borderRadius: '50%',
@@ -168,7 +182,8 @@ export default function GestureOverlay({ active = false, gesture = null, onClose
             )}
 
             <img
-              src={`${BACKEND_URL}/gesture/feed`}
+              ref={imgRef}
+              src={active ? `${BACKEND_URL}/gesture/feed` : ''}
               alt="Gesture webcam feed"
               onLoad={() => setIsLoading(false)}
               onError={() => {

@@ -74,20 +74,19 @@ async def _broadcast_players(room_code: str):
 
 
 async def _start_turn(room_code: str):
-    """Set up a new drawing turn and notify all clients."""
+    """Set up a new drawing turn and notify all clients to choose a word."""
     room = game_manager.get_room(room_code)
     if not room:
         return
 
-    word = game_manager.select_word(room_code)
+    # Generate 4 word choices for the drawer
+    word_choices = game_manager.get_word_choices(room_code)
     drawer = game_manager.get_current_drawer(room_code)
     game_manager.mark_drawer(room_code)
     round_correct[room_code] = set()
     room_time_left[room_code] = ROUND_DURATION
 
-    hint = game_manager.build_hint(word, reveal_count=0)
-
-    # Notify everyone about who is drawing (but not the word)
+    # Notify everyone about who is drawing
     await sio.emit(
         "turn_started",
         {
@@ -96,34 +95,27 @@ async def _start_turn(room_code: str):
             "drawer_avatar": drawer.avatar,
             "round": room.round_number,
             "max_rounds": room.max_rounds,
-            "hint": hint,
             "time": ROUND_DURATION,
         },
         room=room_code,
     )
 
-    # Send the actual word only to the drawer
+    # Send the 4 word choices only to the drawer
     drawer_sid = player_to_sid.get(drawer.id)
     if drawer_sid:
-        await sio.emit("word_to_draw", {"word": word}, to=drawer_sid)
+        await sio.emit("word_choices", {"choices": word_choices}, to=drawer_sid)
 
     # System chat message
     await sio.emit(
         "chat_message",
         {
             "type": "system",
-            "content": f"🎨 {drawer.name} is drawing! Start guessing!",
+            "content": f"🎨 {drawer.name} is choosing a word to draw!",
         },
         room=room_code,
     )
 
     await _broadcast_players(room_code)
-
-    # Start countdown timer
-    game_manager.start_round_timer(room_code, ROUND_DURATION)
-
-    # Also run a coroutine that ticks time updates
-    asyncio.create_task(_tick_timer(room_code, ROUND_DURATION))
 
 
 async def _tick_timer(room_code: str, duration: int):
@@ -161,6 +153,13 @@ async def _end_round(room_code: str):
         for p in game_manager.get_leaderboard(room_code)
     ]
 
+    # Stop gesture/webcam capture for the current drawer
+    air_canvas.stop_capture()
+    # Clear gesture callbacks to prevent interference
+    air_canvas.on_draw_point = None
+    air_canvas.on_clear = None
+    air_canvas.on_gesture = None
+
     await sio.emit(
         "round_ended",
         {"word": correct_word, "leaderboard": leaderboard},
@@ -172,11 +171,21 @@ async def _end_round(room_code: str):
         room=room_code,
     )
 
-    await asyncio.sleep(4)  # show leaderboard briefly
+    await asyncio.sleep(2)  # show leaderboard briefly
 
     advanced = game_manager.next_turn(room_code)
     if advanced:
         await sio.emit("canvas_cleared", {}, room=room_code)
+        
+        # Emit countdown event before starting next round
+        for countdown in range(5, 0, -1):
+            await sio.emit(
+                "round_countdown",
+                {"countdown": countdown},
+                room=room_code,
+            )
+            await asyncio.sleep(1)
+        
         await _start_turn(room_code)
     else:
         # Game over
@@ -365,6 +374,54 @@ def create_socket_app():
         if room and room.host_id == player_id:
             await _end_round(room_code)
 
+    @sio.event
+    async def select_word(sid, data=None):
+        """Drawer selects a word from the 4 choices."""
+        room_code = sid_to_room.get(sid)
+        player_id = sid_to_player.get(sid)
+        if not room_code or not data:
+            return
+        
+        room = game_manager.get_room(room_code)
+        drawer = game_manager.get_current_drawer(room_code)
+        
+        # Only the drawer can select a word
+        if not drawer or drawer.id != player_id:
+            await sio.emit("error", {"message": "Only the drawer can select a word."}, to=sid)
+            return
+        
+        selected_word = data.get("word", "")
+        if not game_manager.select_word_from_choices(room_code, selected_word):
+            await sio.emit("error", {"message": "Invalid word selection."}, to=sid)
+            return
+        
+        # Word is now selected, build hint and start the round
+        word = room.current_word
+        hint = game_manager.build_hint(word, reveal_count=0)
+        
+        # Notify all players that word was selected and drawing can begin
+        await sio.emit(
+            "word_selected",
+            {"hint": hint, "word_length": len(word.split())},
+            room=room_code,
+        )
+        
+        # Update chat
+        await sio.emit(
+            "chat_message",
+            {
+                "type": "system",
+                "content": f"🎨 {drawer.name} has chosen! Start guessing!",
+            },
+            room=room_code,
+        )
+        
+        # Start countdown timer
+        game_manager.start_round_timer(room_code, ROUND_DURATION)
+        
+        # Also run a coroutine that ticks time updates
+        asyncio.create_task(_tick_timer(room_code, ROUND_DURATION))
+
     # ── Drawing ───────────────────────────────────────────────────────────────
 
     @sio.event
@@ -512,6 +569,12 @@ def create_socket_app():
             await sio.emit("error", {"message": "Only the drawer can use gesture mode."}, to=sid)
             return
 
+        # Capture the event loop BEFORE starting the background thread
+        loop = asyncio.get_event_loop()
+
+        # Track previous point for gesture drawing to create proper line segments
+        prev_point = {"x": None, "y": None}
+
         def _on_draw(x_norm, y_norm, color, size, is_eraser):
             """Called by air_canvas on each gesture-drawn point."""
             asyncio.run_coroutine_threadsafe(
@@ -520,6 +583,8 @@ def create_socket_app():
                     {
                         "x": x_norm,
                         "y": y_norm,
+                        "prevX": prev_point["x"],
+                        "prevY": prev_point["y"],
                         "color": color,
                         "size": size,
                         "isEraser": is_eraser,
@@ -527,19 +592,26 @@ def create_socket_app():
                     },
                     room=room_code,
                 ),
-                asyncio.get_event_loop(),
+                loop,
             )
+            # Update previous point for next call
+            prev_point["x"] = x_norm
+            prev_point["y"] = y_norm
 
         def _on_clear():
             asyncio.run_coroutine_threadsafe(
                 sio.emit("canvas_cleared", {}, room=room_code),
-                asyncio.get_event_loop(),
+                loop,
             )
 
         def _on_gesture(gesture_name):
+            # Reset previous point when gesture changes to prevent line artifacts
+            if gesture_name != "draw":
+                prev_point["x"] = None
+                prev_point["y"] = None
             asyncio.run_coroutine_threadsafe(
                 sio.emit("gesture_detected", {"gesture": gesture_name}, to=sid),
-                asyncio.get_event_loop(),
+                loop,
             )
 
         air_canvas.on_draw_point = _on_draw

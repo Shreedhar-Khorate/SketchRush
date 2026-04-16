@@ -31,6 +31,7 @@ class Room(BaseModel):
     players: List[Player] = []
     current_drawer_index: int = 0
     current_word: Optional[str] = None
+    word_choices: Optional[List[str]] = None
     game_state: GameState = GameState.WAITING
     round_number: int = 0
     max_rounds: int = 5

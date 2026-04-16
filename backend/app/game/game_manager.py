@@ -18,30 +18,89 @@ from datetime import datetime
 from app.models.models import Room, Player, GameState
 
 
-# ── Word bank ─────────────────────────────────────────────────────────────────
+from typing import Dict, List
+
 WORD_BANK: Dict[str, List[str]] = {
     "animals": [
         "cat", "dog", "elephant", "giraffe", "penguin", "dolphin",
         "parrot", "turtle", "lion", "zebra", "kangaroo", "octopus",
+        "snake", "frog", "horse", "bear", "fox", "owl",
     ],
+
+    "humans": [
+        "astronaut", "doctor", "teacher", "pirate", "ninja", "superhero",
+        "dancer", "chef", "magician", "king", "queen", "wizard",
+        "soldier", "police", "farmer", "judge", "student",
+    ],
+
+    "space": [
+        "rocket", "satellite", "alien", "moon", "planet", "asteroid",
+        "comet", "nebula", "galaxy", "black hole", "meteor", "spaceship",
+        "space station", "orbit", "astronaut helmet",
+    ],
+
     "objects": [
         "umbrella", "guitar", "bicycle", "camera", "telescope",
         "lighthouse", "hourglass", "compass", "anchor", "lantern",
+        "clock", "phone", "keyboard", "chair", "table",
     ],
+
     "food": [
         "pizza", "sushi", "burger", "ice cream", "watermelon",
         "donut", "taco", "croissant", "cupcake", "ramen",
+        "sandwich", "pasta", "fries", "coffee", "tea",
     ],
+
     "places": [
-        "volcano", "igloo", "pyramid", "castle", "spaceship",
-        "treehouse", "library", "submarine", "windmill", "cave",
+        "volcano", "igloo", "pyramid", "castle", "treehouse",
+        "library", "submarine", "windmill", "cave",
+        "school", "hospital", "airport", "beach", "forest",
     ],
+
     "actions": [
         "skateboarding", "swimming", "cooking", "painting", "dancing",
         "fishing", "surfing", "hiking", "juggling", "knitting",
+        "running", "jumping", "sleeping", "driving",
+    ],
+
+    "history": [
+        "pyramid", "king", "queen", "sword", "shield",
+        "battle", "soldier", "castle", "crown",
+        "ancient scroll", "war", "map", "flag",
+    ],
+
+    "politics": [
+        "election", "vote", "ballot box", "parliament",
+        "president", "prime minister", "flag",
+        "speech", "law", "government building",
+    ],
+
+    
+    "technology": [
+        "computer", "robot", "mobile phone", "internet",
+        "keyboard", "mouse", "drone", "AI", "server",
+        "coding", "website", "app",
+    ],
+
+   
+    "emotions": [
+        "happy", "sad", "angry", "surprised",
+        "scared", "excited", "confused",
+        "crying", "laughing", "love",
+    ],
+
+    "sports": [
+        "cricket", "football", "basketball", "tennis",
+        "badminton", "hockey", "swimming",
+        "running race", "goal", "stadium",
+    ],
+
+    "hard": [
+        "serendipity", "silhouette", "ephemeral", "metamorphosis",
+        "labyrinth", "archipelago", "cacophony",
+        "cryptic", "paradox", "whimsical",
     ],
 }
-
 ALL_WORDS = [w for words in WORD_BANK.values() for w in words]
 
 
@@ -147,6 +206,36 @@ class GameManager:
         room.current_word = word
         room.game_state = GameState.DRAWING
         return word
+
+    def get_word_choices(self, room_code: str) -> List[str]:
+        """Get 4 word choices: human, space, animal, hard (all random)."""
+        room = self.get_room(room_code)
+        if not room:
+            return []
+        
+        # Select one from each category
+        choices = [
+            random.choice(WORD_BANK.get("humans", ["human"])),
+            random.choice(WORD_BANK.get("space", ["rocket"])),
+            random.choice(WORD_BANK.get("animals", ["cat"])),
+            random.choice(WORD_BANK.get("hard", ["challenge"])),
+        ]
+        
+        # Shuffle the order so the hard word isn't always last
+        random.shuffle(choices)
+        
+        room.word_choices = choices
+        room.game_state = GameState.CHOOSING_WORD
+        return choices
+
+    def select_word_from_choices(self, room_code: str, selected_word: str) -> bool:
+        """Set the selected word from the choices. Returns True if valid."""
+        room = self.get_room(room_code)
+        if not room or selected_word not in (room.word_choices or []):
+            return False
+        room.current_word = selected_word
+        room.game_state = GameState.DRAWING
+        return True
 
     def get_current_drawer(self, room_code: str) -> Optional[Player]:
         room = self.get_room(room_code)
