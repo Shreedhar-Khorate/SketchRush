@@ -59,6 +59,7 @@ async def _broadcast_players(room_code: str):
     await sio.emit(
         "players_update",
         {
+            "host_id": room.host_id,
             "players": [
                 {
                     "id": p.id,
@@ -254,7 +255,11 @@ async def _end_round(room_code: str):
         return
 
     # Guard: don't end a round that's already ended
-    if room.game_state in (GameState.GAME_END,):
+    if room.game_state in (GameState.GAME_END, GameState.ROUND_END):
+        return
+
+    # Only end a round while actively drawing
+    if room.game_state != GameState.DRAWING:
         return
 
     correct_word = room.current_word or "?"
@@ -285,13 +290,13 @@ async def _end_round(room_code: str):
 
     await asyncio.sleep(3)  # show leaderboard
 
-    advanced, round_completed = game_manager.next_turn(room_code)
-    if advanced:
-        # Clear canvas for all players between turns
-        await sio.emit("canvas_cleared", {}, room=room_code)
+    try:
+        advanced, _ = game_manager.next_turn(room_code)
+        if advanced:
+            # Clear canvas for all players between turns
+            await sio.emit("canvas_cleared", {}, room=room_code)
 
-        if round_completed:
-            # 5-second countdown before the next round
+            # 5-second countdown before the next turn starts
             for countdown in range(5, 0, -1):
                 await sio.emit(
                     "round_countdown",
@@ -303,8 +308,9 @@ async def _end_round(room_code: str):
             # Signal countdown done
             await sio.emit("round_countdown", {"countdown": 0}, room=room_code)
 
-        await _start_turn(room_code)
-    else:
+            await _start_turn(room_code)
+            return
+
         # Game over
         room = game_manager.get_room(room_code)
         if room:
@@ -320,6 +326,16 @@ async def _end_round(room_code: str):
             {"type": "system", "content": "🏆 Game over! Thanks for playing SketchRush!"},
             room=room_code,
         )
+        # Ensure clients clear round overlay
+        await sio.emit("round_countdown", {"countdown": 0}, room=room_code)
+    except Exception:
+        logger.exception("_end_round transition failed")
+        await sio.emit(
+            "error",
+            {"message": "Round transition failed. Resetting the room."},
+            room=room_code,
+        )
+        await sio.emit("round_countdown", {"countdown": 0}, room=room_code)
 
 
 # Register timeout callback on game_manager
@@ -413,6 +429,7 @@ def create_socket_app():
                     "room_code": raw_code,
                     "player_id": player_id,
                     "is_host": is_host,
+                    "host_id": room.host_id,
                     "players": [
                         {"id": p.id, "name": p.name, "avatar": p.avatar, "score": p.score}
                         for p in room.players

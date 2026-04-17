@@ -15,6 +15,8 @@ export default function GameHeader({
   isDrawing   = false,
   connected   = false,
   isHost      = false,
+  hostName    = '',
+  hostAvatar  = '👑',
   gameState   = 'waiting',
   onStartGame = null,
   selectedRounds = null,
@@ -82,6 +84,11 @@ export default function GameHeader({
               <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
                 Waiting for players…
               </span>
+              {!isHost && hostName && (
+                <span style={{ fontSize: '11px', color: 'var(--text-faint)', fontWeight: 600 }}>
+                  {hostAvatar} {hostName} will choose the rounds
+                </span>
+              )}
               {isHost && (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
                   <span style={{ fontSize: '11px', color: 'var(--text-faint)', fontWeight: 600 }}>
@@ -207,13 +214,27 @@ export default function GameHeader({
 
         {/* Right: room code + players + timer */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+          {/* Host */}
+          {hostName && (
+            <div style={{
+              display: 'none',
+              alignItems: 'center', gap: '6px',
+              padding: '5px 10px', borderRadius: '8px',
+              background: 'var(--surface-raised)', border: '1px solid var(--border)',
+            }} className="lg:flex">
+              <span style={{ fontSize: '13px' }}>{hostAvatar}</span>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>
+                Host: <span style={{ color: 'var(--text)' }}>{hostName}</span>
+              </span>
+            </div>
+          )}
           {/* Room code */}
           <div style={{
-            display: 'none',
+            display: 'flex',
             alignItems: 'center', gap: '4px',
             padding: '5px 10px', borderRadius: '8px',
             background: 'var(--surface-raised)', border: '1px solid var(--border)',
-          }} className="md:flex">
+          }}>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>#</span>
             <code style={{
               fontFamily: "'Fira Code', monospace",

@@ -14,6 +14,7 @@ export function useSocket({ roomCode, playerName, avatar }) {
   const [socketId, setSocketId]         = useState(null)
   const [playerId, setPlayerId]         = useState(null)
   const [isHost, setIsHost]             = useState(false)
+  const [hostId, setHostId]             = useState(null)
   const [connected, setConnected]       = useState(false)
   const [players, setPlayers]           = useState([])
   const [messages, setMessages]         = useState([])
@@ -30,6 +31,7 @@ export function useSocket({ roomCode, playerName, avatar }) {
   const [gestureDetected, setGestureDetected] = useState(null)
   const [gestureActive, setGestureActive] = useState(false)
   const [roundCountdown, setRoundCountdown] = useState(null) // 5, 4, 3, 2, 1, null
+  const [hasGuessedCorrectly, setHasGuessedCorrectly] = useState(false)
 
   const playerIdRef = useRef(null)
 
@@ -70,26 +72,29 @@ export function useSocket({ roomCode, playerName, avatar }) {
       setPlayerId(data.player_id)
       playerIdRef.current = data.player_id
       setIsHost(data.is_host)
+      setHostId(data.host_id || null)
       setPlayers(Array.isArray(data.players) ? data.players.filter(Boolean) : [])
       setGameState(data.game_state || 'waiting')
+      setHasGuessedCorrectly(false)
       addMessage({ type: 'system', content: `✅ Joined room #${data.room_code}` })
     })
 
     sub('host_changed', ({ host_id }) => {
+      setHostId(host_id)
       setIsHost(host_id === playerIdRef.current)
     })
 
-    // Player joined / left
-    sub('player_joined', ({ player_name }) => {
-      addMessage({ type: 'system', content: `🎮 ${player_name} joined!` })
-    })
-    sub('player_left', ({ player_name }) => {
-      addMessage({ type: 'system', content: `👋 ${player_name} left.` })
-    })
+    // Player joined / left (system messages already come through chat_message)
+    sub('player_joined', () => {})
+    sub('player_left', () => {})
 
     // Players list update
-    sub('players_update', ({ players }) => {
+    sub('players_update', ({ players, host_id }) => {
       setPlayers(Array.isArray(players) ? players.filter(Boolean) : [])
+      if (host_id) {
+        setHostId(host_id)
+        setIsHost(host_id === playerIdRef.current)
+      }
     })
 
     // ── Game events ──────────────────────────────────────────────────────────
@@ -98,6 +103,7 @@ export function useSocket({ roomCode, playerName, avatar }) {
       setGameState('playing')
       setRoundResult(null)
       setGameResult(null)
+      setHasGuessedCorrectly(false)
     })
 
     sub('turn_started', (data) => {
@@ -111,6 +117,7 @@ export function useSocket({ roomCode, playerName, avatar }) {
       setTimeLeft(data.time)
       setRoundResult(null)             // dismiss round end modal
       setRoundCountdown(null)
+      setHasGuessedCorrectly(false)
       // Server signals choosing_word state; drawer will get word_choices event
       setGameState('choosing_word')
     })
@@ -143,6 +150,7 @@ export function useSocket({ roomCode, playerName, avatar }) {
       setGameState('round_end')
       setCurrentWord(null)
       setCurrentDrawerId(null)
+      setHasGuessedCorrectly(false)
     })
 
     sub('game_ended', (data) => {
@@ -169,14 +177,20 @@ export function useSocket({ roomCode, playerName, avatar }) {
     })
 
     // ── Chat / guess events ───────────────────────────────────────────────────
-    sub('chat_message', (msg) => addMessage(msg))
+    sub('chat_message', (msg) => {
+      // Ignore duplicate "correct" messages; we handle via correct_guess.
+      if (msg?.type === 'correct') return
+      addMessage(msg)
+    })
 
     sub('correct_guess', (data) => {
+      const isSelf = data.player_id === playerIdRef.current
+      if (isSelf) setHasGuessedCorrectly(true)
       addMessage({
         type: 'correct',
         player: data.player_name,
         avatar: data.player_avatar,
-        content: data.word,
+        content: isSelf ? data.word : null,
         points: data.points,
       })
     })
@@ -233,13 +247,14 @@ export function useSocket({ roomCode, playerName, avatar }) {
 
   return {
     // State
-    connected, socketId, playerId, isHost,
+    connected, socketId, playerId, isHost, hostId,
     players, messages,
     gameState, round, maxRounds,
     currentDrawerId, drawerName, drawerAvatar,
     currentWord, wordHint, wordChoices,
     timeLeft, roundResult, gameResult, roundCountdown,
     isDrawing,
+    hasGuessedCorrectly,
     gestureDetected, gestureActive,
     // Drawing callbacks (set by DrawingCanvas via ref)
     onRemoteDraw, onRemoteClear,

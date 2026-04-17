@@ -259,6 +259,10 @@ class GameManager:
         if not room:
             return False, False
 
+        if not room.players:
+            room.game_state = GameState.WAITING
+            return False, False
+
         self._cancel_timer(room_code)
 
         # Clear drawing state

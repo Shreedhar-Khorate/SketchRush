@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 const RANK_ICONS  = ['👑', '🥈', '🥉']
 const RANK_COLORS = ['#ffd166', '#c0c0c0', '#cd7f32']
 
-export default function PlayerList({ players = [], currentPlayerId = null }) {
+export default function PlayerList({ players = [], currentPlayerId = null, hostId = null }) {
   const safePlayers = Array.isArray(players) ? players.filter(Boolean) : []
   const sorted = [...safePlayers].sort((a, b) => (b?.score ?? 0) - (a?.score ?? 0))
   const maxScore = sorted[0]?.score || 1
@@ -35,6 +35,7 @@ export default function PlayerList({ players = [], currentPlayerId = null }) {
         <AnimatePresence>
           {sorted.map((player, index) => {
             const isMe       = player.id === currentPlayerId
+            const isHost     = hostId && player.id === hostId
             const isTop      = index === 0 && player.score > 0
             const scoreRatio = player.score / maxScore
 
@@ -122,6 +123,11 @@ export default function PlayerList({ players = [], currentPlayerId = null }) {
                       }}>
                         {player.name || 'Player'}
                       </span>
+                      {isHost && (
+                        <span className="badge badge-brand" style={{ fontSize: '9px', padding: '1px 5px' }}>
+                          👑 host
+                        </span>
+                      )}
                       {isMe && (
                         <span className="badge badge-brand" style={{ fontSize: '9px', padding: '1px 5px' }}>you</span>
                       )}

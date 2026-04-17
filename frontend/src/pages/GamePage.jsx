@@ -369,12 +369,12 @@ export default function GamePage() {
 
   // ── Socket ───────────────────────────────────────────────────────────────
   const {
-    connected, playerId, isHost,
+    connected, playerId, isHost, hostId,
     players, messages, gameState,
     round, maxRounds, drawerName, drawerAvatar,
     currentDrawerId, currentWord, wordHint, wordChoices,
     timeLeft, roundResult, gameResult, roundCountdown,
-    isDrawing,
+    isDrawing, hasGuessedCorrectly,
     gestureDetected, gestureActive,
     onRemoteDraw, onRemoteClear,
     sendDraw, sendClear,
@@ -382,6 +382,10 @@ export default function GamePage() {
     startGame, startGameWithRounds, restartGame,
     startGesture, stopGesture, syncGestureParams, selectWord,
   } = useSocket({ roomCode: roomId, playerName, avatar: playerAvatar })
+
+  const hostPlayer = players.find((p) => p && p.id === hostId)
+  const hostName = hostPlayer?.name || ''
+  const hostAvatar = hostPlayer?.avatar || '👑'
 
   // ── Debug logging for game state ───────────────────────────────────────────
   useEffect(() => {
@@ -433,6 +437,7 @@ export default function GamePage() {
   }
 
   const handleSendMessage = (text) => {
+    if (hasGuessedCorrectly) return
     // If game is running, treat as guess; otherwise plain message
     if (gameState === 'drawing' && !isDrawing) {
       sendGuess(text)
@@ -483,6 +488,8 @@ export default function GamePage() {
         isDrawing={isDrawing}
         connected={connected}
         isHost={isHost}
+        hostName={hostName}
+        hostAvatar={hostAvatar}
         gameState={gameState}
         onStartGame={handleStartGame}
         selectedRounds={selectedRounds}
@@ -525,7 +532,7 @@ export default function GamePage() {
         {isDesktop && (
           <div style={{ width: '276px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '12px', minHeight: 0 }}>
             <div style={{ flex: '0 0 42%', minHeight: 0 }}>
-              <PlayerList players={players} currentPlayerId={playerId} />
+              <PlayerList players={players} currentPlayerId={playerId} hostId={hostId} />
             </div>
             <div style={{ flex: '1 1 0', minHeight: 0 }}>
               <ChatPanel
@@ -533,6 +540,7 @@ export default function GamePage() {
                 playerName={playerName}
                 onSend={handleSendMessage}
                 isDrawing={isDrawing}
+                isInputLocked={hasGuessedCorrectly}
               />
             </div>
           </div>
@@ -595,8 +603,14 @@ export default function GamePage() {
                 }}>✕</button>
               </div>
               <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', padding: '0 12px 16px', minHeight: 0, overflow: 'hidden' }}>
-                <PlayerList players={players} currentPlayerId={playerId} />
-                <ChatPanel messages={messages} playerName={playerName} onSend={handleSendMessage} isDrawing={isDrawing} />
+                <PlayerList players={players} currentPlayerId={playerId} hostId={hostId} />
+                <ChatPanel
+                  messages={messages}
+                  playerName={playerName}
+                  onSend={handleSendMessage}
+                  isDrawing={isDrawing}
+                  isInputLocked={hasGuessedCorrectly}
+                />
               </div>
             </motion.div>
           </>

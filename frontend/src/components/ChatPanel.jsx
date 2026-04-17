@@ -1,7 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-export default function ChatPanel({ messages = [], playerName = 'Player', onSend = null, isDrawing = false }) {
+export default function ChatPanel({
+  messages = [],
+  playerName = 'Player',
+  onSend = null,
+  isDrawing = false,
+  isInputLocked = false,
+}) {
   const [input, setInput]     = useState('')
   const messagesEndRef        = useRef(null)
   const inputRef              = useRef(null)
@@ -89,9 +95,11 @@ export default function ChatPanel({ messages = [], playerName = 'Player', onSend
                         +{msg.points} pts
                       </span>
                     </div>
-                    <p style={{ fontSize: '11px', color: 'var(--green)', marginTop: '2px' }}>
-                      "{msg.content}"
-                    </p>
+                    {msg.content ? (
+                      <p style={{ fontSize: '11px', color: 'var(--green)', marginTop: '2px' }}>
+                        "{msg.content}"
+                      </p>
+                    ) : null}
                   </div>
                 </motion.div>
               ) : (
@@ -123,6 +131,10 @@ export default function ChatPanel({ messages = [], playerName = 'Player', onSend
           <p style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center', margin: 0 }}>
             ✏️ You are drawing — others are guessing
           </p>
+        ) : isInputLocked ? (
+          <p style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center', margin: 0 }}>
+            ✅ You guessed the word — chat locked until next round
+          </p>
         ) : (
           <>
             <div style={{ display: 'flex', gap: '7px', alignItems: 'center' }}>
@@ -134,22 +146,23 @@ export default function ChatPanel({ messages = [], playerName = 'Player', onSend
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                 placeholder="Type your guess…"
                 style={{ fontSize: '13px', padding: '9px 12px', borderRadius: '10px', flex: 1 }}
+                disabled={isInputLocked}
               />
               <motion.button
                 onClick={handleSend}
                 whileHover={{ scale: 1.08 }}
                 whileTap={{ scale: 0.92 }}
-                disabled={!input.trim()}
+                disabled={isInputLocked || !input.trim()}
                 style={{
                   flexShrink: 0,
                   width: '38px', height: '38px',
                   borderRadius: '10px',
-                  background: input.trim() ? 'var(--amber)' : 'var(--surface-raised)',
-                  border: input.trim() ? '1px solid var(--amber)' : '1px solid var(--border)',
+                  background: !isInputLocked && input.trim() ? 'var(--amber)' : 'var(--surface-raised)',
+                  border: !isInputLocked && input.trim() ? '1px solid var(--amber)' : '1px solid var(--border)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: input.trim() ? 'var(--bg)' : 'var(--text-muted)',
-                  cursor: input.trim() ? 'pointer' : 'not-allowed',
-                  opacity: input.trim() ? 1 : 0.4,
+                  color: !isInputLocked && input.trim() ? 'var(--bg)' : 'var(--text-muted)',
+                  cursor: !isInputLocked && input.trim() ? 'pointer' : 'not-allowed',
+                  opacity: !isInputLocked && input.trim() ? 1 : 0.4,
                   fontSize: '16px',
                 }}
               >
