@@ -280,7 +280,7 @@ class GameManager:
                 room.game_state = GameState.GAME_END
                 return False, True
 
-        room.game_state = GameState.DRAWING
+        # Don't set state here - let _start_turn() manage state transitions
         return True, round_completed
 
     def get_leaderboard(self, room_code: str) -> List[Player]:

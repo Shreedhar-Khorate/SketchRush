@@ -42,14 +42,74 @@ sid_to_room: dict[str, str] = {}
 player_to_sid: dict[str, str] = {}
 # room_code → set of player_ids who guessed correctly this round
 round_correct: dict[str, set] = {}
-# room_code → asyncio task tracking time remaining
+# room_code → int tracking time remaining (for scoring)
 room_time_left: dict[str, int] = {}
+# room_code → asyncio.Task for auto word pick timeout
+word_choice_tasks: dict[str, asyncio.Task] = {}
+# room_code → asyncio.Task for the active round timer (tick + end)
+round_timer_tasks: dict[str, asyncio.Task] = {}
+# room_code → bool: _end_round already running (dedup guard)
+round_ending: dict[str, bool] = {}
 
-ROUND_DURATION = 60  # seconds
+ROUND_DURATION = 60       # seconds per drawing turn
+WORD_CHOICE_TIMEOUT = 12  # seconds drawer has to pick a word
 LEAVE_BONUS_POINTS = 50
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# ── Low-level task helpers ────────────────────────────────────────────────────
+
+def _cancel_task(tasks_dict: dict, room_code: str):
+    task = tasks_dict.pop(room_code, None)
+    if task and not task.done():
+        task.cancel()
+
+
+def _cancel_word_choice(room_code: str):
+    _cancel_task(word_choice_tasks, room_code)
+
+
+def _cancel_round_timer(room_code: str):
+    """Cancel the combined tick+end timer task for a room."""
+    _cancel_task(round_timer_tasks, room_code)
+
+
+def _start_round_timer(room_code: str, duration: int):
+    """
+    Start a single asyncio task that:
+      1. Ticks the countdown every second (emitting timer_tick)
+      2. Calls _end_round when the timer hits zero
+    Any previous timer task for this room is cancelled first.
+    """
+    _cancel_round_timer(room_code)
+
+    async def _run():
+        logger.info(f"[timer] Starting {duration}s timer for room {room_code}")
+        for t in range(duration, -1, -1):
+            room = game_manager.get_room(room_code)
+            if not room:
+                logger.warning(f"[timer] Room {room_code} gone, stopping")
+                return
+            if room.game_state not in (GameState.DRAWING, GameState.CHOOSING_WORD):
+                logger.info(f"[timer] Room {room_code} state={room.game_state}, stopping timer")
+                return
+            room_time_left[room_code] = t
+            if room.game_state == GameState.DRAWING:
+                await sio.emit("timer_tick", {"time": t}, room=room_code)
+            if t == 0:
+                logger.info(f"[timer] Timeout for room {room_code}, ending round")
+                # Remove ourselves from the dict BEFORE calling _end_round.
+                # If we don't do this, _end_round will call _cancel_round_timer
+                # which cancels the currently-running task (self-cancellation bug).
+                round_timer_tasks.pop(room_code, None)
+                await _end_round(room_code)
+                return
+            await asyncio.sleep(1)
+
+    task = asyncio.create_task(_run())
+    round_timer_tasks[room_code] = task
+
+
+# ── Broadcast helpers ─────────────────────────────────────────────────────────
 
 async def _broadcast_players(room_code: str):
     """Emit updated player list to everyone in the room."""
@@ -75,6 +135,8 @@ async def _broadcast_players(room_code: str):
     )
 
 
+# ── Player leave handling ─────────────────────────────────────────────────────
+
 async def _handle_player_leave(room_code: str, player_name: str, was_host: bool, was_drawer: bool):
     room = game_manager.get_room(room_code)
     if not room:
@@ -94,6 +156,8 @@ async def _handle_player_leave(room_code: str, player_name: str, was_host: bool,
     # If fewer than 2 players remain, pause the game
     if len(room.players) < 2:
         room.game_state = GameState.WAITING
+        _cancel_round_timer(room_code)
+        _cancel_word_choice(room_code)
         await sio.emit(
             "chat_message",
             {"type": "system", "content": "⏸️ Not enough players — waiting for more to join."},
@@ -102,7 +166,7 @@ async def _handle_player_leave(room_code: str, player_name: str, was_host: bool,
         await _broadcast_players(room_code)
         return
 
-    # Award same bonus points to remaining players
+    # Award bonus points to remaining players
     if room.players:
         for p in room.players:
             p.score += LEAVE_BONUS_POINTS
@@ -116,43 +180,27 @@ async def _handle_player_leave(room_code: str, player_name: str, was_host: bool,
         )
         await _broadcast_players(room_code)
 
-    # If the drawer left mid-turn, skip to the next drawer immediately
-    if was_drawer and room.players and room.game_state in (GameState.DRAWING, GameState.CHOOSING_WORD):
+    # If the drawer left mid-turn, end the round immediately
+    if was_drawer and room.game_state in (GameState.DRAWING, GameState.CHOOSING_WORD):
         air_canvas.stop_capture()
         air_canvas.on_draw_point = None
         air_canvas.on_clear = None
         air_canvas.on_gesture = None
-
         await sio.emit("canvas_cleared", {}, room=room_code)
+        await _end_round(room_code)
 
-        advanced, _ = game_manager.next_turn(room_code)
-        if advanced:
-            await _start_turn(room_code)
-        else:
-            room.game_state = GameState.GAME_END
-            final_board = [
-                {"id": p.id, "name": p.name, "avatar": p.avatar, "score": p.score}
-                for p in game_manager.get_leaderboard(room_code)
-            ]
-            await sio.emit(
-                "game_ended",
-                {"leaderboard": final_board, "winner": final_board[0] if final_board else None},
-                room=room_code,
-            )
-            await sio.emit(
-                "chat_message",
-                {"type": "system", "content": "🏆 Game over! Thanks for playing SketchRush!"},
-                room=room_code,
-            )
 
+# ── Turn management ───────────────────────────────────────────────────────────
 
 async def _start_turn(room_code: str):
-    """Set up a new drawing turn and notify all clients to choose a word."""
+    """Set up a new drawing turn — pick a drawer, send word choices, start timers."""
     logger.info(f"[_start_turn] Starting turn for room {room_code}")
     room = game_manager.get_room(room_code)
     if not room:
         logger.error(f"[_start_turn] Room {room_code} not found")
         return
+
+    # Need at least 2 players
     if len(room.players) < 2:
         room.game_state = GameState.WAITING
         await sio.emit(
@@ -163,21 +211,35 @@ async def _start_turn(room_code: str):
         await _broadcast_players(room_code)
         return
 
-    # Generate 4 word choices for the drawer
-    word_choices = game_manager.get_word_choices(room_code)  # sets CHOOSING_WORD state
+    # Validate the drawer exists BEFORE touching any state
     drawer = game_manager.get_current_drawer(room_code)
-    logger.info(f"[_start_turn] Current drawer: {drawer.id if drawer else 'NONE'}, Players count: {len(room.players)}, Current index: {room.current_drawer_index}")
-    
+    logger.info(
+        f"[_start_turn] drawer={drawer.id if drawer else 'NONE'}, "
+        f"players={len(room.players)}, index={room.current_drawer_index}"
+    )
+    if not drawer:
+        logger.error(f"[_start_turn] No drawer for room {room_code} — resetting to WAITING")
+        room.game_state = GameState.WAITING
+        await sio.emit(
+            "chat_message",
+            {"type": "system", "content": "⚠️ Could not determine drawer — game paused. Host can restart."},
+            room=room_code,
+        )
+        await _broadcast_players(room_code)
+        return
+
+    # Cancel any leftover tasks from the previous turn
+    _cancel_word_choice(room_code)
+    _cancel_round_timer(room_code)
+    round_ending.pop(room_code, None)
+
+    # Set up fresh round state
+    word_choices = game_manager.get_word_choices(room_code)   # → sets CHOOSING_WORD
     game_manager.mark_drawer(room_code)
     round_correct[room_code] = set()
     room_time_left[room_code] = ROUND_DURATION
 
-    if not drawer:
-        logger.error(f"[_start_turn] No drawer found for room {room_code}")
-        return
-
     logger.info(f"[_start_turn] Emitting turn_started for {drawer.name}")
-    # Notify everyone about who is drawing (state = choosing_word)
     await sio.emit(
         "turn_started",
         {
@@ -192,153 +254,200 @@ async def _start_turn(room_code: str):
         room=room_code,
     )
 
-    # Send the 4 word choices only to the drawer
     drawer_sid = player_to_sid.get(drawer.id)
     if drawer_sid:
+        # Send word choices to the drawer; start auto-pick timer
         await sio.emit("word_choices", {"choices": word_choices}, to=drawer_sid)
+
+        async def _auto_pick_word():
+            logger.info(f"[_auto_pick] Will fire in {WORD_CHOICE_TIMEOUT}s for room {room_code}")
+            await asyncio.sleep(WORD_CHOICE_TIMEOUT)
+            logger.info(f"[_auto_pick] Firing for room {room_code}")
+            r = game_manager.get_room(room_code)
+            if not r or r.game_state != GameState.CHOOSING_WORD or r.current_word:
+                return
+            choices = r.word_choices or []
+            if not choices:
+                return
+            if not game_manager.select_word_from_choices(room_code, choices[0]):
+                return
+            await _begin_drawing_phase(room_code)
+
+        word_choice_tasks[room_code] = asyncio.create_task(_auto_pick_word())
+
+        # Also start combined word-choice + draw timer as watchdog
+        _start_round_timer(room_code, WORD_CHOICE_TIMEOUT + ROUND_DURATION)
+
     else:
-        # Drawer disconnected — auto-pick first word
+        # Drawer is disconnected — auto-pick word immediately and start drawing
         logger.warning(f"[_start_turn] Drawer SID not found, auto-selecting word")
-        if word_choices:
-            game_manager.select_word_from_choices(room_code, word_choices[0])
-            selected_word = room.current_word
-            hint = game_manager.build_hint(selected_word, reveal_count=0)
+        if word_choices and game_manager.select_word_from_choices(room_code, word_choices[0]):
+            await _begin_drawing_phase(room_code)
+        else:
+            # No choices — something is very wrong, skip this turn
+            logger.error(f"[_start_turn] No word choices available for room {room_code}")
+            room.game_state = GameState.WAITING
+            await _broadcast_players(room_code)
+            return
 
-            # Notify all players that word was selected and drawing can begin
-            await sio.emit(
-                "word_selected",
-                {
-                    "hint": hint,
-                    "word_length": len(selected_word),
-                    "drawer_id": drawer.id,
-                },
-                room=room_code,
-            )
-
-            # Start the round timer (async task — calls _end_round on timeout)
-            game_manager.start_round_timer(room_code, ROUND_DURATION)
-
-            # Also run timer tick coroutine for UI countdown
-            asyncio.create_task(_tick_timer(room_code, ROUND_DURATION))
-
-    # System chat message
     await sio.emit(
         "chat_message",
+        {"type": "system", "content": f"🎨 {drawer.name} is choosing a word to draw!"},
+        room=room_code,
+    )
+    await _broadcast_players(room_code)
+
+
+async def _begin_drawing_phase(room_code: str):
+    """
+    Called after a word is confirmed (by drawer selection or auto-pick).
+    Emits word_selected, starts the proper 60-second draw timer.
+    """
+    room = game_manager.get_room(room_code)
+    if not room or not room.current_word:
+        logger.error(f"[_begin_drawing_phase] No word set for room {room_code}")
+        return
+
+    word = room.current_word
+    hint = game_manager.build_hint(word, reveal_count=0)
+    drawer = game_manager.get_current_drawer(room_code)
+    room.game_state = GameState.DRAWING
+
+    await sio.emit(
+        "word_selected",
         {
-            "type": "system",
-            "content": f"🎨 {drawer.name} is choosing a word to draw!",
+            "hint": hint,
+            "word_length": len(word),
+            "drawer_id": drawer.id if drawer else None,
         },
         room=room_code,
     )
 
-    await _broadcast_players(room_code)
+    if drawer:
+        drawer_sid = player_to_sid.get(drawer.id)
+        if drawer_sid:
+            await sio.emit("word_to_draw", {"word": word}, to=drawer_sid)
 
-
-async def _tick_timer(room_code: str, duration: int):
-    """Emit timer ticks each second until round ends."""
-    for t in range(duration, -1, -1):
-        room = game_manager.get_room(room_code)
-        if not room or room.game_state not in (GameState.DRAWING,):
-            break
-        room_time_left[room_code] = t
-        await sio.emit("timer_tick", {"time": t}, room=room_code)
-
-        if t == 0:
-            break
-        await asyncio.sleep(1)
+    # Cancel the watchdog timer (WORD_CHOICE + ROUND), replace with just ROUND timer
+    _cancel_round_timer(room_code)
+    _start_round_timer(room_code, ROUND_DURATION)
+    logger.info(f"[_begin_drawing_phase] Drawing started for room {room_code}, word='{word}'")
 
 
 async def _end_round(room_code: str):
-    """Called when round timer expires or all players guessed."""
+    """Called when timer expires OR all players guessed correctly."""
+    logger.info(f"[_end_round] Entry for room {room_code}")
     room = game_manager.get_room(room_code)
     if not room:
+        logger.warning(f"[_end_round] Room {room_code} not found")
         return
 
-    # Guard: don't end a round that's already ended
-    if room.game_state in (GameState.GAME_END, GameState.ROUND_END):
+    logger.info(f"[_end_round] state={room.game_state}, round={room.round_number}/{room.max_rounds}")
+
+    # Already at game end — nothing to do
+    if room.game_state == GameState.GAME_END:
+        logger.warning(f"[_end_round] Already GAME_END for {room_code}")
         return
 
-    # Only end a round while actively drawing
-    if room.game_state != GameState.DRAWING:
+    # Dedup: only one _end_round runs at a time per room
+    if round_ending.get(room_code):
+        logger.warning(f"[_end_round] Already ending for {room_code}, skipping duplicate")
         return
-
-    correct_word = room.current_word or "?"
-    leaderboard = [
-        {"id": p.id, "name": p.name, "avatar": p.avatar, "score": p.score}
-        for p in game_manager.get_leaderboard(room_code)
-    ]
-
-    # Stop gesture/webcam capture for the current drawer
-    air_canvas.stop_capture()
-    air_canvas.on_draw_point = None
-    air_canvas.on_clear = None
-    air_canvas.on_gesture = None
-
-    # Set state to ROUND_END to stop timer ticks
-    room.game_state = GameState.ROUND_END
-
-    await sio.emit(
-        "round_ended",
-        {"word": correct_word, "leaderboard": leaderboard},
-        room=room_code,
-    )
-    await sio.emit(
-        "chat_message",
-        {"type": "system", "content": f"⏱️ Round over! The word was '{correct_word}'."},
-        room=room_code,
-    )
-
-    await asyncio.sleep(3)  # show leaderboard
+    round_ending[room_code] = True
 
     try:
-        advanced, _ = game_manager.next_turn(room_code)
-        if advanced:
-            # Clear canvas for all players between turns
-            await sio.emit("canvas_cleared", {}, room=room_code)
+        # Cancel all running timers immediately
+        _cancel_word_choice(room_code)
+        _cancel_round_timer(room_code)
 
-            # 5-second countdown before the next turn starts
-            for countdown in range(5, 0, -1):
-                await sio.emit(
-                    "round_countdown",
-                    {"countdown": countdown},
-                    room=room_code,
-                )
-                await asyncio.sleep(1)
+        # Stop gesture capture
+        air_canvas.stop_capture()
+        air_canvas.on_draw_point = None
+        air_canvas.on_clear = None
+        air_canvas.on_gesture = None
 
-            # Signal countdown done
-            await sio.emit("round_countdown", {"countdown": 0}, room=room_code)
+        correct_word = room.current_word or "?"
+        leaderboard = [
+            {"id": p.id, "name": p.name, "avatar": p.avatar, "score": p.score}
+            for p in game_manager.get_leaderboard(room_code)
+        ]
 
-            await _start_turn(room_code)
-            return
+        # Transition to ROUND_END so timer and draw events are ignored
+        room.game_state = GameState.ROUND_END
 
-        # Game over
-        room = game_manager.get_room(room_code)
-        if room:
-            room.game_state = GameState.GAME_END
-        final_board = leaderboard
         await sio.emit(
-            "game_ended",
-            {"leaderboard": final_board, "winner": final_board[0] if final_board else None},
+            "round_ended",
+            {"word": correct_word, "leaderboard": leaderboard},
             room=room_code,
         )
         await sio.emit(
             "chat_message",
-            {"type": "system", "content": "🏆 Game over! Thanks for playing SketchRush!"},
+            {"type": "system", "content": f"⏱️ Round over! The word was '{correct_word}'."},
             room=room_code,
         )
-        # Ensure clients clear round overlay
+
+        await asyncio.sleep(3)  # show leaderboard briefly
+
+        # Advance game state
+        advanced, _ = game_manager.next_turn(room_code)
+        logger.info(f"[_end_round] next_turn returned advanced={advanced} for {room_code}")
+
+        if not advanced:
+            # All rounds done → game over
+            room = game_manager.get_room(room_code)
+            if room:
+                room.game_state = GameState.GAME_END
+            final_board = leaderboard
+            await sio.emit(
+                "game_ended",
+                {"leaderboard": final_board, "winner": final_board[0] if final_board else None},
+                room=room_code,
+            )
+            await sio.emit(
+                "chat_message",
+                {"type": "system", "content": "🏆 Game over! Thanks for playing SketchRush!"},
+                room=room_code,
+            )
+            await sio.emit("round_countdown", {"countdown": 0}, room=room_code)
+            return
+
+        # Clear canvas for everyone
+        await sio.emit("canvas_cleared", {}, room=room_code)
+
+        # 5-second countdown before next turn
+        for countdown in range(5, 0, -1):
+            await sio.emit("round_countdown", {"countdown": countdown}, room=room_code)
+            await asyncio.sleep(1)
+
+        # Signal countdown done — frontend clears the modal
         await sio.emit("round_countdown", {"countdown": 0}, room=room_code)
-    except Exception:
-        logger.exception("_end_round transition failed")
+
+        # Small buffer so clients process the countdown=0 before turn_started arrives
+        await asyncio.sleep(0.3)
+
+        # Clear dedup flag BEFORE starting next turn
+        round_ending.pop(room_code, None)
+
+        logger.info(f"[_end_round] Starting next turn for room {room_code}")
+        await _start_turn(room_code)
+        logger.info(f"[_end_round] _start_turn complete for room {room_code}")
+
+    except asyncio.CancelledError:
+        logger.warning(f"[_end_round] CancelledError for room {room_code}")
+        raise
+    except Exception as e:
+        logger.exception(f"[_end_round] Exception during transition: {e}")
         await sio.emit(
             "error",
-            {"message": "Round transition failed. Resetting the room."},
+            {"message": "Round transition failed. Please restart the game."},
             room=room_code,
         )
         await sio.emit("round_countdown", {"countdown": 0}, room=room_code)
+    finally:
+        round_ending.pop(room_code, None)
 
 
-# Register timeout callback on game_manager
+# Register timeout callback on game_manager (kept for compatibility)
 async def _on_round_timeout(room_code: str):
     await _end_round(room_code)
 
@@ -380,7 +489,6 @@ def create_socket_app():
 
             game_manager.remove_player_from_room(room_code, player_id)
 
-            # Notify room
             await sio.emit(
                 "player_left",
                 {"player_id": player_id, "player_name": player_name},
@@ -400,16 +508,16 @@ def create_socket_app():
     @sio.event
     async def join_room(sid, data):
         try:
-            raw_code  = data.get("room", "").strip().upper()
+            raw_code   = data.get("room", "").strip().upper()
             player_name = data.get("playerName", "Anonymous")[:16]
-            avatar    = data.get("avatar", "🦊")
-            player_id = sid_to_player.get(sid)
+            avatar     = data.get("avatar", "🦊")
+            player_id  = sid_to_player.get(sid)
 
             if not player_id:
                 await sio.emit("error", {"message": "Not identified. Reconnect."}, to=sid)
                 return
 
-            # Create room if needed
+            # Create room if it doesn't exist
             if not game_manager.get_room(raw_code):
                 game_manager.create_room(player_id, room_code=raw_code)
 
@@ -485,7 +593,7 @@ def create_socket_app():
         room_code = sid_to_room.get(sid)
         player_id = sid_to_player.get(sid)
         data = data or {}
-        logger.info(f"[start_game] Called by player {player_id} in room {room_code}, data: {data}")
+        logger.info(f"[start_game] Called by {player_id} in room {room_code}, data={data}")
         if not room_code:
             return
 
@@ -496,11 +604,10 @@ def create_socket_app():
             await sio.emit("error", {"message": "Only the host can start the game."}, to=sid)
             return
 
-        # Set max_rounds if provided
-        max_rounds = data.get('max_rounds')
+        max_rounds = data.get("max_rounds")
         if max_rounds and isinstance(max_rounds, int) and 1 <= max_rounds <= 10:
             room.max_rounds = max_rounds
-            logger.info(f"[start_game] Set max_rounds to {max_rounds} for room {room_code}")
+            logger.info(f"[start_game] Set max_rounds={max_rounds} for room {room_code}")
 
         if not game_manager.start_game(room_code):
             await sio.emit("error", {"message": "Not enough players (need at least 2)."}, to=sid)
@@ -520,7 +627,7 @@ def create_socket_app():
         room_code = sid_to_room.get(sid)
         player_id = sid_to_player.get(sid)
         data = data or {}
-        logger.info(f"[restart_game] Called by player {player_id} in room {room_code}, data: {data}")
+        logger.info(f"[restart_game] Called by {player_id} in room {room_code}")
         if not room_code:
             return
 
@@ -531,12 +638,15 @@ def create_socket_app():
             await sio.emit("error", {"message": "Only the host can restart the game."}, to=sid)
             return
 
-        # Reset game state
-        max_rounds = data.get('max_rounds', room.max_rounds)
+        # Cancel any ongoing timers
+        _cancel_round_timer(room_code)
+        _cancel_word_choice(room_code)
+        round_ending.pop(room_code, None)
+
+        max_rounds = data.get("max_rounds", room.max_rounds)
         if max_rounds and isinstance(max_rounds, int) and 1 <= max_rounds <= 10:
             room.max_rounds = max_rounds
 
-        # Reset all players' scores and drawing state
         for p in room.players:
             p.score = 0
             p.is_drawing = False
@@ -547,15 +657,9 @@ def create_socket_app():
         room.current_word = None
         room.word_choices = None
 
-        logger.info(f"[restart_game] Game restarted for room {room_code} with {room.max_rounds} rounds")
-        
-        # Clear canvas for all players
+        logger.info(f"[restart_game] Restarted room {room_code} with {room.max_rounds} rounds")
         await sio.emit("canvas_cleared", {}, room=room_code)
-        
-        # Broadcast updated players
         await _broadcast_players(room_code)
-        
-        # Emit game started event
         await sio.emit("game_started", {"room_code": room_code}, room=room_code)
         await sio.emit(
             "chat_message",
@@ -566,7 +670,7 @@ def create_socket_app():
 
     @sio.event
     async def request_next_turn(sid, data=None):
-        """Host can manually skip turn."""
+        """Host can manually skip the current turn."""
         room_code = sid_to_room.get(sid)
         player_id = sid_to_player.get(sid)
         if not room_code:
@@ -581,76 +685,52 @@ def create_socket_app():
         room_code = sid_to_room.get(sid)
         player_id = sid_to_player.get(sid)
         if not room_code or not data:
+            logger.warning("[select_word] Missing room_code or data")
             return
-        
+
+        logger.info(f"[select_word] Player {player_id} selecting word in room {room_code}")
         room = game_manager.get_room(room_code)
         drawer = game_manager.get_current_drawer(room_code)
-        
-        # Only the drawer can select a word
+
         if not drawer or drawer.id != player_id:
+            logger.warning(f"[select_word] Unauthorised — drawer={drawer.id if drawer else None}, player={player_id}")
             await sio.emit("error", {"message": "Only the drawer can select a word."}, to=sid)
             return
-        
+
         selected_word = data.get("word", "")
+        logger.info(f"[select_word] Attempting to select: '{selected_word}'")
         if not game_manager.select_word_from_choices(room_code, selected_word):
+            logger.warning(f"[select_word] Invalid word selection: '{selected_word}'")
             await sio.emit("error", {"message": "Invalid word selection."}, to=sid)
             return
-        
-        # Word is now selected, build hint and start the round
-        word = room.current_word
-        hint = game_manager.build_hint(word, reveal_count=0)
 
-        # Notify all players that word was selected and drawing can begin
-        await sio.emit(
-            "word_selected",
-            {
-                "hint": hint,
-                "word_length": len(word),
-                "drawer_id": drawer.id,
-            },
-            room=room_code,
-        )
+        # Cancel the auto-pick timer — drawer chose manually
+        _cancel_word_choice(room_code)
 
-        # Send the actual word to the drawer only
-        drawer_sid = player_to_sid.get(drawer.id)
-        if drawer_sid:
-            await sio.emit("word_to_draw", {"word": word}, to=drawer_sid)
+        logger.info(f"[select_word] Word selected. Starting drawing phase for room {room_code}")
+        await _begin_drawing_phase(room_code)
 
-        # Update chat
         await sio.emit(
             "chat_message",
-            {
-                "type": "system",
-                "content": f"🎨 {drawer.name} has chosen! Start guessing!",
-            },
+            {"type": "system", "content": f"🎨 {drawer.name} has chosen! Start guessing!"},
             room=room_code,
         )
-
-        # Start the round timer (async task — calls _end_round on timeout)
-        game_manager.start_round_timer(room_code, ROUND_DURATION)
-
-        # Also run timer tick coroutine for UI countdown
-        asyncio.create_task(_tick_timer(room_code, ROUND_DURATION))
 
     # ── Drawing ───────────────────────────────────────────────────────────────
 
     @sio.event
     async def draw(sid, data):
-        """
-        Broadcast a drawing stroke segment to all other players.
-        data: { x, y, prevX, prevY, color, size, isEraser, mode }
-        """
+        """Broadcast a drawing stroke to all other players."""
         room_code = sid_to_room.get(sid)
         if not room_code:
             return
-        # Only allow the current drawer to draw
         player_id = sid_to_player.get(sid)
         room = game_manager.get_room(room_code)
         if not room or room.game_state != GameState.DRAWING:
-            return  # Game not in drawing state
+            return
         drawer = game_manager.get_current_drawer(room_code)
         if not drawer or drawer.id != player_id:
-            return  # not the drawer
+            return
         await sio.emit("draw", data, room=room_code, skip_sid=sid)
 
     @sio.event
@@ -661,10 +741,10 @@ def create_socket_app():
         player_id = sid_to_player.get(sid)
         room = game_manager.get_room(room_code)
         if not room or room.game_state != GameState.DRAWING:
-            return  # Game not in drawing state
+            return
         drawer = game_manager.get_current_drawer(room_code)
         if not drawer or drawer.id != player_id:
-            return  # not the drawer
+            return
         await sio.emit("canvas_cleared", {}, room=room_code)
 
     # ── Chat & Guessing ───────────────────────────────────────────────────────
@@ -685,18 +765,17 @@ def create_socket_app():
         if not room or not player:
             return
 
-        # Only allow guessing during DRAWING state
+        logger.info(f"[guess] {player.name} guessed '{word}' state={room.game_state}")
+
         if room.game_state != GameState.DRAWING:
             return
 
-        # Drawer cannot guess
         drawer = game_manager.get_current_drawer(room_code)
         if drawer and drawer.id == player_id:
-            return
+            return  # drawer can't guess
 
-        # Already guessed correctly?
         if player_id in round_correct.get(room_code, set()):
-            return
+            return  # already guessed correctly
 
         is_correct = game_manager.check_guess(room_code, word)
 
@@ -704,6 +783,7 @@ def create_socket_app():
             time_left = room_time_left.get(room_code, ROUND_DURATION)
             points    = game_manager.award_guess_points(room_code, player_id, time_left, ROUND_DURATION)
             round_correct.setdefault(room_code, set()).add(player_id)
+            logger.info(f"[guess] Correct! {player.name} +{points}pts, correct={len(round_correct[room_code])}")
 
             await sio.emit(
                 "correct_guess",
@@ -729,12 +809,14 @@ def create_socket_app():
             )
             await _broadcast_players(room_code)
 
-            # If everyone (except drawer) guessed → end round early
+            # End round early if all non-drawers guessed correctly
             non_drawers = [p for p in room.players if not p.is_drawing]
-            if len(round_correct.get(room_code, set())) >= len(non_drawers):
+            correct_count = len(round_correct.get(room_code, set()))
+            logger.info(f"[guess] {correct_count}/{len(non_drawers)} non-drawers correct")
+            if correct_count >= len(non_drawers):
+                logger.info(f"[guess] All guessed! Ending round early for {room_code}")
                 await _end_round(room_code)
         else:
-            # Broadcast as normal chat
             await sio.emit(
                 "chat_message",
                 {
@@ -783,20 +865,15 @@ def create_socket_app():
         if not room_code or not player_id:
             return
 
-        # Only the drawer can use gesture
         drawer = game_manager.get_current_drawer(room_code)
         if not drawer or drawer.id != player_id:
             await sio.emit("error", {"message": "Only the drawer can use gesture mode."}, to=sid)
             return
 
-        # Capture the event loop BEFORE starting the background thread
         loop = asyncio.get_event_loop()
-
-        # Track previous point for gesture drawing to create proper line segments
         prev_point = {"x": None, "y": None}
 
         def _on_draw(x_norm, y_norm, color, size, is_eraser):
-            """Called by air_canvas on each gesture-drawn point."""
             asyncio.run_coroutine_threadsafe(
                 sio.emit(
                     "draw",
@@ -814,7 +891,6 @@ def create_socket_app():
                 ),
                 loop,
             )
-            # Update previous point for next call
             prev_point["x"] = x_norm
             prev_point["y"] = y_norm
 
@@ -825,7 +901,6 @@ def create_socket_app():
             )
 
         def _on_gesture(gesture_name):
-            # Reset previous point when gesture changes to prevent line artifacts
             if gesture_name != "draw":
                 prev_point["x"] = None
                 prev_point["y"] = None
@@ -849,19 +924,16 @@ def create_socket_app():
 
     @sio.event
     async def gesture_color(sid, data):
-        """Update drawing color for air canvas."""
         color = data.get("color", "#1a1a2e")
         air_canvas.set_color(color)
 
     @sio.event
     async def gesture_brush_size(sid, data):
-        """Update brush size for air canvas."""
         size = int(data.get("size", 5))
         air_canvas.set_brush_size(size)
 
     @sio.event
     async def gesture_eraser(sid, data):
-        """Toggle eraser mode for air canvas."""
         enabled = bool(data.get("enabled", False))
         air_canvas.set_eraser(enabled)
 

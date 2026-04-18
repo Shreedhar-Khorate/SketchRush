@@ -160,9 +160,11 @@ export function useSocket({ roomCode, playerName, avatar }) {
 
     sub('round_countdown', ({ countdown }) => {
       if (countdown === 0) {
-        // Countdown finished — clear modal, canvas will be fresh
+        // Countdown finished — clear modal, next turn_started will update state
         setRoundResult(null)
         setRoundCountdown(null)
+        // Safety net: if turn_started doesn't arrive, don't stay stuck in round_end
+        setGameState(prev => prev === 'round_end' ? 'waiting' : prev)
       } else {
         setRoundCountdown(countdown)
       }
