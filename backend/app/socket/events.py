@@ -50,6 +50,8 @@ word_choice_tasks: dict[str, asyncio.Task] = {}
 round_timer_tasks: dict[str, asyncio.Task] = {}
 # room_code → bool: _end_round already running (dedup guard)
 round_ending: dict[str, bool] = {}
+# room_code → original creator player_id (host never changes)
+room_creator: dict[str, str] = {}
 
 ROUND_DURATION = 60       # seconds per drawing turn
 WORD_CHOICE_TIMEOUT = 12  # seconds drawer has to pick a word
@@ -116,10 +118,12 @@ async def _broadcast_players(room_code: str):
     room = game_manager.get_room(room_code)
     if not room:
         return
+    # Always use the original creator as host_id
+    creator_id = room_creator.get(room_code, room.host_id)
     await sio.emit(
         "players_update",
         {
-            "host_id": room.host_id,
+            "host_id": creator_id,
             "players": [
                 {
                     "id": p.id,
@@ -142,16 +146,19 @@ async def _handle_player_leave(room_code: str, player_name: str, was_host: bool,
     if not room:
         return
 
-    # Reassign host if needed
+    # The original creator is always the host — do NOT reassign.
+    # Just notify players that the host left; the room pauses.
     if was_host and room.players:
-        new_host = room.players[0]
-        room.host_id = new_host.id
-        await sio.emit("host_changed", {"host_id": new_host.id}, room=room_code)
         await sio.emit(
             "chat_message",
-            {"type": "system", "content": f"👑 {new_host.name} is now the host."},
+            {"type": "system", "content": f"👑 The host ({player_name}) left the room. Game paused — waiting for host to return or a new game."},
             room=room_code,
         )
+        # Pause any ongoing game
+        _cancel_round_timer(room_code)
+        _cancel_word_choice(room_code)
+        round_ending.pop(room_code, None)
+        room.game_state = GameState.WAITING
 
     # If fewer than 2 players remain, pause the game
     if len(room.players) < 2:
@@ -483,11 +490,15 @@ def create_socket_app():
                 player = game_manager.get_player(room_code, player_id)
                 if player:
                     player_name = player.name
-                was_host = room.host_id == player_id
+                was_host = room_creator.get(room_code, room.host_id) == player_id
                 drawer = game_manager.get_current_drawer(room_code)
                 was_drawer = drawer is not None and drawer.id == player_id
 
             game_manager.remove_player_from_room(room_code, player_id)
+
+            # Clean up room_creator if the room was deleted (last player left)
+            if not game_manager.get_room(room_code):
+                room_creator.pop(room_code, None)
 
             await sio.emit(
                 "player_left",
@@ -517,9 +528,11 @@ def create_socket_app():
                 await sio.emit("error", {"message": "Not identified. Reconnect."}, to=sid)
                 return
 
-            # Create room if it doesn't exist
+            # Create room if it doesn't exist — first joiner is always the creator/host
             if not game_manager.get_room(raw_code):
                 game_manager.create_room(player_id, room_code=raw_code)
+                room_creator[raw_code] = player_id  # lock in the original creator
+                logger.info(f"[join_room] Room {raw_code} created by player {player_id}")
 
             if not game_manager.add_player_to_room(raw_code, player_id, player_name, avatar):
                 await sio.emit("error", {"message": "Room is full or already joined."}, to=sid)
@@ -529,7 +542,9 @@ def create_socket_app():
             await sio.enter_room(sid, raw_code)
 
             room = game_manager.get_room(raw_code)
-            is_host = room.host_id == player_id
+            # is_host: only the original creator is host
+            creator_id = room_creator.get(raw_code, room.host_id)
+            is_host = creator_id == player_id
 
             await sio.emit(
                 "room_joined",
@@ -537,7 +552,7 @@ def create_socket_app():
                     "room_code": raw_code,
                     "player_id": player_id,
                     "is_host": is_host,
-                    "host_id": room.host_id,
+                    "host_id": creator_id,
                     "players": [
                         {"id": p.id, "name": p.name, "avatar": p.avatar, "score": p.score}
                         for p in room.players
@@ -573,10 +588,13 @@ def create_socket_app():
             player = game_manager.get_player(room_code, player_id)
             name = player.name if player else "Player"
             room = game_manager.get_room(room_code)
-            was_host = room.host_id == player_id if room else False
+            was_host = (room_creator.get(room_code, room.host_id) == player_id) if room else False
             drawer = game_manager.get_current_drawer(room_code) if room else None
             was_drawer = drawer is not None and drawer.id == player_id
             game_manager.remove_player_from_room(room_code, player_id)
+            # Clean up room_creator if room was deleted
+            if not game_manager.get_room(room_code):
+                room_creator.pop(room_code, None)
             await sio.leave_room(sid, room_code)
             await sio.emit("player_left", {"player_id": player_id}, room=room_code)
             await sio.emit(
@@ -600,14 +618,20 @@ def create_socket_app():
         room = game_manager.get_room(room_code)
         if not room:
             return
-        if room.host_id != player_id:
-            await sio.emit("error", {"message": "Only the host can start the game."}, to=sid)
+
+        # Only the original creator (host) can start
+        creator_id = room_creator.get(room_code, room.host_id)
+        if creator_id != player_id:
+            await sio.emit("error", {"message": "Only the host (room creator) can start the game."}, to=sid)
             return
 
+        # max_rounds MUST be provided — host is required to select it
         max_rounds = data.get("max_rounds")
-        if max_rounds and isinstance(max_rounds, int) and 1 <= max_rounds <= 10:
-            room.max_rounds = max_rounds
-            logger.info(f"[start_game] Set max_rounds={max_rounds} for room {room_code}")
+        if not max_rounds or not isinstance(max_rounds, int) or not (1 <= max_rounds <= 10):
+            await sio.emit("error", {"message": "Please select the number of rounds (1–10) before starting."}, to=sid)
+            return
+        room.max_rounds = max_rounds
+        logger.info(f"[start_game] Set max_rounds={max_rounds} for room {room_code}")
 
         if not game_manager.start_game(room_code):
             await sio.emit("error", {"message": "Not enough players (need at least 2)."}, to=sid)
@@ -634,8 +658,11 @@ def create_socket_app():
         room = game_manager.get_room(room_code)
         if not room:
             return
-        if room.host_id != player_id:
-            await sio.emit("error", {"message": "Only the host can restart the game."}, to=sid)
+
+        # Only the original creator (host) can restart
+        creator_id = room_creator.get(room_code, room.host_id)
+        if creator_id != player_id:
+            await sio.emit("error", {"message": "Only the host (room creator) can restart the game."}, to=sid)
             return
 
         # Cancel any ongoing timers

@@ -86,7 +86,7 @@ export default function GameHeader({
               </span>
               {!isHost && hostName && (
                 <span style={{ fontSize: '11px', color: 'var(--text-faint)', fontWeight: 600 }}>
-                  {hostAvatar} {hostName} will choose the rounds
+                  {hostAvatar} {hostName} (host) will select rounds &amp; start
                 </span>
               )}
               {isHost && (

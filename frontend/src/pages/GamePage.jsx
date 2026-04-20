@@ -420,6 +420,10 @@ export default function GamePage() {
 
   const handleConfirmRounds = (rounds) => {
     setSelectedRounds(rounds)
+    // If we're in game_end, immediately restart with the chosen rounds
+    if (gameState === 'game_end') {
+      restartGame(rounds)
+    }
   }
 
   const handleStartGame = () => {
@@ -428,8 +432,8 @@ export default function GamePage() {
   }
 
   const handlePlayAgain = () => {
+    // Reset selectedRounds so the host must pick again before restarting
     setSelectedRounds(null)
-    restartGame(maxRounds)  // Use the same maxRounds as the previous game
   }
 
   const handleBackToLobby = () => {
@@ -617,8 +621,8 @@ export default function GamePage() {
         )}
       </AnimatePresence>
 
-      {/* Select rounds modal (only for host in waiting state) */}
-      {gameState === 'waiting' && isHost && selectedRounds === null && (
+      {/* Select rounds modal — host must select before starting or restarting */}
+      {(gameState === 'waiting' || gameState === 'game_end') && isHost && selectedRounds === null && (
         <SelectRoundsModal isHost={isHost} onConfirmRounds={handleConfirmRounds} />
       )}
 
