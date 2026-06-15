@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: sketchrush-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ALLOWED_ORIGINS
+        value: https://your-app.vercel.app   # ← replace with your Vercel URL
+      - key: PYTHON_VERSION
+        value: 3.11.0
