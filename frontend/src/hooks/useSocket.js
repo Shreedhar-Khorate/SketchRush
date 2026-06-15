@@ -28,8 +28,6 @@ export function useSocket({ roomCode, playerName, avatar }) {
   const [maxRounds, setMaxRounds]       = useState(5)
   const [roundResult, setRoundResult]   = useState(null)   // { word, leaderboard }
   const [gameResult, setGameResult]     = useState(null)   // { leaderboard, winner }
-  const [gestureDetected, setGestureDetected] = useState(null)
-  const [gestureActive, setGestureActive] = useState(false)
   const [roundCountdown, setRoundCountdown] = useState(null) // 5, 4, 3, 2, 1, null
   const [hasGuessedCorrectly, setHasGuessedCorrectly] = useState(false)
 
@@ -197,14 +195,6 @@ export function useSocket({ roomCode, playerName, avatar }) {
       })
     })
 
-    // ── Gesture events ────────────────────────────────────────────────────────
-    sub('gesture_started', ({ active }) => setGestureActive(active))
-    sub('gesture_stopped', () => setGestureActive(false))
-    sub('gesture_detected', ({ gesture }) => {
-      setGestureDetected(gesture)
-      setTimeout(() => setGestureDetected(null), 1000)
-    })
-
     // Error
     sub('error', ({ message }) => {
       console.error('[useSocket] Error event:', message)
@@ -232,19 +222,6 @@ export function useSocket({ roomCode, playerName, avatar }) {
   const startGame  = useCallback(() => socketManager.startGame(), [])
   const startGameWithRounds = useCallback((maxRounds) => socketManager.startGameWithRounds(maxRounds), [])
   const restartGame = useCallback((maxRounds) => socketManager.restartGame(maxRounds), [])
-
-  const startGesture = useCallback((color, size, eraser) => {
-    socketManager.setGestureColor(color)
-    socketManager.setGestureBrushSize(size)
-    socketManager.setGestureEraser(eraser)
-    socketManager.startGesture()
-  }, [])
-  const stopGesture = useCallback(() => socketManager.stopGesture(), [])
-  const syncGestureParams = useCallback((color, size, eraser) => {
-    socketManager.setGestureColor(color)
-    socketManager.setGestureBrushSize(size)
-    socketManager.setGestureEraser(eraser)
-  }, [])
   const selectWord = useCallback((word) => socketManager.selectWord(word), [])
 
   return {
@@ -257,11 +234,10 @@ export function useSocket({ roomCode, playerName, avatar }) {
     timeLeft, roundResult, gameResult, roundCountdown,
     isDrawing,
     hasGuessedCorrectly,
-    gestureDetected, gestureActive,
     // Drawing callbacks (set by DrawingCanvas via ref)
     onRemoteDraw, onRemoteClear,
     // Actions
     sendDraw, sendClear, sendGuess, sendMessage,
-    startGame, startGameWithRounds, restartGame, startGesture, stopGesture, syncGestureParams, selectWord,
+    startGame, startGameWithRounds, restartGame, selectWord,
   }
 }

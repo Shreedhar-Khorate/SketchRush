@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -375,12 +375,10 @@ export default function GamePage() {
     currentDrawerId, currentWord, wordHint, wordChoices,
     timeLeft, roundResult, gameResult, roundCountdown,
     isDrawing, hasGuessedCorrectly,
-    gestureDetected, gestureActive,
     onRemoteDraw, onRemoteClear,
     sendDraw, sendClear,
     sendGuess, sendMessage,
-    startGame, startGameWithRounds, restartGame,
-    startGesture, stopGesture, syncGestureParams, selectWord,
+    startGame, startGameWithRounds, restartGame, selectWord,
   } = useSocket({ roomCode: roomId, playerName, avatar: playerAvatar })
 
   const hostPlayer = players.find((p) => p && p.id === hostId)
@@ -392,21 +390,18 @@ export default function GamePage() {
     console.log('[GamePage] Game state changed to:', gameState, '| Drawer:', currentDrawerId, '| isDrawing:', isDrawing)
   }, [gameState, currentDrawerId, isDrawing])
 
-  // ── Sync gesture params whenever toolbar changes ──────────────────────────
-  useEffect(() => {
-    if (gestureMode) syncGestureParams(selectedColor, brushSize, isEraser)
-  }, [gestureMode, selectedColor, brushSize, isEraser, syncGestureParams])
+  // ── Gesture draw: draws LOCALLY on this canvas + broadcasts to server ──────
+  // onRemoteDraw.current is set by DrawingCanvas to its own _applyRemoteDraw
+  // which handles normalised coords (0-1) exactly like remote socket strokes.
+  const handleGestureDraw = useCallback((data) => {
+    if (onRemoteDraw.current) onRemoteDraw.current(data)  // paint locally
+    sendDraw(data)                                         // broadcast to others
+  }, [onRemoteDraw, sendDraw])
 
   // ── Gesture mode toggle ───────────────────────────────────────────────────
   const handleToggleGesture = (on) => {
     setGestureMode(on)
-    if (on) {
-      setShowGesture(true)
-      startGesture(selectedColor, brushSize, isEraser)
-    } else {
-      setShowGesture(false)
-      stopGesture()
-    }
+    setShowGesture(on)
   }
 
   const handleClear = () => {
@@ -455,18 +450,16 @@ export default function GamePage() {
     if (!isDrawing && gestureMode) {
       setGestureMode(false)
       setShowGesture(false)
-      stopGesture()
     }
-  }, [isDrawing, gestureMode, stopGesture])
+  }, [isDrawing, gestureMode])
 
   // Also stop on round_end / game_end game states
   useEffect(() => {
     if ((gameState === 'round_end' || gameState === 'game_end') && gestureMode) {
       setGestureMode(false)
       setShowGesture(false)
-      stopGesture()
     }
-  }, [gameState, gestureMode, stopGesture])
+  }, [gameState, gestureMode])
 
   if (!playerName) return null
 
@@ -636,11 +629,15 @@ export default function GamePage() {
         <RoundEndModal result={roundResult} countdown={roundCountdown} onDismiss={() => {}} />
       )}
 
-      {/* Gesture overlay — fixed position, covers entire viewport */}
+      {/* Gesture overlay — client-side MediaPipe, no server webcam needed */}
       <GestureOverlay
-        active={gestureMode && gestureActive}
-        gesture={gestureDetected}
+        active={gestureMode}
+        onDraw={handleGestureDraw}
+        onClear={handleClear}
         onClose={() => handleToggleGesture(false)}
+        color={selectedColor}
+        brushSize={brushSize}
+        isEraser={isEraser}
       />
 
       {/* Game end modal */}
