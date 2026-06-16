@@ -465,7 +465,7 @@ game_manager.on_round_timeout = _on_round_timeout
 
 # ── Event handlers ────────────────────────────────────────────────────────────
 
-def create_socket_app():
+def create_socket_app(other_asgi_app=None):
     """Wire all Socket.IO events and return the ASGI app."""
 
     @sio.event
@@ -892,7 +892,7 @@ def create_socket_app():
             room=room_code,
         )
 
-    return ASGIApp(sio)
+    return ASGIApp(sio, other_asgi_app)
 
 
 def get_sio():

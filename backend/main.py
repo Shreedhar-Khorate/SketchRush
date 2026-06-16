@@ -108,15 +108,17 @@ async def get_room(room_code: str):
     }
 
 
-# ── Mount Socket.IO ───────────────────────────────────────────────────────────
-socket_app = create_socket_app()
-app.mount("/socket.io", socket_app)
-
-
 # ── Mount static files ────────────────────────────────────────────────────────
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 os.makedirs(static_dir, exist_ok=True)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+
+# ── Wrap with Socket.IO ASGIApp ───────────────────────────────────────────────
+# Wrap the FastAPI application in the Socket.IO ASGI app.
+# All Socket.IO requests are intercepted by python-socketio, while all other
+# HTTP endpoints (/, /health, /rooms, /static) are forwarded to the FastAPI app.
+app = create_socket_app(other_asgi_app=app)
 
 
 if __name__ == "__main__":
