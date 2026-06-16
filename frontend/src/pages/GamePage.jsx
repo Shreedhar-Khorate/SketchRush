@@ -599,7 +599,16 @@ export default function GamePage() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>✕</button>
               </div>
-              <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', padding: '0 12px 16px', minHeight: 0, overflow: 'hidden' }}>
+              <div
+                className="grid grid-cols-1 md:grid-cols-2"
+                style={{
+                  flex: 1,
+                  gap: '10px',
+                  padding: '0 12px 16px',
+                  minHeight: 0,
+                  overflow: 'hidden',
+                }}
+              >
                 <PlayerList players={players} currentPlayerId={playerId} hostId={hostId} />
                 <ChatPanel
                   messages={messages}

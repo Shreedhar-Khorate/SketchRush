@@ -597,3 +597,42 @@ canvas { cursor: crosshair; display: block; }
 .rank-1 { color: #ffd166; }
 .rank-2 { color: #c0c0c0; }
 .rank-3 { color: #cd7f32; }
+
+/* ===== HOME FOOTER & CREDITS ===== */
+.home-footer {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  width: 100%;
+}
+
+.footer-dot {
+  width: 4px;
+  height: 4px;
+  background-color: var(--text-faint);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.footer-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.2s ease;
+}
+
+.footer-link:hover {
+  color: var(--amber);
+  transform: translateY(-1px);
+}
+
+.footer-link svg {
+  transition: transform 0.2s ease;
+}
+
+.footer-link:hover svg {
+  transform: scale(1.1);
+}

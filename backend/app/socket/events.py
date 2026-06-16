@@ -17,7 +17,6 @@ from socketio import AsyncServer, ASGIApp
 
 from app.game.game_manager import GameManager
 from app.models.models import GameState
-from app.gesture.air_canvas import air_canvas
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +72,19 @@ def _cancel_word_choice(room_code: str):
 def _cancel_round_timer(room_code: str):
     """Cancel the combined tick+end timer task for a room."""
     _cancel_task(round_timer_tasks, room_code)
+
+
+def _cleanup_room_state(room_code: str):
+    """Clean up all room-specific dictionary mappings and cancel active timers to prevent memory leaks."""
+    _cancel_round_timer(room_code)
+    _cancel_word_choice(room_code)
+    
+    round_correct.pop(room_code, None)
+    room_time_left.pop(room_code, None)
+    round_ending.pop(room_code, None)
+    room_creator.pop(room_code, None)
+    
+    logger.info(f"[cleanup] Cleaned up all cached state for empty room {room_code}")
 
 
 def _start_round_timer(room_code: str, duration: int):
@@ -189,10 +201,6 @@ async def _handle_player_leave(room_code: str, player_name: str, was_host: bool,
 
     # If the drawer left mid-turn, end the round immediately
     if was_drawer and room.game_state in (GameState.DRAWING, GameState.CHOOSING_WORD):
-        air_canvas.stop_capture()
-        air_canvas.on_draw_point = None
-        air_canvas.on_clear = None
-        air_canvas.on_gesture = None
         await sio.emit("canvas_cleared", {}, room=room_code)
         await _end_round(room_code)
 
@@ -367,12 +375,6 @@ async def _end_round(room_code: str):
         _cancel_word_choice(room_code)
         _cancel_round_timer(room_code)
 
-        # Stop gesture capture
-        air_canvas.stop_capture()
-        air_canvas.on_draw_point = None
-        air_canvas.on_clear = None
-        air_canvas.on_gesture = None
-
         correct_word = room.current_word or "?"
         leaderboard = [
             {"id": p.id, "name": p.name, "avatar": p.avatar, "score": p.score}
@@ -496,9 +498,9 @@ def create_socket_app():
 
             game_manager.remove_player_from_room(room_code, player_id)
 
-            # Clean up room_creator if the room was deleted (last player left)
+            # Clean up room state if the room was deleted (last player left)
             if not game_manager.get_room(room_code):
-                room_creator.pop(room_code, None)
+                _cleanup_room_state(room_code)
 
             await sio.emit(
                 "player_left",
@@ -592,9 +594,9 @@ def create_socket_app():
             drawer = game_manager.get_current_drawer(room_code) if room else None
             was_drawer = drawer is not None and drawer.id == player_id
             game_manager.remove_player_from_room(room_code, player_id)
-            # Clean up room_creator if room was deleted
+            # Clean up room state if room was deleted
             if not game_manager.get_room(room_code):
-                room_creator.pop(room_code, None)
+                _cleanup_room_state(room_code)
             await sio.leave_room(sid, room_code)
             await sio.emit("player_left", {"player_id": player_id}, room=room_code)
             await sio.emit(
@@ -610,7 +612,8 @@ def create_socket_app():
     async def start_game(sid, data=None):
         room_code = sid_to_room.get(sid)
         player_id = sid_to_player.get(sid)
-        data = data or {}
+        if not isinstance(data, dict):
+            data = {}
         logger.info(f"[start_game] Called by {player_id} in room {room_code}, data={data}")
         if not room_code:
             return
@@ -650,7 +653,8 @@ def create_socket_app():
     async def restart_game(sid, data=None):
         room_code = sid_to_room.get(sid)
         player_id = sid_to_player.get(sid)
-        data = data or {}
+        if not isinstance(data, dict):
+            data = {}
         logger.info(f"[restart_game] Called by {player_id} in room {room_code}")
         if not room_code:
             return
@@ -751,6 +755,8 @@ def create_socket_app():
         room_code = sid_to_room.get(sid)
         if not room_code:
             return
+        if not isinstance(data, dict):
+            return
         player_id = sid_to_player.get(sid)
         room = game_manager.get_room(room_code)
         if not room or room.game_state != GameState.DRAWING:
@@ -781,6 +787,8 @@ def create_socket_app():
         room_code = sid_to_room.get(sid)
         player_id = sid_to_player.get(sid)
         if not room_code or not player_id:
+            return
+        if not isinstance(data, dict):
             return
 
         word = data.get("word", "").strip()
@@ -862,6 +870,8 @@ def create_socket_app():
         player_id = sid_to_player.get(sid)
         if not room_code or not player_id:
             return
+        if not isinstance(data, dict):
+            return
 
         player = game_manager.get_player(room_code, player_id)
         if not player:
@@ -882,89 +892,7 @@ def create_socket_app():
             room=room_code,
         )
 
-    # ── Gesture / Air Canvas ─────────────────────────────────────────────────
-
-    @sio.event
-    async def start_gesture(sid, data=None):
-        """Client requests gesture mode — start webcam capture."""
-        room_code = sid_to_room.get(sid)
-        player_id = sid_to_player.get(sid)
-        if not room_code or not player_id:
-            return
-
-        drawer = game_manager.get_current_drawer(room_code)
-        if not drawer or drawer.id != player_id:
-            await sio.emit("error", {"message": "Only the drawer can use gesture mode."}, to=sid)
-            return
-
-        loop = asyncio.get_event_loop()
-        prev_point = {"x": None, "y": None}
-
-        def _on_draw(x_norm, y_norm, color, size, is_eraser):
-            asyncio.run_coroutine_threadsafe(
-                sio.emit(
-                    "draw",
-                    {
-                        "x": x_norm,
-                        "y": y_norm,
-                        "prevX": prev_point["x"],
-                        "prevY": prev_point["y"],
-                        "color": color,
-                        "size": size,
-                        "isEraser": is_eraser,
-                        "mode": "gesture",
-                    },
-                    room=room_code,
-                ),
-                loop,
-            )
-            prev_point["x"] = x_norm
-            prev_point["y"] = y_norm
-
-        def _on_clear():
-            asyncio.run_coroutine_threadsafe(
-                sio.emit("canvas_cleared", {}, room=room_code),
-                loop,
-            )
-
-        def _on_gesture(gesture_name):
-            if gesture_name != "draw":
-                prev_point["x"] = None
-                prev_point["y"] = None
-            asyncio.run_coroutine_threadsafe(
-                sio.emit("gesture_detected", {"gesture": gesture_name}, to=sid),
-                loop,
-            )
-
-        air_canvas.on_draw_point = _on_draw
-        air_canvas.on_clear      = _on_clear
-        air_canvas.on_gesture    = _on_gesture
-        air_canvas.start_capture()
-
-        await sio.emit("gesture_started", {"status": "ok", "active": air_canvas.active}, to=sid)
-
-    @sio.event
-    async def stop_gesture(sid, data=None):
-        """Stop gesture/webcam capture."""
-        air_canvas.stop_capture()
-        await sio.emit("gesture_stopped", {}, to=sid)
-
-    @sio.event
-    async def gesture_color(sid, data):
-        color = data.get("color", "#1a1a2e")
-        air_canvas.set_color(color)
-
-    @sio.event
-    async def gesture_brush_size(sid, data):
-        size = int(data.get("size", 5))
-        air_canvas.set_brush_size(size)
-
-    @sio.event
-    async def gesture_eraser(sid, data):
-        enabled = bool(data.get("enabled", False))
-        air_canvas.set_eraser(enabled)
-
-    return ASGIApp(sio)
+    return sio
 
 
 def get_sio():

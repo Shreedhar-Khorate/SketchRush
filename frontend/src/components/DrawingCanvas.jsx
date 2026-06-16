@@ -219,12 +219,17 @@ export default function DrawingCanvas({
     : `2px solid ${color === '#E6EDF3' || color === '#FFFFFF' ? '#30363D' : color}`
 
   return (
-    <div className="w-full h-full flex items-stretch relative" style={{ minHeight: 0 }}>
+    <div className="w-full h-full flex items-center justify-center relative" style={{ minHeight: 0 }}>
       <div
-        className="flex-1 relative rounded-2xl overflow-hidden"
+        className="relative rounded-2xl overflow-hidden"
         style={{
           background: '#FFFFFF',
           border: '1px solid var(--border)',
+          width: '100%',
+          height: '100%',
+          maxWidth: '100%',
+          maxHeight: '100%',
+          aspectRatio: '4/3',
         }}
       >
         {/* Clear flash */}
@@ -289,7 +294,6 @@ export default function DrawingCanvas({
             display: 'block',
             width: '100%',
             height: '100%',
-            aspectRatio: '4/3',
             touchAction: 'none',
             cursor: 'none',
             background: '#FFFFFF',

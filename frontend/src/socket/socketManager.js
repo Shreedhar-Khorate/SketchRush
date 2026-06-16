@@ -124,28 +124,6 @@ class SocketManager {
   sendMessage(text) {
     this.emit('message', { text })
   }
-
-  // ── Gesture (Air Canvas) ──────────────────────────────────────────────────
-
-  startGesture() {
-    this.emit('start_gesture', {})
-  }
-
-  stopGesture() {
-    this.emit('stop_gesture', {})
-  }
-
-  setGestureColor(color) {
-    this.emit('gesture_color', { color })
-  }
-
-  setGestureBrushSize(size) {
-    this.emit('gesture_brush_size', { size })
-  }
-
-  setGestureEraser(enabled) {
-    this.emit('gesture_eraser', { enabled })
-  }
 }
 
 // Singleton
