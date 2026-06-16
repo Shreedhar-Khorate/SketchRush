@@ -892,7 +892,7 @@ def create_socket_app():
             room=room_code,
         )
 
-    return sio
+    return ASGIApp(sio)
 
 
 def get_sio():
