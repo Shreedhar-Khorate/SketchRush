@@ -109,7 +109,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="home-root min-h-screen w-full relative overflow-hidden">
+    <div className="home-root min-h-screen w-full relative overflow-y-auto overflow-x-hidden">
 
       {/* Background */}
       <div className="home-bg" aria-hidden="true">
@@ -340,7 +340,7 @@ export default function HomePage() {
             <p className="text-xs" style={{ color: 'var(--text-faint)' }}>
               © {new Date().getFullYear()} SketchRush ·All Rights Reserved·
             </p>
-            <div className="flex items-center justify-center gap-3 text-xs" style={{ color: 'var(--text-muted)' }}>
+            <div className="flex items-center justify-center gap-3 text-xs flex-wrap" style={{ color: 'var(--text-muted)' }}>
               <span>Created by <strong style={{ color: 'var(--text)' }}>Shreedhar Khorate</strong></span>
               <span className="footer-dot" />
               <a

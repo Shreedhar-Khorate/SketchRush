@@ -119,6 +119,8 @@ body {
   color: var(--text);
   background: var(--bg);
   min-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .home-root input,
@@ -130,7 +132,7 @@ body {
 
 /* ===== BACKGROUND LAYERS ===== */
 .home-bg {
-  position: absolute;
+  position: fixed;
   inset: 0;
   z-index: 0;
   overflow: hidden;
