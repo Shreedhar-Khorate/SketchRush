@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import anime from 'animejs'
@@ -27,28 +27,51 @@ const FEATURES = [
 
 const ORBS = [
   { id: 'ember', size: '500px', color: 'rgba(249,115,22,0.42)', blur: '90px', opacity: 0.7, position: { top: '-15%', left: '-10%' } },
-  { id: 'aqua',  size: '460px', color: 'rgba(56,189,248,0.36)', blur: '95px', opacity: 0.65, position: { top: '5%', right: '-8%' } },
-  { id: 'lime',  size: '400px', color: 'rgba(34,197,94,0.3)',   blur: '85px', opacity: 0.5, position: { bottom: '-20%', left: '20%' } },
-  { id: 'sun',   size: '300px', color: 'rgba(251,191,36,0.3)',  blur: '75px', opacity: 0.55, position: { bottom: '8%', right: '16%' } },
+  { id: 'aqua', size: '460px', color: 'rgba(56,189,248,0.36)', blur: '95px', opacity: 0.65, position: { top: '5%', right: '-8%' } },
+  { id: 'lime', size: '400px', color: 'rgba(34,197,94,0.3)', blur: '85px', opacity: 0.5, position: { bottom: '-20%', left: '20%' } },
+  { id: 'sun', size: '300px', color: 'rgba(251,191,36,0.3)', blur: '75px', opacity: 0.55, position: { bottom: '8%', right: '16%' } },
 ]
 
 const FLOATERS = [
-  { id: 'spark',  emoji: '✨', size: '20px', opacity: 0.6, position: { top: '13%', left: '10%' } },
-  { id: 'bolt',   emoji: '⚡', size: '24px', opacity: 0.7, position: { top: '18%', right: '14%' } },
-  { id: 'pencil', emoji: '✏️', size: '22px', opacity: 0.6, position: { top: '55%', left: '5%' } },
-  { id: 'brush',  emoji: '🖌️', size: '22px', opacity: 0.6, position: { top: '60%', right: '6%' } },
-  { id: 'target', emoji: '🎯', size: '20px', opacity: 0.55, position: { bottom: '20%', left: '16%' } },
-  { id: 'puzzle', emoji: '🧩', size: '20px', opacity: 0.5, position: { bottom: '14%', right: '18%' } },
+  { id: 'spark', emoji: '✨', size: '20px', opacity: 0.6, position: { top: '13%', left: '10%' }, factor: 15 },
+  { id: 'bolt', emoji: '⚡', size: '24px', opacity: 0.7, position: { top: '18%', right: '14%' }, factor: -20 },
+  { id: 'pencil', emoji: '✏️', size: '22px', opacity: 0.6, position: { top: '55%', left: '5%' }, factor: 25 },
+  { id: 'brush', emoji: '🖌️', size: '22px', opacity: 0.6, position: { top: '60%', right: '6%' }, factor: -15 },
+  { id: 'target', emoji: '🎯', size: '20px', opacity: 0.55, position: { bottom: '20%', left: '16%' }, factor: 30 },
+  { id: 'puzzle', emoji: '🧩', size: '20px', opacity: 0.5, position: { bottom: '14%', right: '18%' }, factor: -25 },
 ]
 
 const wrapVariants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.07, delayChildren: 0.05 } },
+  visible: { opacity: 1, transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
 }
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] } },
+  hidden: { opacity: 0, y: 30, filter: 'blur(10px)' },
+  visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { type: 'spring', stiffness: 100, damping: 15 } },
+}
+
+const gridVariants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.04
+    }
+  }
+}
+
+const avatarVariants = {
+  hidden: { opacity: 0, scale: 0.6, y: 15 },
+  visible: { 
+    opacity: 1, 
+    scale: 1, 
+    y: 0,
+    transition: {
+      type: 'spring',
+      stiffness: 260,
+      damping: 18
+    }
+  }
 }
 
 export default function HomePage() {
@@ -62,6 +85,43 @@ export default function HomePage() {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
+  // Typewriter tagline
+  const taglineFullText = "Draw fast. Guess faster."
+  const [taglineText, setTaglineText] = useState('')
+  const [showCursor, setShowCursor] = useState(true)
+
+  useEffect(() => {
+    let i = 0
+    const interval = setInterval(() => {
+      setTaglineText(taglineFullText.slice(0, i + 1))
+      i++
+      if (i >= taglineFullText.length) {
+        clearInterval(interval)
+      }
+    }, 60)
+    return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setShowCursor(prev => !prev)
+    }, 530)
+    return () => clearInterval(timer)
+  }, [])
+
+  // Parallax mouse position
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+  const handleMouseMove = useCallback((e) => {
+    const x = (e.clientX / window.innerWidth) - 0.5
+    const y = (e.clientY / window.innerHeight) - 0.5
+    setMousePos({ x, y })
+  }, [])
+
+  useEffect(() => {
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [handleMouseMove])
+
   useEffect(() => {
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (prefersReduced) return
@@ -70,9 +130,9 @@ export default function HomePage() {
     if (!orbs.length) return
 
     const orbCfg = [
-      { x: [-28, 55], y: [-18, 45], scale: [1, 1.1],    dur: 18000 },
+      { x: [-28, 55], y: [-18, 45], scale: [1, 1.1], dur: 18000 },
       { x: [38, -48], y: [28, -38], scale: [1.04, 0.96], dur: 20000 },
-      { x: [-18, 38], y: [45, -28], scale: [1, 1.08],    dur: 22000 },
+      { x: [-18, 38], y: [45, -28], scale: [1, 1.08], dur: 22000 },
       { x: [18, -28], y: [-36, 28], scale: [1.02, 0.98], dur: 17000 },
     ]
 
@@ -115,6 +175,35 @@ export default function HomePage() {
       <div className="home-bg" aria-hidden="true">
         <div className="home-gradient" />
         <div className="home-grid" />
+
+        {/* Particle Rain Background */}
+        <div className="particle-rain">
+          {Array.from({ length: 24 }).map((_, idx) => {
+            const x = `${(idx * 7.7 + 5) % 96}%`
+            const delay = `${(idx * 0.45).toFixed(2)}s`
+            const duration = `${(8 + (idx % 3) * 3)}s`
+            const size = `${(2 + (idx % 2) * 2)}px`
+            const opacity = (0.25 + (idx % 3) * 0.2).toFixed(2)
+            const colorMap = ['rgba(249, 115, 22, 0.6)', 'rgba(56, 189, 248, 0.5)', 'rgba(34, 197, 94, 0.45)']
+            const color = colorMap[idx % 3]
+
+            return (
+              <div
+                key={idx}
+                className="particle"
+                style={{
+                  '--x': x,
+                  '--delay': delay,
+                  '--duration': duration,
+                  '--size': size,
+                  '--opacity': opacity,
+                  '--color': color
+                }}
+              />
+            )
+          })}
+        </div>
+
         <div className="home-orbs">
           {ORBS.map((orb, i) => (
             <div key={orb.id} ref={el => { orbRefs.current[i] = el }} className="home-orb"
@@ -125,7 +214,14 @@ export default function HomePage() {
           {FLOATERS.map((f, i) => (
             <div key={f.id} ref={el => { floaterRefs.current[i] = el }} className="home-floater"
               style={{ fontSize: f.size, opacity: f.opacity, ...f.position }}>
-              {f.emoji}
+              <div
+                style={{
+                  transform: `translate(${mousePos.x * f.factor}px, ${mousePos.y * f.factor}px)`,
+                  transition: 'transform 0.4s cubic-bezier(0.1, 0.8, 0.2, 1)'
+                }}
+              >
+                {f.emoji}
+              </div>
             </div>
           ))}
         </div>
@@ -138,15 +234,18 @@ export default function HomePage() {
 
           {/* ── Logo ── */}
           <motion.div variants={itemVariants} className="text-center">
-            
 
-            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-2"
-              style={{ color: 'var(--text)', letterSpacing: '-0.02em' }}>
+
+            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-2 title-gradient"
+              style={{ letterSpacing: '-0.02em' }}>
               SketchRush
             </h1>
-            <p className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
-              Draw fast.{' '}
-              <span style={{ color: 'var(--amber)' }}>Guess faster.</span>
+            <p className="text-sm font-medium min-h-[20px]" style={{ color: 'var(--text-muted)' }}>
+              {taglineText.slice(0, 11)}
+              {taglineText.length > 11 && (
+                <span style={{ color: 'var(--amber)' }}>{taglineText.slice(11)}</span>
+              )}
+              <span className={`inline-block w-1.5 h-3.5 ml-0.5 ${showCursor ? 'opacity-100' : 'opacity-0'} transition-opacity`} style={{ background: 'var(--amber)', verticalAlign: 'middle' }} />
             </p>
 
             {/* Feature pills */}
@@ -160,13 +259,31 @@ export default function HomePage() {
           </motion.div>
 
           {/* ── Main card ── */}
-          <motion.div variants={itemVariants} className="home-card p-6 sm:p-7 flex flex-col gap-6">
+          <motion.div variants={itemVariants} className="home-card p-7 sm:p-9 flex flex-col gap-7">
 
             {/* Name */}
             <div className="home-section">
-              <label className="home-label"> Your name</label>
+              <div className="home-label-container">
+                <label className="home-label">Your Name</label>
+                <div className="flex items-center gap-1.5" style={{ color: 'var(--green)' }}>
+                  <span className="status-dot-container">
+                    <span className="status-dot" style={{ background: 'var(--green)' }} />
+                  </span>
+                  <span className="status-dot-text">Ready to play</span>
+                </div>
+              </div>
               <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '15px', pointerEvents: 'none' }}>🎮</span>
+                <div className="name-input-avatar-badge">
+                  <motion.span 
+                    key={selectedAvatar.emoji}
+                    initial={{ scale: 0.7, rotate: -15 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: 'spring', stiffness: 450, damping: 15 }}
+                    style={{ display: 'inline-block' }}
+                  >
+                    {selectedAvatar.emoji}
+                  </motion.span>
+                </div>
                 <input
                   type="text"
                   maxLength={16}
@@ -174,14 +291,9 @@ export default function HomePage() {
                   onChange={e => { setPlayerName(e.target.value); setError('') }}
                   onKeyDown={e => e.key === 'Enter' && handleJoin()}
                   placeholder="Enter your player name"
-                  style={{ paddingLeft: '38px', paddingRight: '52px' }}
+                  className="name-input-field"
                 />
-                <span style={{
-                  position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
-                  fontSize: '11px', fontWeight: 600, fontVariantNumeric: 'tabular-nums',
-                  color: playerName.length > 12 ? 'var(--amber)' : 'var(--text-faint)',
-                  transition: 'color 0.15s'
-                }}>
+                <span className="name-input-char-counter">
                   {playerName.length}/16
                 </span>
               </div>
@@ -191,16 +303,17 @@ export default function HomePage() {
 
             {/* Avatar picker */}
             <div className="home-section">
-              <div className="flex items-center justify-between">
-                <label className="home-label">Choose avatar</label>
-                <span style={{ fontSize: '11px', color: 'var(--text-faint)', fontWeight: 500 }}>
+              <div className="home-label-container">
+                <label className="home-label">Choose Avatar</label>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
                   {selectedAvatar.emoji} {selectedAvatar.label}
                 </span>
               </div>
-              <div className="avatar-grid">
+              <motion.div variants={gridVariants} className="avatar-grid">
                 {AVATARS.map(avatar => (
                   <motion.button
                     key={avatar.emoji}
+                    variants={avatarVariants}
                     onClick={() => setSelectedAvatar(avatar)}
                     whileTap={{ scale: 0.93 }}
                     title={avatar.label}
@@ -219,51 +332,50 @@ export default function HomePage() {
                     )}
                   </motion.button>
                 ))}
-              </div>
-            </div>
-
-            <div className="home-divider" />
-
-            {/* Player preview */}
-            <motion.div layout className="player-preview">
-              <motion.div
-                className="player-avatar-box"
-                key={selectedAvatar.emoji}
-                initial={{ scale: 0.75, rotate: -8 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: 'spring', stiffness: 420, damping: 22 }}
-              >
-                {selectedAvatar.emoji}
               </motion.div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text)', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {playerName || 'Your Name'}
-                </p>
-                <p style={{ fontSize: '12px', color: 'var(--text-faint)', marginBottom: '6px' }}>
-                  Playing as {selectedAvatar.label}
-                </p>
-                <div className="flex items-center gap-1.5">
-                  <span className="status-dot" style={{ background: 'var(--green)' }} />
-                  <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--green)' }}>Ready to play</span>
-                </div>
-              </div>
-            </motion.div>
+            </div>
 
             <div className="home-divider" />
 
             {/* Join mode */}
             <div className="home-section">
-              <label className="home-label">Room</label>
-              <div className="mode-tabs">
-                {['quick', 'private'].map(mode => (
-                  <button
-                    key={mode}
-                    onClick={() => { setJoinMode(mode); setRoomCode(''); setError('') }}
-                    className={`mode-tab${joinMode === mode ? ' active' : ''}`}
-                  >
-                    {mode === 'quick' ? '⚡ Quick Play' : '🔒 Private Room'}
-                  </button>
-                ))}
+              <div className="home-label-container">
+                <label className="home-label">Room Mode</label>
+              </div>
+              <div className="room-options-grid">
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.02, y: -1 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => { setJoinMode('quick'); setRoomCode(''); setError('') }}
+                  className={`room-option-card ${joinMode === 'quick' ? 'active' : ''}`}
+                >
+                  <div className="room-option-icon">⚡</div>
+                  <div className="room-option-meta">
+                    <span className="room-option-title">Quick Play</span>
+                    <span className="room-option-desc">Join active lobbies automatically</span>
+                  </div>
+                  {joinMode === 'quick' && (
+                    <motion.div layoutId="room-glow" className="room-option-active-border" />
+                  )}
+                </motion.button>
+                
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.02, y: -1 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => { setJoinMode('private'); setError('') }}
+                  className={`room-option-card ${joinMode === 'private' ? 'active' : ''}`}
+                >
+                  <div className="room-option-icon">🔒</div>
+                  <div className="room-option-meta">
+                    <span className="room-option-title">Private Room</span>
+                    <span className="room-option-desc">Create/join lobby using a code</span>
+                  </div>
+                  {joinMode === 'private' && (
+                    <motion.div layoutId="room-glow" className="room-option-active-border" />
+                  )}
+                </motion.button>
               </div>
 
               <AnimatePresence mode="wait">
@@ -272,8 +384,8 @@ export default function HomePage() {
                     initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                     transition={{ duration: 0.18 }}
                     className="quick-play-box">
-                    <p style={{ fontSize: '13px', color: 'var(--text-faint)' }}>
-                      🎲 A random room will be generated for you
+                    <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                      🎲 A random, optimized room code will be generated for your session.
                     </p>
                   </motion.div>
                 ) : (
@@ -286,7 +398,7 @@ export default function HomePage() {
                       value={roomCode}
                       onChange={e => { setRoomCode(e.target.value.toUpperCase()); setError('') }}
                       onKeyDown={e => e.key === 'Enter' && handleJoin()}
-                      placeholder="A1B2C"
+                      placeholder="ENTER CODE (E.G. A1B2C)"
                       className="room-code-input"
                     />
                   </motion.div>
@@ -309,30 +421,33 @@ export default function HomePage() {
             </AnimatePresence>
 
             {/* CTA */}
-            <motion.button
-              onClick={handleJoin}
-              whileHover={{ scale: isLoading ? 1 : 1.015, y: isLoading ? 0 : -2 }}
-              whileTap={{ scale: isLoading ? 1 : 0.975 }}
-              disabled={isLoading}
-              className="btn-primary"
-            >
-              <AnimatePresence mode="wait">
-                {isLoading ? (
-                  <motion.span key="loading"
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    className="flex items-center justify-center gap-2">
-                    <motion.span animate={{ rotate: 360 }} transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }} style={{ display: 'inline-block', fontSize: '16px' }}>⚡</motion.span>
-                    Joining room…
-                  </motion.span>
-                ) : (
-                  <motion.span key="idle"
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    className="flex items-center justify-center gap-2">
-                    {joinMode === 'quick' ? '🎯 Start Playing' : '🚀 Join Room'}
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </motion.button>
+            <div className="btn-primary-container">
+              {!isLoading && <div className="btn-glow-ring" />}
+              <motion.button
+                onClick={handleJoin}
+                whileHover={{ scale: isLoading ? 1 : 1.015, y: isLoading ? 0 : -2 }}
+                whileTap={{ scale: isLoading ? 1 : 0.975 }}
+                disabled={isLoading}
+                className="btn-primary"
+              >
+                <AnimatePresence mode="wait">
+                  {isLoading ? (
+                    <motion.span key="loading"
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                      className="flex items-center justify-center gap-2">
+                      <motion.span animate={{ rotate: 360 }} transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }} style={{ display: 'inline-block', fontSize: '16px' }}>⚡</motion.span>
+                      Joining room…
+                    </motion.span>
+                  ) : (
+                    <motion.span key="idle"
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                      className="flex items-center justify-center gap-2">
+                      {joinMode === 'quick' ? '🎯 Start Playing' : '🚀 Join Room'}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </motion.button>
+            </div>
           </motion.div>
 
           {/* Footer & Credits */}
@@ -350,7 +465,7 @@ export default function HomePage() {
                 className="footer-link"
               >
                 <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" style={{ display: 'inline-block' }}>
-                  <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                  <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
                 </svg>
                 <span>GitHub</span>
               </a>
@@ -362,7 +477,7 @@ export default function HomePage() {
                 className="footer-link"
               >
                 <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" style={{ display: 'inline-block' }}>
-                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
                 </svg>
                 <span>LinkedIn</span>
               </a>
