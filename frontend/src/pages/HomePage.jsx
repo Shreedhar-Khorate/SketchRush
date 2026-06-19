@@ -78,12 +78,14 @@ export default function HomePage() {
   const navigate = useNavigate()
   const orbRefs = useRef([])
   const floaterRefs = useRef([])
+  const sketchRefs = useRef([])
   const [playerName, setPlayerName] = useState('')
   const [selectedAvatar, setSelectedAvatar] = useState(AVATARS[0])
   const [joinMode, setJoinMode] = useState('quick')
   const [roomCode, setRoomCode] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [infoTab, setInfoTab] = useState('how-to-play')
 
   // Typewriter tagline
   const taglineFullText = "Draw fast. Guess faster."
@@ -127,6 +129,7 @@ export default function HomePage() {
     if (prefersReduced) return
     const orbs = orbRefs.current.filter(Boolean)
     const floaters = floaterRefs.current.filter(Boolean)
+    const sketchLines = sketchRefs.current.filter(Boolean)
     if (!orbs.length) return
 
     const orbCfg = [
@@ -145,11 +148,22 @@ export default function HomePage() {
       anime({ targets: t, translateY: [0, -16], translateX: [0, i % 2 === 0 ? 12 : -12], rotate: [0, i % 2 === 0 ? 5 : -5], easing: 'easeInOutSine', duration: 11000 + i * 900, direction: 'alternate', loop: true, delay: i * 160 })
     )
 
+    const sa = anime({
+      targets: sketchLines,
+      strokeDashoffset: [anime.setDashoffset, 0],
+      easing: 'easeInOutCubic',
+      duration: 3500,
+      delay: (t, i) => i * 450,
+      loop: false
+    })
+
     return () => {
       oa.forEach(a => a.pause())
       fa.forEach(a => a.pause())
+      sa.pause()
       anime.remove(orbs)
       anime.remove(floaters)
+      anime.remove(sketchLines)
     }
   }, [])
 
@@ -175,6 +189,59 @@ export default function HomePage() {
       <div className="home-bg" aria-hidden="true">
         <div className="home-gradient" />
         <div className="home-grid" />
+
+        {/* Glowing Sketch Lines (Self-drawing) */}
+        <div 
+          className="home-sketch-container"
+          style={{
+            transform: `translate(${mousePos.x * 35}px, ${mousePos.y * 35}px)`,
+            transition: 'transform 0.5s cubic-bezier(0.1, 0.8, 0.2, 1)'
+          }}
+        >
+          <svg className="home-sketch-lines" viewBox="0 0 1000 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              ref={el => { sketchRefs.current[0] = el }}
+              d="M -100,200 C 200,100 300,500 500,400 C 700,300 800,700 1100,600"
+              stroke="url(#sketch-grad-1)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              opacity="0.38"
+            />
+            <path
+              ref={el => { sketchRefs.current[1] = el }}
+              d="M 1100,150 C 800,250 700,50 400,200 C 100,350 -50,150 -100,300"
+              stroke="url(#sketch-grad-2)"
+              strokeWidth="2"
+              strokeLinecap="round"
+              opacity="0.28"
+            />
+            <path
+              ref={el => { sketchRefs.current[2] = el }}
+              d="M 150,900 C 300,800 450,950 600,850 C 750,750 850,900 1050,800"
+              stroke="url(#sketch-grad-3)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              opacity="0.32"
+            />
+            
+            <defs>
+              <linearGradient id="sketch-grad-1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#f97316" stopOpacity="0.8" />
+                <stop offset="50%" stopColor="#38bdf8" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#22c55e" stopOpacity="0.8" />
+              </linearGradient>
+              <linearGradient id="sketch-grad-2" x1="100%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.7" />
+                <stop offset="100%" stopColor="#a371f7" stopOpacity="0.7" />
+              </linearGradient>
+              <linearGradient id="sketch-grad-3" x1="0%" y1="50%" x2="100%" y2="50%">
+                <stop offset="0%" stopColor="#22c55e" stopOpacity="0.7" />
+                <stop offset="50%" stopColor="#fb923c" stopOpacity="0.7" />
+                <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.7" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
 
         {/* Particle Rain Background */}
         <div className="particle-rain">
@@ -448,6 +515,90 @@ export default function HomePage() {
                 </AnimatePresence>
               </motion.button>
             </div>
+          </motion.div>
+
+          {/* ── Info Card (About & How to Play) ── */}
+          <motion.div variants={itemVariants} className="home-info-card p-5 flex flex-col gap-4">
+            <div className="flex pb-2 gap-2" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <button
+                type="button"
+                onClick={() => setInfoTab('how-to-play')}
+                className={`info-tab-btn ${infoTab === 'how-to-play' ? 'active' : ''}`}
+              >
+                🎮 How to Play
+                {infoTab === 'how-to-play' && (
+                  <motion.div layoutId="info-tab-glow" className="info-tab-glow-bar" />
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setInfoTab('about')}
+                className={`info-tab-btn ${infoTab === 'about' ? 'active' : ''}`}
+              >
+                ✨ About SketchRush
+                {infoTab === 'about' && (
+                  <motion.div layoutId="info-tab-glow" className="info-tab-glow-bar" />
+                )}
+              </button>
+            </div>
+            
+            <AnimatePresence mode="wait">
+              {infoTab === 'how-to-play' ? (
+                <motion.div
+                  key="how-to"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.18 }}
+                  className="flex flex-col gap-2.5"
+                >
+                  <div className="info-step">
+                    <div className="info-step-num">1</div>
+                    <p className="info-step-text">
+                      Enter your <strong>Player Name</strong> and pick an <strong>Avatar</strong> character.
+                    </p>
+                  </div>
+                  <div className="info-step">
+                    <div className="info-step-num">2</div>
+                    <p className="info-step-text">
+                      Select <strong>Quick Play</strong> to auto-join a lobby, or create a <strong>Private Room</strong> for friends.
+                    </p>
+                  </div>
+                  <div className="info-step">
+                    <div className="info-step-num">3</div>
+                    <p className="info-step-text">
+                      Draw the word shown on the canvas as fast as possible before the timer runs out!
+                    </p>
+                  </div>
+                  <div className="info-step">
+                    <div className="info-step-num">4</div>
+                    <p className="info-step-text">
+                      Guess other players' drawings in real-time. Faster correct guesses score higher points!
+                    </p>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="about"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.18 }}
+                  className="flex flex-col gap-2.5 text-[12px] leading-relaxed"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  <p>
+                    <strong>SketchRush</strong> is a real-time multiplayer drawing and guessing game designed for high-speed creative competition.
+                  </p>
+                  <p>
+                    Featuring sub-second WebSocket sync and high-performance interactive drawing canvases, it connects players seamlessly across desktop and mobile devices.
+                  </p>
+                  <p>
+                    Draw with speed, guess with precision, and dominate the scoreboard in a competitive race against the clock!
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
 
           {/* Footer & Credits */}

@@ -192,6 +192,23 @@ body {
   }
 }
 
+.home-sketch-container {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.home-sketch-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.22));
+}
+
 .home-bg {
   position: fixed;
   inset: 0;
@@ -1088,4 +1105,94 @@ canvas {
 
 .footer-link:hover svg {
   transform: scale(1.1);
+}
+
+/* ===== INFO CARD STYLES ===== */
+.home-info-card {
+  background: rgba(10, 16, 26, 0.75);
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 
+    0 16px 40px rgba(0, 0, 0, 0.4),
+    0 4px 12px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  margin-top: 4px;
+}
+
+.info-tab-btn {
+  position: relative;
+  flex: 1;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: center;
+  transition: color 0.22s ease;
+  outline: none;
+}
+
+.info-tab-btn:hover {
+  color: var(--text);
+}
+
+.info-tab-btn.active {
+  color: var(--amber-light);
+}
+
+.info-tab-glow-bar {
+  position: absolute;
+  bottom: -9px;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--amber), transparent);
+  border-radius: 99px;
+  z-index: 2;
+}
+
+.info-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  transition: all 0.2s ease;
+}
+
+.info-step:hover {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.04);
+}
+
+.info-step-num {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: var(--amber-bg);
+  border: 1px solid var(--amber-border);
+  color: var(--amber-light);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.info-step-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.info-step-text strong {
+  color: var(--text);
 }
