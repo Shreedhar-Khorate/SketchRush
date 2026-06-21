@@ -1,39 +1,28 @@
-# SketchRush Backend
+# 🐍 SketchRush Backend
 
-Real-time multiplayer drawing and guessing game backend built with FastAPI and Socket.IO with gesture-controlled air canvas support.
+FastAPI & Socket.IO server for SketchRush, providing real-time room lifecycle coordination, socket line synchronizations, scoring, and turn management.
 
-## Features
+---
 
-✨ **Real-time Multiplayer Gaming**
+## 📋 Features
 
-- Live drawing synchronization via Socket.IO
-- Chat system for guessing
-- Turn-based gameplay
+* ⚡ **Room Management** - Join/leave handling, host designation, and room state mapping.
+* 🌐 **Real-time Synchronization** - Low-latency coordinate and stroke sync for the drawing canvas.
+* 💬 **Chat & Guess Handling** - Dynamic matching of guesses against active words, computing time-weighted scores.
+* ⏱️ **Robust Game Loops** - Server-side asyncio watchdog tasks managing turns, choice timeouts, and round transitions.
 
-🎨 **Air Canvas Gesture Recognition**
+---
 
-- MediaPipe hand detection
-- 5 gesture types: Draw, Move, Erase, Clear, None
-- Real-time MJPEG webcam feed with canvas overlay
-- Support for 12+ colors and adjustable brush sizes
-- Eraser tool with larger brush
+## 🛠️ Requirements
 
-💾 **Canvas Management**
+* Python 3.10+
+* Virtual environment (`venv`)
 
-- Save drawings as PNG files
-- Canvas snapshots as JPEG
-- Static file serving for saved sketches
+---
 
-## Requirements
+## 🚀 Setup
 
-- Python 3.8+
-- pip
-- Webcam (for gesture mode)
-
-## Setup
-
-### 1. Create Virtual Environment
-
+### 1. Initialize Virtual Environment
 ```bash
 # Windows
 python -m venv venv
@@ -45,140 +34,67 @@ source venv/bin/activate
 ```
 
 ### 2. Install Dependencies
-
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Environment Configuration
-
-Copy `.env.example` to `.env`:
-
-```bash
-cp .env.example .env
-```
-
-### 4. Run Development Server
-
+### 3. Run Development Server
 ```bash
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
+The server will run on [http://localhost:8000](http://localhost:8000).
 
-The server will be available at `http://localhost:8000`
+---
 
-## API Endpoints
+## 🔌 API Endpoints
 
-### General
+### Health & Details
+* **GET** `/` - General health status check
+* **GET** `/health` - Detailed health check with application version
+* **GET** `/rooms` - Returns JSON list of all active lobbies and player counts
+* **GET** `/rooms/{room_code}` - Returns detailed player list, host, and game status for a room code
 
-- **GET** `/` - Health check
-- **GET** `/health` - Health check with version
+---
 
-### Game Rooms
+## 📡 Socket.IO Event Reference
 
-- **GET** `/rooms` - List all active rooms
-- **GET** `/rooms/{room_code}` - Get room details and player list
-
-### Gesture API (Air Canvas)
-
-#### Control
-
-- **POST** `/gesture/start` - Start webcam capture and gesture recognition
-- **POST** `/gesture/stop` - Stop webcam capture
-- **POST** `/gesture/clear` - Clear the canvas
-- **POST** `/gesture/save` - Save canvas as PNG file
-
-#### Settings
-
-- **POST** `/gesture/set_color?color={hex_color}` - Set brush color
-- **POST** `/gesture/set_brush_size?size={1-60}` - Set brush thickness
-- **POST** `/gesture/set_eraser?enabled={true|false}` - Toggle eraser mode
-
-#### Streaming & Status
-
-- **GET** `/gesture/feed` - Real-time MJPEG stream (webcam + canvas)
-- **GET** `/gesture/status` - Get current gesture mode status
-- **GET** `/gesture/canvas` - Get current canvas as JPEG image
-
-### Static Files
-
-- **GET** `/static/saved_sketches/{filename}` - Access saved sketch images
-
-## Gesture Recognition
-
-The system supports 5 hand gestures:
-
-| Gesture   | Hand Position           | Action                   |
-| --------- | ----------------------- | ------------------------ |
-| **DRAW**  | Index finger extended   | Draw on canvas           |
-| **MOVE**  | Index + middle extended | Move cursor (no drawing) |
-| **ERASE** | Thumb + index pinched   | Erase (stop drawing)     |
-| **CLEAR** | Fist (all fingers down) | Clear entire canvas      |
-| **NONE**  | Unrecognized            | No action                |
-
-## Gesture API Documentation
-
-For detailed gesture API documentation, see [API_GESTURES.md](./API_GESTURES.md)
-
-### Quick Start with Gesture Mode
-
-```bash
-# 1. Start the server
-uvicorn main:app --reload
-
-# 2. Start gesture mode via API
-curl -X POST http://localhost:8000/gesture/start
-
-# 3. Set a color
-curl -X POST "http://localhost:8000/gesture/set_color?color=%23ff4d6d"
-
-# 4. View the stream in a browser
-# Open: http://localhost:8000/gesture/feed (as an img src)
-
-# 5. Save your drawing
-curl -X POST http://localhost:8000/gesture/save
-```
-
-## Socket.IO Events
-
-### Client → Server
+### Client ➔ Server
 
 #### `join_room`
-
-Join a game room.
-
+Lobby admission request.
 ```json
 {
-  "room": "XXXXX",
-  "playerName": "John",
+  "room": "ROOMCODE",
+  "playerName": "Alice",
   "avatar": "🦊"
 }
 ```
 
-#### `leave_room`
-
-Leave the current room.
-
 #### `start_game`
-
-Start the game (host only).
-
-#### `draw`
-
-Send drawing coordinates.
-
+Starts drawing rounds (Host only).
 ```json
 {
-  "x": 100,
-  "y": 200,
-  "color": "#3B82F6",
-  "size": 5
+  "max_rounds": 3
+}
+```
+
+#### `draw`
+Line stroke data package.
+```json
+{
+  "x": 0.45,
+  "y": 0.32,
+  "prevX": 0.43,
+  "prevY": 0.31,
+  "color": "#1A1A2E",
+  "size": 5,
+  "isEraser": false,
+  "mode": "mouse"
 }
 ```
 
 #### `guess`
-
-Submit a guess.
-
+Submits active guess word.
 ```json
 {
   "word": "cat"
@@ -186,141 +102,79 @@ Submit a guess.
 ```
 
 #### `message`
-
-Send a chat message.
-
+Sends chat messaging.
 ```json
 {
-  "text": "Hello everyone!"
+  "text": "Hello world!"
 }
 ```
 
 #### `clear_canvas`
+Triggers canvas clearing.
 
-Clear the drawing canvas.
+---
 
-### Server → Client
+### Server ➔ Client
 
-#### `player_joined`
-
-A player joined the room.
-
+#### `room_joined`
+Initial state configuration payload.
 ```json
 {
+  "room_code": "ROOMCODE",
   "player_id": "uuid",
-  "player_name": "John",
-  "avatar": "🦊",
-  "room_code": "XXXXX",
-  "players_count": 4
+  "is_host": true,
+  "host_id": "uuid",
+  "players": [...],
+  "game_state": "waiting"
 }
 ```
 
-#### `player_left`
+#### `players_update`
+Emitted when player list, host, or scores change.
 
-A player left the room.
-
-#### `game_started`
-
-Game has started.
-
+#### `turn_started`
+Notifies client that a new drawer is active.
 ```json
 {
-  "room_code": "XXXXX",
   "drawer_id": "uuid",
-  "drawer_name": "John"
+  "drawer_name": "Alice",
+  "drawer_avatar": "🦊",
+  "round": 1,
+  "max_rounds": 3,
+  "time": 60,
+  "state": "choosing_word"
 }
 ```
+
+#### `word_choices`
+Random word banks for choice selection (Drawer only).
 
 #### `word_selected`
-
-A word has been selected (drawer only).
-
+Begins drawing round, syncing hint to players.
 ```json
 {
-  "word": "cat"
+  "hint": "_ _ _",
+  "word_length": 3,
+  "drawer_id": "uuid"
 }
 ```
 
-#### `draw`
-
-Drawing event from another player.
+#### `timer_tick`
+Countdown updates.
 
 #### `correct_guess`
+Confirms matching correct guess and points awarded.
 
-A player guessed correctly.
+#### `round_ended`
+Reveals correct word and standings.
 
-```json
-{
-  "player_id": "uuid",
-  "player_name": "John",
-  "word": "cat"
-}
-```
+#### `game_ended`
+Declares winner and complete results standings.
 
-#### `wrong_guess`
+---
 
-A player guessed incorrectly.
+## 📦 Tech Stack
 
-#### `message`
-
-Chat message received.
-
-```json
-{
-  "player_id": "uuid",
-  "player_name": "John",
-  "message": "Hello!"
-}
-```
-
-## Project Structure
-
-```
-backend/
-├── app/
-│   ├── game/
-│   │   ├── game_manager.py     # Game logic and room management
-│   │   └── __init__.py
-│   ├── models/
-│   │   ├── models.py           # Pydantic models
-│   │   └── __init__.py
-│   ├── socket/
-│   │   ├── events.py           # Socket.IO event handlers
-│   │   └── __init__.py
-│   └── __init__.py
-├── main.py                      # FastAPI application
-├── requirements.txt             # Python dependencies
-├── .env.example                 # Environment variables template
-└── README.md                    # This file
-```
-
-## Development Tips
-
-- Hot reload is enabled with `--reload` flag
-- WebSocket connection issues? Check CORS settings in `main.py`
-- Use browser DevTools Network tab to debug Socket.IO connections
-- Logs are printed to console for debugging
-
-## Deployment
-
-### Using Render
-
-1. Connect your GitHub repository to Render
-2. Set environment variables in Render dashboard
-3. Use `uvicorn main:app --host 0.0.0.0 --port $PORT`
-
-### Using Railway
-
-1. Connect your GitHub repository
-2. Add environment variables
-3. Set start command: `pip install -r requirements.txt && uvicorn main:app --host 0.0.0.0 --port $PORT`
-
-## Future Enhancements
-
-- [ ] Database integration for persistent game history
-- [ ] User authentication and accounts
-- [ ] Word pack customization
-- [ ] Advanced scoring system
-- [ ] Spectator mode
-- [ ] Replay system
-- [ ] Statistics tracking
+* **FastAPI** - High performance web framework.
+* **python-socketio** - Socket.IO server implementation matching v4 protocol.
+* **Uvicorn** - ASGI server implementation.

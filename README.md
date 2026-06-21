@@ -1,28 +1,45 @@
-# SketchRush
+# 🎨 SketchRush
 
-SketchRush is a real-time multiplayer drawing and guessing web application inspired by Skribbl.io, enhanced with AI-powered hand gesture drawing using computer vision.
+SketchRush is a real-time multiplayer drawing and guessing web application inspired by Skribbl.io, enhanced with client-side AI hand gesture drawing using MediaPipe hand-tracking.
 
 **Tagline:** _"Draw Fast. Guess Faster."_
+
+---
+
+## 🌐 Live URLs
+
+* **Live Demo (Frontend):** [https://sketch-rush-orpin.vercel.app](https://sketch-rush-orpin.vercel.app)
+* **Backend Service:** [https://sketchrush-backend.onrender.com](https://sketchrush-backend.onrender.com)
+
+---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Node.js 16+ & npm
-- Python 3.8+
+* Node.js 18+ & npm
+* Python 3.10+
 
-### Frontend Setup
+### Easy Startup Scripts (Windows)
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+For convenience, you can start the project using the preconfigured batch files:
 
-The frontend will run on `http://localhost:5173`
+* **Start Backend:**
+  ```bash
+  cd backend
+  ./run.bat
+  ```
+* **Start Frontend:**
+  ```bash
+  cd frontend
+  ./run.bat
+  ```
 
-### Backend Setup
+---
 
+### Manual Setup
+
+#### 1. Backend Setup (FastAPI)
 ```bash
 cd backend
 
@@ -41,42 +58,54 @@ pip install -r requirements.txt
 # Run development server
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
+The backend will run on [http://localhost:8000](http://localhost:8000).
 
-The backend will run on `http://localhost:8000`
+#### 2. Frontend Setup (React + Vite)
+```bash
+cd frontend
+npm install
+npm run dev
+```
+The frontend will run on [http://localhost:5173](http://localhost:5173).
+
+---
 
 ## 📋 Features
 
 ### Core Features
+* 🎨 **Interactive Drawing Canvas** - Smooth freehand drawing with brush size and color palette controls.
+* ✋ **Gesture Drawing Mode (AI-Powered)** - Zero-lag, client-side hand gesture recognition using MediaPipe. Drawing is fully run in the browser (WASM) for high performance and cloud deployment compatibility.
+* 🌐 **Real-time Multiplayer Sync** - Sub-second drawing and chat synchronization via WebSocket (`Socket.IO`).
+* 🏠 **Lobby & Room System** - Private rooms with custom alphanumeric codes, hosts, and customizable round numbers.
+* 💬 **Real-time Chat & Guessing** - Active chat panels that auto-detect correct guesses and dynamically calculate points.
+* 🏆 **Dynamic Leaderboard** - Points are awarded based on time remaining and accuracy, with live player card rankings.
+* ⏱️ **Turn & Game Loop Timers** - Fully automated round transitions with 5-second count downs, timer ticks, and auto-draw protection.
 
-- 🎨 **HTML5 Canvas Drawing** - Freehand drawing with brush size and color controls
-- ✋ **Gesture Drawing Mode** - Hand gesture recognition for drawing (AI-powered)
-- 🌐 **Real-time Multiplayer** - WebSocket-based live synchronization
-- 🏠 **Room System** - Create or join rooms with room codes
-- 💬 **Live Chat** - Real-time messaging and guess input
-- 🏆 **Scoring System** - Points for correct guesses and drawer performance
-- ⏱️ **Timer** - 60-second round timer with visual feedback
-- 👥 **Player Rankings** - Live leaderboard during gameplay
+---
 
-### Game Modes
+## ✋ Gesture Guide (Air Canvas)
 
-- **Quick Play** - Auto-generate room code
-- **Private Room** - Join with custom room code
+When it is your turn to draw, click the **✋ Gesture** button to activate the camera. Run the following gestures:
 
-## 🏗️ Architecture
+| Gesture | Hand Position | Action |
+| :--- | :--- | :--- |
+| 👆 **Draw** | Index finger raised, others folded | Draw on the canvas |
+| ✌️ **Hover / Move** | Index & middle fingers raised | Move cursor without drawing |
+| 🤏 **Erase** | Thumb & index pinched | Erase lines (White Brush) |
+| ✊ **Clear** | Fist (all fingers down) | Clear entire canvas |
 
-### Frontend (React + Vite)
+---
 
-- **Framework:** React 19 with Vite
-- **Styling:** Tailwind CSS + Custom Design System
-- **Animations:** Framer Motion
-- **Real-time:** Socket.IO Client
-- **Routing:** React Router v6
+## 🏗️ Technical Stack
 
-### Backend (Python)
+| Layer | Technology |
+| :--- | :--- |
+| **Frontend** | React 19, Vite, Vanilla CSS, Framer Motion, Anime.js |
+| **AI Vision** | MediaPipe Tasks-Vision (HandLandmarker WASM) |
+| **Backend** | Python 3.10+, FastAPI |
+| **Real-time** | Socket.IO |
 
-- **Framework:** FastAPI
-- **Real-time:** Socket.IO
-- **Game Logic:** Room management, turn system, scoring
+---
 
 ## 📁 Project Structure
 
@@ -84,187 +113,80 @@ The backend will run on `http://localhost:8000`
 SketchRush/
 ├── frontend/
 │   ├── src/
-│   │   ├── components/       # Game components
-│   │   ├── pages/            # Page components
-│   │   ├── socket/           # Socket.IO integration
-│   │   ├── hooks/            # Custom React hooks
-│   │   ├── App.jsx           # Main app with routing
+│   │   ├── components/       # UI elements (DrawingCanvas, GestureOverlay, ChatPanel, etc.)
+│   │   ├── pages/            # View pages (HomePage, GamePage)
+│   │   ├── socket/           # socketManager client configuration
+│   │   ├── hooks/            # useSocket state syncing hook
+│   │   ├── App.jsx           # React routing
 │   │   └── main.jsx          # Entry point
-│   ├── package.json
-│   ├── vite.config.js
-│   └── tailwind.config.js
+│   ├── package.json          # Node dependencies
+│   └── vite.config.js        # Vite config
 ├── backend/
 │   ├── app/
-│   │   ├── game/             # Game logic
-│   │   ├── models/           # Data models
-│   │   └── socket/           # Socket events
-│   ├── main.py               # FastAPI app
-│   └── requirements.txt
-└── README.md
+│   │   ├── game/             # GameManager core logic & word list
+│   │   ├── models/           # Pydantic schemas (Room, Player)
+│   │   └── socket/           # Socket.IO events and room timers
+│   ├── main.py               # FastAPI server entry point
+│   └── requirements.txt      # Python dependencies
+├── README.md                 # This file
+├── LICENSE                   # MIT License
+└── prd.md                    # Product Requirements Document
 ```
 
-## 🎮 Game Flow
-
-1. **Home** - Enter name and select avatar
-2. **Create/Join Room** - Quick play or private room
-3. **Lobby** - Wait for players to join
-4. **Game Start** - Host starts the game
-5. **Drawing Round** - One player draws, others guess
-6. **Scoring** - Points awarded for correct guesses
-7. **Next Round** - Automatic turn rotation
-8. **Game End** - Final leaderboard display
-
-## 🎯 Component Tree
-
-```
-App
-├── HomePage
-│   ├── Logo
-│   ├── Name Input
-│   ├── Avatar Picker
-│   └── Join Options
-└── GamePage
-    ├── GameHeader
-    │   ├── Logo
-    │   ├── Room Code
-    │   ├── Player Count
-    │   └── Timer
-    ├── DrawingToolbar
-    │   ├── Color Palette
-    │   ├── Brush Sizes
-    │   ├── Tools (Eraser, Clear)
-    │   └── Mode Toggle
-    ├── DrawingCanvas (HTML5)
-    └── Sidebar
-        ├── PlayerList
-        └── ChatPanel
-```
-
-## 🎨 Design System
-
-### Colors
-
-- **Primary:** #3B82F6 (Blue)
-- **Secondary:** #22C55E (Green)
-- **Accent:** #F97316 (Orange)
-- **Background:** #0F172A (Dark Navy)
-- **Card:** #1E293B (Slate)
-
-### Typography
-
-- **Font:** Inter, sans-serif
-- **Headings:** 24–32px, bold
-- **Body:** 14–16px, regular
-- **Buttons:** 14px, medium
-
-### Effects
-
-- Neon glow on active elements
-- Smooth canvas drawing
-- Animated transitions
-- Responsive layouts
-
-## 📱 Responsive Design
-
-- **Mobile** (`< 640px`) - Stacked layout, bottom sheet sidebar
-- **Tablet** (`640–1024px`) - Wrapped toolbar, full-width canvas
-- **Desktop** (`> 1024px`) - Full side-by-side layout
+---
 
 ## 🔌 Socket.IO Events
 
-### Join Room
+### Client ➔ Server
+* `join_room`: Join a room with `{ room: "XXXXX", playerName: "Alice", avatar: "🦊" }`
+* `leave_room`: Notify server that client has left.
+* `start_game`: Start game with `{ max_rounds: N }` (Host only).
+* `draw`: Broadcast line segment data `{ x, y, prevX, prevY, color, size, isEraser, mode }`.
+* `guess`: Submit text guess `{ word: "..." }`.
+* `message`: Send chat message `{ text: "..." }`.
+* `clear_canvas`: Clear drawing canvas for all clients in the room.
 
-```json
-{ "room": "XXXXX", "playerName": "Alice", "avatar": "🦊" }
-```
+### Server ➔ Client
+* `room_joined`: Confirms lobby admission and delivers initial player list.
+* `players_update`: Emitted when player list, host, or scores change.
+* `turn_started`: Notifies clients which player is drawing, starts countdown.
+* `word_choices`: Delivers 4 random word choices (drawer only).
+* `word_selected`: Begins drawing round with word hint (e.g. `_ _ _`).
+* `timer_tick`: Syncs countdown timer seconds.
+* `correct_guess`: Broadcasts that a player guessed the word.
+* `round_ended`: Shows round leaderboard and reveals correct word.
+* `game_ended`: Final standings and winner display.
 
-### Draw
-
-```json
-{ "x": 100, "y": 200, "color": "#3B82F6", "size": 5 }
-```
-
-### Guess
-
-```json
-{ "word": "cat" }
-```
-
-See [Backend README](./backend/README.md) for full event documentation.
-
-## 🚀 Deployment
-
-### Frontend (Vercel)
-
-```bash
-cd frontend
-npm run build
-# Deploy dist/ folder to Vercel
-```
-
-### Backend (Render)
-
-1. Create new Web Service on Render
-2. Connect GitHub repository
-3. Set build command: `pip install -r requirements.txt`
-4. Set start command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-5. Set `FRONTEND_URL` environment variable
-
-## 📦 Tech Stack
-
-| Layer      | Technology                                  |
-| ---------- | ------------------------------------------- |
-| Frontend   | React 19, Vite, Tailwind CSS, Framer Motion |
-| Backend    | FastAPI, Python 3.8+                        |
-| Real-time  | Socket.IO (v4)                              |
-| Styling    | Tailwind CSS v4                             |
-| Animations | Framer Motion, Tailwind Keyframes           |
+---
 
 ## 🛣️ Roadmap
 
-### Phase 1 (MVP)
+### Completed Features (Phase 1 & 2)
+* [x] **Real-time Canvas Drawing Sync**
+* [x] **Auto-balancing Timer & Turn Management**
+* [x] **Dynamic Multi-select Rounds System**
+* [x] **Webcam-less Gesture AI (MediaPipe WASM)** - Moved hand-tracking to client-side, making SketchRush fully cloud-deployable without server-side CPU overhead.
+* [x] **UX Polish & Animations** - Added particles, glowing paths, custom CSS custom cursors, and responsive modal transitions.
 
-- [x] Frontend UI and components
-- [x] Backend game logic
-- [ ] Testing and debugging
-- [ ] Performance optimization
+### Future Enhancements (Phase 3)
+* [ ] Database integration for persistent game history and accounts
+* [ ] Sound effects and visual countdown haptics
+* [ ] Custom user-generated word packs
+* [ ] Spectator mode for full rooms
 
-### Phase 2
-
-- [ ] Gesture drawing (MediaPipe)
-- [ ] Database integration
-- [ ] User accounts
-- [ ] Statistics tracking
-- [ ] Word pack management
-
-### Phase 3
-
-- [ ] Spectator mode
-- [ ] Replay system
-- [ ] Sound effects
-- [ ] Mobile app
-- [ ] AI drawing recognition
+---
 
 ## 🤝 Contributing
 
-To contribute:
-
 1. Fork the repository
 2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+3. Submit a pull request with details of changes
+
+---
 
 ## 📝 License
 
-MIT License - See [LICENSE](./LICENSE) file for details.
-
-## 👨‍💻 Author
-
-Shreedhar Khorate
-
-## 📞 Support
-
-For issues and feature requests, please open an issue on GitHub.
+Distributed under the MIT License. See [LICENSE](./LICENSE) for more details.
 
 ---
 
