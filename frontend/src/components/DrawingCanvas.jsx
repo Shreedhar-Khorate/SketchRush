@@ -212,24 +212,49 @@ export default function DrawingCanvas({
 
   const handlePointerUp = () => { isMouseDown.current = false }
 
+  const containerRef  = useRef(null)
+  const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 })
+
+  // ── Maintain exact 4:3 aspect ratio ────────────────────────────────────────
+  useEffect(() => {
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect
+        // Calculate max 4:3 rectangle that fits
+        let newWidth = width
+        let newHeight = width * (3 / 4)
+        if (newHeight > height) {
+          newHeight = height
+          newWidth = height * (4 / 3)
+        }
+        setCanvasSize({ width: newWidth, height: newHeight })
+      }
+    })
+    if (containerRef.current) {
+      observer.observe(containerRef.current)
+    }
+    return () => observer.disconnect()
+  }, [])
+
   // ── Render ────────────────────────────────────────────────────────────────
-  const cursorSize = isEraser ? brushSize * 3 + 8 : brushSize + 6
+  // Scale the visual cursor so it matches the line width on screen
+  const scale = canvasSize.width / 800
+  const scaledBrushSize = brushSize * scale
+  const cursorSize = isEraser ? scaledBrushSize * 3 + 8 : scaledBrushSize + 6
   const cursorBorder = isEraser
     ? '2px dashed rgba(248,81,73,0.8)'
     : `2px solid ${color === '#E6EDF3' || color === '#FFFFFF' ? '#30363D' : color}`
 
   return (
-    <div className="w-full h-full flex items-center justify-center relative" style={{ minHeight: 0 }}>
+    <div ref={containerRef} className="w-full h-full flex items-center justify-center relative" style={{ minHeight: 0 }}>
       <div
-        className="relative rounded-2xl overflow-hidden"
+        className="relative rounded-2xl overflow-hidden shadow-lg"
         style={{
           background: '#FFFFFF',
           border: '1px solid var(--border)',
-          width: '100%',
-          height: '100%',
-          maxWidth: '100%',
-          maxHeight: '100%',
-          aspectRatio: '4/3',
+          width: `${canvasSize.width}px`,
+          height: `${canvasSize.height}px`,
+          // Ensure it stays strictly proportional to our 800x600 backing buffer
         }}
       >
         {/* Clear flash */}
