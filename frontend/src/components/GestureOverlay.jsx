@@ -105,6 +105,7 @@ export default function GestureOverlay({
   const [status, setStatus]   = useState('idle')   // idle | loading | active | error
   const [errorMsg, setErrorMsg] = useState('')
   const [gesture, setGesture] = useState(GESTURE_NONE)
+  const [minimized, setMinimized] = useState(false)
 
   // Keep latest props in refs so the rAF loop always reads fresh values
   const colorRef     = useRef(color)
@@ -117,6 +118,8 @@ export default function GestureOverlay({
   useEffect(() => { eraserRef.current  = isEraser  }, [isEraser])
   useEffect(() => { onDrawRef.current  = onDraw    }, [onDraw])
   useEffect(() => { onClearRef.current = onClear   }, [onClear])
+  // Reset minimized state when gesture mode is deactivated
+  useEffect(() => { if (!active) setMinimized(false) }, [active])
 
   // ── Cleanup helper ────────────────────────────────────────────────────────
   const stopAll = useCallback(() => {
@@ -350,229 +353,291 @@ export default function GestureOverlay({
   return (
     <AnimatePresence>
       {active && (
-        <motion.div
-          key="gesture-overlay"
-          initial={{ opacity: 0, scale: 0.94, y: 12 }}
-          animate={{ opacity: 1, scale: 1,    y: 0  }}
-          exit={{   opacity: 0, scale: 0.94, y: 12  }}
-          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-          style={{
-            position:  'fixed',
-            right:     '16px',
-            bottom:    '16px',
-            width:     '380px',
-            maxWidth:  '92vw',
-            zIndex:    32,
-            borderRadius: '16px',
-            overflow:  'hidden',
-            background: 'rgba(6,9,24,0.97)',
-            border:    '1px solid rgba(99,120,255,0.3)',
-            boxShadow: '0 0 32px rgba(99,120,255,0.15), 0 20px 40px rgba(0,0,0,0.65)',
-          }}
-        >
-          {/* ── Header ── */}
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '10px 14px',
-            borderBottom: '1px solid var(--border-subtle)',
-            background: 'rgba(11,15,35,0.75)',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '18px' }}>✋</span>
-              <span style={{ fontWeight: 700, fontSize: '12px', color: 'var(--text)' }}>
-                Gesture Mode
+        minimized ? (
+          // ── Minimized PiP pill — canvas fully unoccluded ───────────────────
+          <motion.div
+            key="gesture-pip-min"
+            initial={{ opacity: 0, y: 8, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.9 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              position: 'fixed',
+              right: '16px',
+              bottom: '16px',
+              zIndex: 32,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 14px',
+              borderRadius: '999px',
+              background: 'rgba(6,9,24,0.97)',
+              border: '1px solid rgba(99,120,255,0.35)',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.55)',
+            }}
+          >
+            <span style={{ fontSize: '16px' }}>✋</span>
+            {status === 'active' && (
+              <span style={{ fontSize: '11px', fontWeight: 700, color: info.color }}>
+                {info.icon} {info.label}
               </span>
-              {status === 'active' && (
-                <span style={{
-                  width: '7px', height: '7px', borderRadius: '50%',
-                  background: 'var(--green)',
-                  display: 'inline-block',
-                  animation: 'pulse 1.5s infinite',
-                }} />
-              )}
-              {status === 'loading' && (
-                <motion.span
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                  style={{ display: 'inline-block', fontSize: '13px' }}
-                >⚙️</motion.span>
-              )}
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {/* Gesture badge */}
-              <AnimatePresence mode="wait">
+            )}
+            {status === 'loading' && (
+              <motion.span
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                style={{ display: 'inline-block', fontSize: '13px' }}
+              >⚙️</motion.span>
+            )}
+            <button
+              onClick={() => setMinimized(false)}
+              title="Expand gesture panel"
+              style={{
+                padding: '3px 8px', borderRadius: '8px',
+                background: 'rgba(99,120,255,0.15)',
+                border: '1px solid rgba(99,120,255,0.3)',
+                color: 'var(--text-muted)',
+                fontSize: '11px', fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >▲</button>
+            {onClose && (
+              <button
+                onClick={onClose}
+                style={{
+                  padding: '3px 8px', borderRadius: '8px',
+                  background: 'rgba(248,81,73,0.12)',
+                  border: '1px solid rgba(248,81,73,0.3)',
+                  color: 'var(--red)',
+                  fontSize: '11px', fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >✕ Stop</button>
+            )}
+          </motion.div>
+        ) : (
+          // ── Full PiP panel (compact, bottom-right, canvas stays visible) ──
+          <motion.div
+            key="gesture-overlay"
+            initial={{ opacity: 0, scale: 0.94, y: 12 }}
+            animate={{ opacity: 1, scale: 1,    y: 0  }}
+            exit={{   opacity: 0, scale: 0.94, y: 12  }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              position:  'fixed',
+              right:     '16px',
+              bottom:    '16px',
+              width:     '240px',
+              maxWidth:  '92vw',
+              zIndex:    32,
+              borderRadius: '16px',
+              overflow:  'hidden',
+              background: 'rgba(6,9,24,0.97)',
+              border:    '1px solid rgba(99,120,255,0.3)',
+              boxShadow: '0 0 32px rgba(99,120,255,0.15), 0 20px 40px rgba(0,0,0,0.65)',
+            }}
+          >
+            {/* ── Header ── */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '8px 12px',
+              borderBottom: '1px solid var(--border-subtle)',
+              background: 'rgba(11,15,35,0.75)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+                <span style={{ fontSize: '15px' }}>✋</span>
+                <span style={{ fontWeight: 700, fontSize: '11px', color: 'var(--text)' }}>
+                  Gesture Mode
+                </span>
                 {status === 'active' && (
-                  <motion.div
-                    key={gesture}
-                    initial={{ opacity: 0, x: 6 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{   opacity: 0, x: -6 }}
-                    transition={{ duration: 0.18 }}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: '5px',
-                      padding: '3px 10px', borderRadius: '99px',
-                      background: `color-mix(in srgb, ${info.color} 15%, transparent)`,
-                      border: `1px solid color-mix(in srgb, ${info.color} 35%, transparent)`,
-                      fontSize: '11px', fontWeight: 700, color: info.color,
-                    }}
-                  >
-                    <span>{info.icon}</span>
-                    <span>{info.label}</span>
-                  </motion.div>
+                  <span style={{
+                    width: '6px', height: '6px', borderRadius: '50%',
+                    background: 'var(--green)',
+                    display: 'inline-block',
+                    animation: 'pulse 1.5s infinite',
+                  }} />
                 )}
-              </AnimatePresence>
+                {status === 'loading' && (
+                  <motion.span
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                    style={{ display: 'inline-block', fontSize: '11px' }}
+                  >⚙️</motion.span>
+                )}
+              </div>
 
-              {/* Stop button */}
-              {onClose && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                {/* Gesture badge */}
+                <AnimatePresence mode="wait">
+                  {status === 'active' && (
+                    <motion.div
+                      key={gesture}
+                      initial={{ opacity: 0, x: 4 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{   opacity: 0, x: -4 }}
+                      transition={{ duration: 0.15 }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '4px',
+                        padding: '2px 7px', borderRadius: '99px',
+                        background: `color-mix(in srgb, ${info.color} 15%, transparent)`,
+                        border: `1px solid color-mix(in srgb, ${info.color} 35%, transparent)`,
+                        fontSize: '10px', fontWeight: 700, color: info.color,
+                      }}
+                    >
+                      <span>{info.icon}</span>
+                      <span>{info.label}</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Minimize button */}
                 <button
-                  onClick={onClose}
+                  onClick={() => setMinimized(true)}
+                  title="Minimize to pill"
                   style={{
-                    padding: '4px 10px', borderRadius: '8px',
-                    background: 'rgba(248,81,73,0.12)',
-                    border: '1px solid rgba(248,81,73,0.3)',
-                    color: 'var(--red)',
-                    fontSize: '11px', fontWeight: 700,
+                    padding: '3px 7px', borderRadius: '7px',
+                    background: 'rgba(99,120,255,0.12)',
+                    border: '1px solid rgba(99,120,255,0.25)',
+                    color: 'var(--text-muted)',
+                    fontSize: '10px', fontWeight: 700,
                     cursor: 'pointer',
                     transition: 'background 0.15s',
                   }}
-                >
-                  ✕ Stop
-                </button>
+                >▼</button>
+
+                {/* Stop button */}
+                {onClose && (
+                  <button
+                    onClick={onClose}
+                    style={{
+                      padding: '3px 7px', borderRadius: '7px',
+                      background: 'rgba(248,81,73,0.12)',
+                      border: '1px solid rgba(248,81,73,0.3)',
+                      color: 'var(--red)',
+                      fontSize: '10px', fontWeight: 700,
+                      cursor: 'pointer',
+                      transition: 'background 0.15s',
+                    }}
+                  >✕</button>
+                )}
+              </div>
+            </div>
+
+            {/* ── Video / Status area (compact PiP size) ── */}
+            <div style={{ position: 'relative', width: '100%', background: '#000', minHeight: '130px' }}>
+
+              {/* Loading state */}
+              {status === 'loading' && (
+                <div style={{
+                  position: 'absolute', inset: 0, zIndex: 4,
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  gap: '8px', background: 'rgba(6,9,24,0.95)',
+                  color: 'var(--text-muted)', fontSize: '11px', textAlign: 'center', padding: '16px',
+                }}>
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+                    style={{ fontSize: '26px' }}
+                  >⚙️</motion.div>
+                  <div style={{ fontWeight: 700, color: 'var(--text)', fontSize: '11px' }}>Loading AI Model…</div>
+                  <div style={{ fontSize: '10px', opacity: 0.7 }}>First time may take a moment</div>
+                </div>
+              )}
+
+              {/* Error state */}
+              {status === 'error' && (
+                <div style={{
+                  width: '100%', minHeight: '130px',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  gap: '8px', background: 'rgba(248,81,73,0.06)',
+                  padding: '16px', textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '28px' }}>❌</div>
+                  <div style={{ fontWeight: 700, color: 'var(--red)', fontSize: '11px' }}>
+                    Gesture Mode Failed
+                  </div>
+                  <div style={{ fontSize: '10px', color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                    {errorMsg}
+                  </div>
+                  <button
+                    onClick={onClose}
+                    style={{
+                      marginTop: '4px', padding: '6px 14px', borderRadius: '8px',
+                      background: 'var(--red-bg)', border: '1px solid rgba(248,81,73,0.3)',
+                      color: 'var(--red)', fontWeight: 700, fontSize: '11px', cursor: 'pointer',
+                    }}
+                  >Close</button>
+                </div>
+              )}
+
+              {/* Webcam video — compact PiP max 140px tall */}
+              <video
+                ref={videoRef}
+                muted
+                playsInline
+                style={{
+                  width: '100%',
+                  display: status === 'active' ? 'block' : 'none',
+                  maxHeight: '140px',
+                  objectFit: 'cover',
+                  transform: 'scaleX(-1)',
+                }}
+              />
+              <canvas
+                ref={canvasRef}
+                style={{
+                  position: 'absolute', inset: 0,
+                  width: '100%', height: '100%',
+                  pointerEvents: 'none',
+                  display: status === 'active' ? 'block' : 'none',
+                  transform: 'scaleX(-1)',
+                }}
+              />
+
+              {/* Live labels */}
+              {status === 'active' && (
+                <div style={{
+                  position: 'absolute', bottom: '6px', left: '6px',
+                  display: 'flex', gap: '4px', zIndex: 5,
+                }}>
+                  <span className="badge badge-brand" style={{ opacity: 0.85, fontSize: '9px', padding: '2px 6px' }}>
+                    📷 Cam
+                  </span>
+                  <span className="badge badge-green" style={{ opacity: 0.85, fontSize: '9px', padding: '2px 6px' }}>
+                    🤖 AI
+                  </span>
+                </div>
               )}
             </div>
-          </div>
 
-          {/* ── Video / Status area ── */}
-          <div style={{ position: 'relative', width: '100%', background: '#000', minHeight: '200px' }}>
-
-            {/* Loading state */}
-            {status === 'loading' && (
-              <div style={{
-                position: 'absolute', inset: 0, zIndex: 4,
-                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                gap: '10px', background: 'rgba(6,9,24,0.95)',
-                color: 'var(--text-muted)', fontSize: '13px', textAlign: 'center', padding: '24px',
-              }}>
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
-                  style={{ fontSize: '32px' }}
-                >⚙️</motion.div>
-                <div style={{ fontWeight: 700, color: 'var(--text)' }}>Loading AI Model…</div>
-                <div style={{ fontSize: '11px', opacity: 0.7 }}>
-                  Downloading MediaPipe HandLandmarker (first time only)
-                </div>
-              </div>
-            )}
-
-            {/* Error state */}
-            {status === 'error' && (
-              <div style={{
-                width: '100%', minHeight: '220px',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                gap: '10px', background: 'rgba(248,81,73,0.06)',
-                padding: '24px', textAlign: 'center',
-              }}>
-                <div style={{ fontSize: '36px' }}>❌</div>
-                <div style={{ fontWeight: 700, color: 'var(--red)', fontSize: '13px' }}>
-                  Gesture Mode Failed
-                </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.8 }}>
-                  {errorMsg}
-                </div>
-                <button
-                  onClick={onClose}
-                  style={{
-                    marginTop: '8px', padding: '8px 20px', borderRadius: '10px',
-                    background: 'var(--red-bg)', border: '1px solid rgba(248,81,73,0.3)',
-                    color: 'var(--red)', fontWeight: 700, fontSize: '12px', cursor: 'pointer',
-                  }}
-                >
-                  Close
-                </button>
-              </div>
-            )}
-
-            {/* Webcam video + skeleton canvas (mirrored) */}
-            <video
-              ref={videoRef}
-              muted
-              playsInline
-              style={{
-                width: '100%',
-                display: status === 'active' ? 'block' : 'none',
-                maxHeight: '240px',
-                objectFit: 'cover',
-                transform: 'scaleX(-1)',   // mirror for natural feel
-              }}
-            />
-            <canvas
-              ref={canvasRef}
-              style={{
-                position: 'absolute', inset: 0,
-                width: '100%', height: '100%',
-                pointerEvents: 'none',
-                display: status === 'active' ? 'block' : 'none',
-                transform: 'scaleX(-1)',   // mirror to match video
-              }}
-            />
-
-            {/* Live labels */}
-            {status === 'active' && (
-              <div style={{
-                position: 'absolute', bottom: '8px', left: '8px',
-                display: 'flex', gap: '6px', zIndex: 5,
-              }}>
-                <span className="badge badge-brand" style={{ opacity: 0.9, fontSize: '10px' }}>
-                  📷 Webcam
-                </span>
-                <span className="badge badge-green" style={{ opacity: 0.9, fontSize: '10px' }}>
-                  🤖 AI Active
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* ── Gesture Guide ── */}
-          <div style={{
-            padding: '10px 14px',
-            borderTop: '1px solid var(--border-subtle)',
-            background: 'rgba(11,15,35,0.65)',
-          }}>
+            {/* ── Compact Gesture Guide ── */}
             <div style={{
-              fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)',
-              textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px',
+              padding: '8px 12px',
+              borderTop: '1px solid var(--border-subtle)',
+              background: 'rgba(11,15,35,0.65)',
             }}>
-              Gesture Guide
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
+                {[
+                  { icon: '☝️', label: 'Draw',   color: 'var(--green)' },
+                  { icon: '✌️', label: 'Pause',  color: 'var(--blue)' },
+                  { icon: '✊', label: 'Clear',  color: 'var(--red)' },
+                  { icon: '🤏', label: 'Erase',  color: 'var(--amber)' },
+                ].map(g => (
+                  <div key={g.label} style={{
+                    display: 'flex', alignItems: 'center', gap: '5px',
+                    padding: '4px 6px', borderRadius: '7px',
+                    background: 'rgba(11,15,35,0.75)',
+                    border: '1px solid var(--border-subtle)',
+                    fontSize: '10px', fontWeight: 600, color: g.color,
+                  }}>
+                    <span style={{ fontSize: '12px' }}>{g.icon}</span>
+                    <span>{g.label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px' }}>
-              {[
-                { icon: '☝️', label: 'Draw',         color: 'var(--green)' },
-                { icon: '✌️', label: 'Pause / Move', color: 'var(--blue)' },
-                { icon: '✊', label: 'Clear Canvas', color: 'var(--red)' },
-                { icon: '🤏', label: 'Erase',        color: 'var(--amber)' },
-              ].map(g => (
-                <div key={g.label} style={{
-                  display: 'flex', alignItems: 'center', gap: '7px',
-                  padding: '6px 8px', borderRadius: '9px',
-                  background: 'rgba(11,15,35,0.75)',
-                  border: '1px solid var(--border-subtle)',
-                  fontSize: '11px', fontWeight: 600, color: g.color,
-                }}>
-                  <span style={{ fontSize: '15px' }}>{g.icon}</span>
-                  <span>{g.label}</span>
-                </div>
-              ))}
-            </div>
-            <div style={{
-              fontSize: '10px', color: 'var(--text-muted)',
-              textAlign: 'center', marginTop: '8px',
-            }}>
-              Toolbar color &amp; brush size apply to gesture drawing too.
-            </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        )
       )}
     </AnimatePresence>
   )

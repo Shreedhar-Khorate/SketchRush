@@ -366,6 +366,7 @@ export default function GamePage() {
   const [showGesture,     setShowGesture]     = useState(false)
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
   const [selectedRounds,  setSelectedRounds]  = useState(null)  // Track if host selected rounds
+  const [mobileSidebarTab, setMobileSidebarTab] = useState('chat') // 'players' | 'chat'
 
   // ── Socket ───────────────────────────────────────────────────────────────
   const {
@@ -527,10 +528,19 @@ export default function GamePage() {
 
         {/* Desktop sidebar */}
         {isDesktop && (
-          <div style={{ width: '276px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '12px', minHeight: 0 }}>
-            <div style={{ flex: '0 0 42%', minHeight: 0 }}>
+          <div style={{ width: '276px', flexShrink: 0, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            {/* Players — fixed height cap with own internal scroll */}
+            <div style={{ flexShrink: 0, height: '220px', minHeight: 0 }}>
               <PlayerList players={players} currentPlayerId={playerId} hostId={hostId} />
             </div>
+            {/* Visible elevated divider */}
+            <div style={{
+              height: '1px', flexShrink: 0,
+              margin: '8px 4px',
+              background: 'linear-gradient(to right, transparent, var(--border), transparent)',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+            }} />
+            {/* Chat — fills all remaining space */}
             <div style={{ flex: '1 1 0', minHeight: 0 }}>
               <ChatPanel
                 messages={messages}
@@ -599,24 +609,42 @@ export default function GamePage() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>✕</button>
               </div>
-              <div
-                className="grid grid-cols-1 md:grid-cols-2"
-                style={{
-                  flex: 1,
-                  gap: '10px',
-                  padding: '0 12px 16px',
-                  minHeight: 0,
-                  overflow: 'hidden',
-                }}
-              >
-                <PlayerList players={players} currentPlayerId={playerId} hostId={hostId} />
-                <ChatPanel
-                  messages={messages}
-                  playerName={playerName}
-                  onSend={handleSendMessage}
-                  isDrawing={isDrawing}
-                  isInputLocked={hasGuessedCorrectly}
-                />
+              {/* Mobile tab toggle — Players | Chat */}
+              <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', flexShrink: 0, margin: '0 12px' }}>
+                {[
+                  { id: 'players', label: `👥 Players (${players.length})` },
+                  { id: 'chat',    label: '💬 Chat & Guess' },
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setMobileSidebarTab(tab.id)}
+                    style={{
+                      flex: 1, padding: '8px 12px',
+                      fontSize: '13px', fontWeight: 700,
+                      background: 'transparent', border: 'none',
+                      color: mobileSidebarTab === tab.id ? 'var(--amber)' : 'var(--text-muted)',
+                      borderBottom: mobileSidebarTab === tab.id ? '2px solid var(--amber)' : '2px solid transparent',
+                      cursor: 'pointer', transition: 'all 0.15s ease',
+                      marginBottom: '-1px',
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+              {/* Active panel */}
+              <div style={{ flex: 1, minHeight: 0, padding: '8px 12px 16px', overflow: 'hidden' }}>
+                {mobileSidebarTab === 'players' ? (
+                  <PlayerList players={players} currentPlayerId={playerId} hostId={hostId} />
+                ) : (
+                  <ChatPanel
+                    messages={messages}
+                    playerName={playerName}
+                    onSend={handleSendMessage}
+                    isDrawing={isDrawing}
+                    isInputLocked={hasGuessedCorrectly}
+                  />
+                )}
               </div>
             </motion.div>
           </>
