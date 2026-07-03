@@ -13,6 +13,18 @@ SketchRush is a real-time multiplayer drawing and guessing web application inspi
 
 ---
 
+## ☁️ Deployment & Keep-Alive
+
+To keep the Render free tier backend service active and prevent a 30–50 second cold-start delay (which occurs when Render spins down the server after 15 minutes of inactivity):
+
+1. **UptimeRobot Setup:**
+   * Set up an HTTP(s) monitor on [UptimeRobot.com](https://uptimerobot.com/) to ping `https://sketchrush-backend.onrender.com/health` every **5 minutes**.
+   * To ensure UptimeRobot's pings succeed, the backend health check endpoint in [main.py](backend/main.py) supports both `GET` and `HEAD` HTTP methods (preventing `405 Method Not Allowed` errors).
+2. **Result:**
+   * The server remains warm and active 24/7, enabling players to connect and join game rooms instantly.
+
+---
+
 ## 🚀 Quick Start
 
 ### Prerequisites
