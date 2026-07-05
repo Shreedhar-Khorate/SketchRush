@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import anime from 'animejs'
+import FeedbackModal from '../components/FeedbackModal'
 
 const AVATARS = [
   { emoji: '🦊', label: 'Fox' },
@@ -86,6 +87,7 @@ export default function HomePage() {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [infoTab, setInfoTab] = useState('how-to-play')
+  const [showFeedback, setShowFeedback] = useState(false)
 
   // Typewriter tagline
   const taglineFullText = "Draw fast. Guess faster."
@@ -632,11 +634,36 @@ export default function HomePage() {
                 </svg>
                 <span>LinkedIn</span>
               </a>
+              <span className="footer-dot" />
+              <button
+                type="button"
+                onClick={() => setShowFeedback(true)}
+                className="footer-link"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                  fontFamily: 'inherit',
+                  fontSize: 'inherit',
+                  color: 'inherit',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                 <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" style={{ display: 'inline-block' }}>
+                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+                </svg>
+                <span> Feedback </span>
+              </button>
             </div>
           </motion.div>
 
         </motion.div>
       </div>
+
+      <FeedbackModal isOpen={showFeedback} onClose={() => setShowFeedback(false)} />
     </div>
   )
 }

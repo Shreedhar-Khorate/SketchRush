@@ -10,6 +10,7 @@ import ChatPanel       from '../components/ChatPanel'
 import GestureOverlay  from '../components/GestureOverlay'
 
 import { useSocket }   from '../hooks/useSocket'
+import FeedbackModal from '../components/FeedbackModal'
 
 function useIsDesktop() {
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 1024)
@@ -261,7 +262,7 @@ function SelectRoundsModal({ isHost, initialRounds = 3, onConfirmRounds }) {
 }
 
 // ── Game End Overlay ──────────────────────────────────────────────────────────
-function GameEndModal({ result, isHost, onPlayAgain, onBackToLobby }) {
+function GameEndModal({ result, isHost, onPlayAgain, onBackToLobby, onShowFeedback }) {
   if (!result) return null
   return (
     <div style={{
@@ -337,6 +338,39 @@ function GameEndModal({ result, isHost, onPlayAgain, onBackToLobby }) {
             🚀 Back to Lobby
           </motion.button>
         </div>
+
+        <motion.button
+          onClick={onShowFeedback}
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.97 }}
+          style={{
+            width: '100%',
+            marginTop: '12px',
+            padding: '10px',
+            fontSize: '13px',
+            fontWeight: 600,
+            borderRadius: '12px',
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid var(--border)',
+            color: 'var(--text-muted)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            transition: 'color 0.2s, border-color 0.2s',
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.color = 'var(--text)'
+            e.target.style.borderColor = 'var(--amber)'
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.color = 'var(--text-muted)'
+            e.target.style.borderColor = 'var(--border)'
+          }}
+        >
+          💬 Share Feedback
+        </motion.button>
       </motion.div>
     </div>
   )
@@ -367,6 +401,7 @@ export default function GamePage() {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
   const [selectedRounds,  setSelectedRounds]  = useState(null)  // Track if host selected rounds
   const [mobileSidebarTab, setMobileSidebarTab] = useState('chat') // 'players' | 'chat'
+  const [showFeedback, setShowFeedback] = useState(false)
 
   // ── Socket ───────────────────────────────────────────────────────────────
   const {
@@ -678,7 +713,9 @@ export default function GamePage() {
       />
 
       {/* Game end modal */}
-      <GameEndModal result={gameResult} isHost={isHost} onPlayAgain={handlePlayAgain} onBackToLobby={handleBackToLobby} />
+      <GameEndModal result={gameResult} isHost={isHost} onPlayAgain={handlePlayAgain} onBackToLobby={handleBackToLobby} onShowFeedback={() => setShowFeedback(true)} />
+
+      <FeedbackModal isOpen={showFeedback} onClose={() => setShowFeedback(false)} />
     </div>
   )
 }
