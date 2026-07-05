@@ -369,7 +369,7 @@ function GameEndModal({ result, isHost, onPlayAgain, onBackToLobby, onShowFeedba
             e.target.style.borderColor = 'var(--border)'
           }}
         >
-          💬 Share Feedback
+           Share Feedback
         </motion.button>
       </motion.div>
     </div>
