@@ -92,6 +92,7 @@ The frontend will run on [http://localhost:5173](http://localhost:5173).
 * 💬 **Real-time Chat & Guessing** - Active chat panels that auto-detect correct guesses and dynamically calculate points.
 * 🏆 **Dynamic Leaderboard** - Points are awarded based on time remaining and accuracy, with live player card rankings.
 * ⏱️ **Turn & Game Loop Timers** - Fully automated round transitions with 5-second count downs, timer ticks, and auto-draw protection.
+* 💬 **Interactive Feedback System** - Clean wizard-style feedback form integrated into the lobby footer and match end screen, collecting player ratings using Formspree.
 
 ---
 
@@ -179,6 +180,7 @@ SketchRush/
 * [x] **Dynamic Multi-select Rounds System**
 * [x] **Webcam-less Gesture AI (MediaPipe WASM)** - Moved hand-tracking to client-side, making SketchRush fully cloud-deployable without server-side CPU overhead.
 * [x] **UX Polish & Animations** - Added particles, glowing paths, custom CSS custom cursors, and responsive modal transitions.
+* [x] **Formspree Feedback Form** - Wizard-style responsive feedback modal collecting user ratings on fun, UI layout, gesture tracking accuracy, and sync delay.
 
 ### Future Enhancements (Phase 3)
 * [ ] Database integration for persistent game history and accounts
