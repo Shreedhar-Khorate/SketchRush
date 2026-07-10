@@ -68,6 +68,12 @@ async def health():
     return {"status": "ok", "version": "2.0.0"}
 
 
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    """Silences browser favicon.ico 404 log noise on the API server."""
+    return Response(status_code=204)
+
+
 @app.get("/rooms")
 async def get_rooms():
     return {
