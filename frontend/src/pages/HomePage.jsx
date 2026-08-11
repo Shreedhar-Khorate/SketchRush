@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import anime from 'animejs'
 import FeedbackModal from '../components/FeedbackModal'
+import { loadProfile, saveProfile } from '../lib/profileCookie'
 
 const AVATARS = [
   { emoji: '🦊', label: 'Fox' },
@@ -80,14 +81,36 @@ export default function HomePage() {
   const orbRefs = useRef([])
   const floaterRefs = useRef([])
   const sketchRefs = useRef([])
-  const [playerName, setPlayerName] = useState('')
-  const [selectedAvatar, setSelectedAvatar] = useState(AVATARS[0])
+  // ── Restore profile from cookie (auto-fill name + avatar) ─────────────────
+  const [playerName, setPlayerName] = useState(() => {
+    const saved = loadProfile()
+    return saved?.name || ''
+  })
+  const [selectedAvatar, setSelectedAvatar] = useState(() => {
+    const saved = loadProfile()
+    if (saved?.avatarEmoji) {
+      const match = AVATARS.find(a => a.emoji === saved.avatarEmoji)
+      if (match) return match
+    }
+    return AVATARS[0]
+  })
   const [joinMode, setJoinMode] = useState('quick')
   const [roomCode, setRoomCode] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [infoTab, setInfoTab] = useState('how-to-play')
   const [showFeedback, setShowFeedback] = useState(false)
+
+  // ── Persist profile cookie reactively (debounced 400 ms) ─────────────────
+  // Saves as soon as the user types their name or picks an avatar,
+  // so the cookie is always up-to-date even if they close the tab before joining.
+  useEffect(() => {
+    if (!playerName.trim()) return   // don’t overwrite a valid cookie with blank
+    const id = setTimeout(() => {
+      saveProfile({ name: playerName.trim(), avatarEmoji: selectedAvatar.emoji })
+    }, 400)
+    return () => clearTimeout(id)
+  }, [playerName, selectedAvatar])
 
   // Typewriter tagline
   const taglineFullText = "Draw fast. Guess faster."
@@ -179,6 +202,8 @@ export default function HomePage() {
     } else {
       code = roomCode.toUpperCase()
     }
+    // Persist profile so name + avatar are auto-filled on next visit
+    saveProfile({ name: playerName.trim(), avatarEmoji: selectedAvatar.emoji })
     setIsLoading(true)
     await new Promise(r => setTimeout(r, 600))
     navigate(`/game/${code}`, { state: { playerName: playerName.trim(), avatar: selectedAvatar.emoji } })
