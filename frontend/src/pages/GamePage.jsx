@@ -28,68 +28,85 @@ function WordChoiceModal({ choices, onSelect }) {
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 70,
-      background: 'rgba(13,17,23,0.9)',
+      background: 'rgba(20,20,20,0.65)',
+      backdropFilter: 'blur(3px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '20px',
     }}>
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         style={{
           background: 'var(--surface)',
-          border: '1px solid var(--border)',
-          borderRadius: '16px',
-          padding: '40px',
-          maxWidth: '500px',
+          border: '3px solid var(--line)',
+          borderRadius: '20px',
+          boxShadow: '8px 8px 0 var(--shadow)',
+          padding: '36px 32px',
+          maxWidth: '480px',
           width: '100%',
           textAlign: 'center',
+          fontFamily: 'var(--font-body)',
         }}
       >
-        <h1 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '12px', color: 'var(--text)' }}>
-          🎯 Choose a Word
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: '8px',
+          background: 'var(--yellow)', border: '2px solid var(--line)',
+          boxShadow: '2px 2px 0 var(--shadow)',
+          borderRadius: '999px', padding: '6px 14px',
+          fontSize: '12px', fontWeight: 800, textTransform: 'uppercase',
+          letterSpacing: '0.04em', marginBottom: '14px',
+        }}>
+          🎯 Your Turn to Draw!
+        </div>
+        <h1 style={{
+          fontSize: '26px', fontWeight: 800, marginBottom: '8px',
+          color: 'var(--text)', fontFamily: 'var(--font-heading)',
+          letterSpacing: '-0.02em',
+        }}>
+          Choose a Word
         </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '28px' }}>
-          Select which word you want to draw
+        <p style={{ color: 'var(--text-muted)', fontSize: '14px', fontWeight: 600, marginBottom: '24px' }}>
+          Pick a secret word to sketch on the canvas
         </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '4px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '8px' }}>
           {choices.map((word, idx) => (
             <motion.button
               key={word}
               onClick={() => onSelect(word)}
-              whileHover={{ scale: 1.05, translateY: -2 }}
-              whileTap={{ scale: 0.97 }}
+              whileHover={{ scale: 1.04, translateY: -2 }}
+              whileTap={{ scale: 0.96 }}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.08 }}
               style={{
-                padding: '16px 20px',
-                borderRadius: '12px',
-                background: 'var(--surface-raised)',
-                border: '1px solid var(--border)',
+                padding: '16px 18px',
+                borderRadius: '14px',
+                background: 'var(--surface-2)',
+                border: '2px solid var(--line)',
+                boxShadow: '3px 3px 0 var(--shadow)',
                 color: 'var(--text)',
-                fontWeight: 600,
-                fontSize: '14px',
+                fontWeight: 800,
+                fontSize: '16px',
                 cursor: 'pointer',
                 textTransform: 'capitalize',
-                transition: 'all 0.2s ease',
+                fontFamily: 'var(--font-heading)',
+                transition: 'background 0.15s ease, transform 0.1s ease',
               }}
               onMouseEnter={(e) => {
-                e.target.style.background = 'var(--amber-bg)'
-                e.target.style.borderColor = 'var(--amber)'
+                e.currentTarget.style.background = 'var(--yellow)'
               }}
               onMouseLeave={(e) => {
-                e.target.style.background = 'var(--surface-raised)'
-                e.target.style.borderColor = 'var(--border)'
+                e.currentTarget.style.background = 'var(--surface-2)'
               }}
             >
               {word}
             </motion.button>
           ))}
         </div>
-        <p style={{ fontSize: '12px', color: 'var(--text-faint)', marginTop: '16px' }}>
-          One of these is very hard! 😈
+        <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', marginTop: '16px' }}>
+          One of these is extra tricky! 😈
         </p>
       </motion.div>
     </div>
@@ -102,50 +119,65 @@ function RoundEndModal({ result, countdown, onDismiss }) {
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 60,
-      background: 'rgba(13,17,23,0.75)',
+      background: 'rgba(20,20,20,0.65)',
+      backdropFilter: 'blur(3px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '20px',
     }}>
       <motion.div
         initial={{ scale: 0.88, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         style={{
           background: 'var(--surface)',
-          border: '1px solid var(--border)',
-          borderRadius: '16px',
+          border: '3px solid var(--line)',
+          borderRadius: '20px',
+          boxShadow: '8px 8px 0 var(--shadow)',
           padding: '32px 36px',
           minWidth: '320px', maxWidth: '440px',
           textAlign: 'center',
+          fontFamily: 'var(--font-body)',
         }}
       >
-        <div style={{ fontSize: '48px', marginBottom: '10px' }}>⏱️</div>
-        <h2 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '4px', color: 'var(--text)' }}>
+        <div style={{ fontSize: '48px', marginBottom: '8px' }}>⏱️</div>
+        <h2 style={{
+          fontSize: '26px', fontWeight: 800, marginBottom: '6px',
+          color: 'var(--text)', fontFamily: 'var(--font-heading)',
+          letterSpacing: '-0.02em',
+        }}>
           Round Over!
         </h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '20px' }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: '15px', fontWeight: 600, marginBottom: '20px' }}>
           The word was{' '}
-          <span style={{ fontWeight: 700, color: 'var(--amber)', fontFamily: "'Fira Code', monospace" }}>
+          <span style={{
+            fontWeight: 800, color: 'var(--text)',
+            background: 'var(--yellow)', padding: '2px 8px',
+            borderRadius: '6px', border: '1.5px solid var(--line)',
+            boxShadow: '1.5px 1.5px 0 var(--shadow)',
+            fontFamily: 'var(--font-heading)',
+          }}>
             "{result.word}"
           </span>
         </p>
         {result.leaderboard?.slice(0, 5).map((p, i) => (
           <div key={p.id} style={{
             display: 'flex', alignItems: 'center', gap: '10px',
-            padding: '8px 10px', borderRadius: '10px',
-            background: i === 0 ? 'var(--amber-bg)' : 'var(--surface-raised)',
-            border: i === 0 ? '1px solid rgba(240,165,0,0.3)' : '1px solid var(--border-subtle)',
-            marginBottom: '6px',
+            padding: '8px 12px', borderRadius: '12px',
+            background: i === 0 ? 'var(--yellow)' : 'var(--surface-2)',
+            border: '2px solid var(--line)',
+            boxShadow: i === 0 ? '3px 3px 0 var(--shadow)' : '2px 2px 0 var(--shadow)',
+            marginBottom: '8px',
           }}>
-            <span style={{ width: '22px', fontSize: i === 0 ? '18px' : '12px', color: ['#ffd166','#c0c0c0','#cd7f32'][i] || 'var(--text-muted)' }}>
+            <span style={{ width: '24px', fontSize: i === 0 ? '18px' : '13px', fontWeight: 800 }}>
               {['👑','🥈','🥉'][i] || `#${i+1}`}
             </span>
-            <span style={{ fontSize: '18px' }}>{p.avatar}</span>
-            <span style={{ flex: 1, fontSize: '13px', fontWeight: 600, textAlign: 'left', color: 'var(--text)' }}>{p.name}</span>
-            <span style={{ fontSize: '13px', fontWeight: 700, color: i === 0 ? 'var(--amber)' : 'var(--amber)' }}>
+            <span style={{ fontSize: '20px' }}>{p.avatar}</span>
+            <span style={{ flex: 1, fontSize: '14px', fontWeight: 800, textAlign: 'left', color: 'var(--text)' }}>{p.name}</span>
+            <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text)' }}>
               {p.score} pts
             </span>
           </div>
         ))}
-        <p style={{ marginTop: '16px', fontSize: '12px', color: 'var(--text-faint)' }}>
+        <p style={{ marginTop: '16px', fontSize: '13px', fontWeight: 700, color: 'var(--text-muted)' }}>
           {countdown ? (
             <motion.span
               key={countdown}
@@ -174,48 +206,67 @@ function SelectRoundsModal({ isHost, initialRounds = 3, onConfirmRounds }) {
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 70,
-      background: 'rgba(13,17,23,0.9)',
+      background: 'rgba(20,20,20,0.65)',
+      backdropFilter: 'blur(3px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '20px',
     }}>
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         style={{
           background: 'var(--surface)',
-          border: '1px solid var(--border)',
-          borderRadius: '16px',
-          padding: '40px',
-          maxWidth: '500px',
+          border: '3px solid var(--line)',
+          borderRadius: '20px',
+          boxShadow: '8px 8px 0 var(--shadow)',
+          padding: '36px 32px',
+          maxWidth: '480px',
           width: '100%',
           textAlign: 'center',
+          fontFamily: 'var(--font-body)',
         }}
       >
-        <h1 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '12px', color: 'var(--text)' }}>
-          🎮 How Many Rounds?
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: '8px',
+          background: 'var(--yellow)', border: '2px solid var(--line)',
+          boxShadow: '2px 2px 0 var(--shadow)',
+          borderRadius: '999px', padding: '6px 14px',
+          fontSize: '12px', fontWeight: 800, textTransform: 'uppercase',
+          letterSpacing: '0.04em', marginBottom: '14px',
+        }}>
+          🎮 Game Settings
+        </div>
+        <h1 style={{
+          fontSize: '26px', fontWeight: 800, marginBottom: '8px',
+          color: 'var(--text)', fontFamily: 'var(--font-heading)',
+          letterSpacing: '-0.02em',
+        }}>
+          How Many Rounds?
         </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '28px' }}>
-          Select the number of rounds to play in this game
+        <p style={{ color: 'var(--text-muted)', fontSize: '14px', fontWeight: 600, marginBottom: '24px' }}>
+          Select the total number of rounds to play in this match
         </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', marginBottom: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', marginBottom: '12px' }}>
           {[1, 2, 3, 4, 5].map((num) => (
             <motion.button
               key={num}
               onClick={() => setSelectedRounds(num)}
-              whileHover={{ scale: 1.05, translateY: -2 }}
-              whileTap={{ scale: 0.97 }}
+              whileHover={{ scale: 1.06, translateY: -2 }}
+              whileTap={{ scale: 0.94 }}
               style={{
-                padding: '16px 12px',
+                padding: '14px 10px',
                 borderRadius: '12px',
-                background: selectedRounds === num ? 'var(--amber-bg)' : 'var(--surface-raised)',
-                border: selectedRounds === num ? '2px solid var(--amber)' : '1px solid var(--border)',
+                background: selectedRounds === num ? 'var(--yellow)' : 'var(--surface-2)',
+                border: '2px solid var(--line)',
+                boxShadow: selectedRounds === num ? '3px 3px 0 var(--shadow)' : '2px 2px 0 var(--shadow)',
                 color: 'var(--text)',
-                fontWeight: 600,
+                fontWeight: 800,
                 fontSize: '18px',
+                fontFamily: 'var(--font-heading)',
                 cursor: 'pointer',
-                transition: 'all 0.2s ease',
+                transition: 'background 0.15s ease',
               }}
             >
               {num}
@@ -228,18 +279,20 @@ function SelectRoundsModal({ isHost, initialRounds = 3, onConfirmRounds }) {
             <motion.button
               key={num}
               onClick={() => setSelectedRounds(num)}
-              whileHover={{ scale: 1.05, translateY: -2 }}
-              whileTap={{ scale: 0.97 }}
+              whileHover={{ scale: 1.06, translateY: -2 }}
+              whileTap={{ scale: 0.94 }}
               style={{
-                padding: '16px 12px',
+                padding: '14px 10px',
                 borderRadius: '12px',
-                background: selectedRounds === num ? 'var(--amber-bg)' : 'var(--surface-raised)',
-                border: selectedRounds === num ? '2px solid var(--amber)' : '1px solid var(--border)',
+                background: selectedRounds === num ? 'var(--yellow)' : 'var(--surface-2)',
+                border: '2px solid var(--line)',
+                boxShadow: selectedRounds === num ? '3px 3px 0 var(--shadow)' : '2px 2px 0 var(--shadow)',
                 color: 'var(--text)',
-                fontWeight: 600,
+                fontWeight: 800,
                 fontSize: '18px',
+                fontFamily: 'var(--font-heading)',
                 cursor: 'pointer',
-                transition: 'all 0.2s ease',
+                transition: 'background 0.15s ease',
               }}
             >
               {num}
@@ -249,10 +302,10 @@ function SelectRoundsModal({ isHost, initialRounds = 3, onConfirmRounds }) {
 
         <motion.button
           onClick={() => onConfirmRounds(selectedRounds)}
-          whileHover={{ scale: 1.04 }}
+          whileHover={{ scale: 1.03, translateY: -2 }}
           whileTap={{ scale: 0.97 }}
           className="btn-primary"
-          style={{ width: '100%', padding: '14px', fontSize: '14px', borderRadius: '12px', fontWeight: 600 }}
+          style={{ width: '100%', padding: '16px', fontSize: '16px', borderRadius: '14px', fontWeight: 800, fontFamily: 'var(--font-heading)' }}
         >
           Confirm {selectedRounds} Round{selectedRounds !== 1 ? 's' : ''}
         </motion.button>
@@ -267,48 +320,63 @@ function GameEndModal({ result, isHost, onPlayAgain, onBackToLobby, onShowFeedba
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 60,
-      background: 'rgba(13,17,23,0.82)',
+      background: 'rgba(20,20,20,0.65)',
+      backdropFilter: 'blur(3px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '20px',
     }}>
       <motion.div
         initial={{ scale: 0.88, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         style={{
           background: 'var(--surface)',
-          border: '1px solid var(--border)',
-          borderRadius: '16px', padding: '36px 40px',
+          border: '3px solid var(--line)',
+          borderRadius: '20px',
+          boxShadow: '8px 8px 0 var(--shadow)',
+          padding: '36px 36px',
           minWidth: '340px', maxWidth: '480px',
           textAlign: 'center',
+          fontFamily: 'var(--font-body)',
         }}
       >
         <motion.div
           animate={{ rotate: [0, -8, 8, -4, 0] }}
           transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }}
-          style={{ fontSize: '56px', marginBottom: '12px' }}
+          style={{ fontSize: '56px', marginBottom: '8px' }}
         >🏆</motion.div>
-        <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--amber)', marginBottom: '6px' }}>
+        <h2 style={{
+          fontSize: '28px', fontWeight: 800, color: 'var(--text)',
+          fontFamily: 'var(--font-heading)', letterSpacing: '-0.02em',
+          marginBottom: '6px',
+        }}>
           Game Over!
         </h2>
         {result.winner && (
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '20px' }}>
-            🎉 <span style={{ fontWeight: 700, color: 'var(--text)' }}>{result.winner.name}</span> wins with{' '}
-            <span style={{ color: 'var(--amber)', fontWeight: 700 }}>{result.winner.score} pts</span>
-          </p>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: '6px',
+            background: 'var(--yellow)', border: '2px solid var(--line)',
+            boxShadow: '2px 2px 0 var(--shadow)', borderRadius: '999px',
+            padding: '6px 16px', marginBottom: '20px',
+            fontSize: '14px', fontWeight: 800, color: 'var(--text)',
+          }}>
+            🎉 <span>{result.winner.name}</span> wins with {result.winner.score} pts!
+          </div>
         )}
         {result.leaderboard?.map((p, i) => (
           <div key={p.id} style={{
             display: 'flex', alignItems: 'center', gap: '10px',
-            padding: '10px 12px', borderRadius: '12px',
-            background: i === 0 ? 'var(--amber-bg)' : 'var(--surface-raised)',
-            border: i === 0 ? '1px solid rgba(240,165,0,0.3)' : '1px solid var(--border-subtle)',
+            padding: '10px 14px', borderRadius: '12px',
+            background: i === 0 ? 'var(--yellow)' : 'var(--surface-2)',
+            border: '2px solid var(--line)',
+            boxShadow: i === 0 ? '3px 3px 0 var(--shadow)' : '2px 2px 0 var(--shadow)',
             marginBottom: '8px',
           }}>
-            <span style={{ width: '24px', fontSize: i === 0 ? '20px' : '13px', color: ['#ffd166','#c0c0c0','#cd7f32'][i] || 'var(--text-muted)' }}>
+            <span style={{ width: '24px', fontSize: i === 0 ? '20px' : '13px', fontWeight: 800 }}>
               {['👑','🥈','🥉'][i] || `#${i+1}`}
             </span>
             <span style={{ fontSize: '20px' }}>{p.avatar}</span>
-            <span style={{ flex: 1, fontSize: '14px', fontWeight: 700, textAlign: 'left', color: 'var(--text)' }}>{p.name}</span>
-            <span style={{ fontSize: '15px', fontWeight: 700, color: i === 0 ? 'var(--amber)' : 'var(--amber)' }}>
+            <span style={{ flex: 1, fontSize: '15px', fontWeight: 800, textAlign: 'left', color: 'var(--text)' }}>{p.name}</span>
+            <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text)' }}>
               {p.score} pts
             </span>
           </div>
@@ -317,12 +385,14 @@ function GameEndModal({ result, isHost, onPlayAgain, onBackToLobby, onShowFeedba
           {isHost && (
             <motion.button
               onClick={onPlayAgain}
-              whileHover={{ scale: 1.04 }}
+              whileHover={{ scale: 1.03, translateY: -2 }}
               whileTap={{ scale: 0.97 }}
               style={{
-                padding: '12px', fontSize: '14px', fontWeight: 700, borderRadius: '12px',
-                background: 'var(--surface-raised)', border: '1px solid var(--border)',
+                padding: '12px', fontSize: '15px', fontWeight: 800, borderRadius: '12px',
+                background: 'var(--surface-2)', border: '2.5px solid var(--line)',
+                boxShadow: '3px 3px 0 var(--shadow)',
                 color: 'var(--text)', cursor: 'pointer',
+                fontFamily: 'var(--font-heading)',
               }}
             >
               🔄 Play Again
@@ -330,10 +400,10 @@ function GameEndModal({ result, isHost, onPlayAgain, onBackToLobby, onShowFeedba
           )}
           <motion.button
             onClick={onBackToLobby}
-            whileHover={{ scale: 1.04 }}
+            whileHover={{ scale: 1.03, translateY: -2 }}
             whileTap={{ scale: 0.97 }}
             className="btn-primary"
-            style={{ padding: '12px', fontSize: '14px', borderRadius: '12px' }}
+            style={{ padding: '12px', fontSize: '15px', borderRadius: '12px', fontFamily: 'var(--font-heading)', fontWeight: 800 }}
           >
             🚀 Back to Lobby
           </motion.button>
@@ -341,35 +411,28 @@ function GameEndModal({ result, isHost, onPlayAgain, onBackToLobby, onShowFeedba
 
         <motion.button
           onClick={onShowFeedback}
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.97 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           style={{
             width: '100%',
             marginTop: '12px',
             padding: '10px',
             fontSize: '13px',
-            fontWeight: 600,
+            fontWeight: 700,
             borderRadius: '12px',
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid var(--border)',
-            color: 'var(--text-muted)',
+            background: 'var(--surface-2)',
+            border: '2px solid var(--line)',
+            boxShadow: '2px 2px 0 var(--shadow)',
+            color: 'var(--text)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '6px',
-            transition: 'color 0.2s, border-color 0.2s',
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.color = 'var(--text)'
-            e.target.style.borderColor = 'var(--amber)'
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.color = 'var(--text-muted)'
-            e.target.style.borderColor = 'var(--border)'
+            fontFamily: 'var(--font-heading)',
           }}
         >
-           Share Feedback
+          💬 Share Feedback
         </motion.button>
       </motion.div>
     </div>
@@ -501,10 +564,14 @@ export default function GamePage() {
 
   return (
     <div style={{
-      background: 'var(--bg-deep)',
+      background: 'var(--bg)',
+      backgroundImage: 'radial-gradient(var(--dot, rgba(20,20,20,0.13)) 1.4px, transparent 1.4px)',
+      backgroundSize: '26px 26px',
+      color: 'var(--text)',
       width: '100vw', height: '100vh',
       display: 'flex', flexDirection: 'column',
       overflow: 'hidden',
+      fontFamily: 'var(--font-body)',
     }}>
       {/* Header */}
       <GameHeader
@@ -568,12 +635,12 @@ export default function GamePage() {
             <div style={{ flexShrink: 0, height: '220px', minHeight: 0 }}>
               <PlayerList players={players} currentPlayerId={playerId} hostId={hostId} />
             </div>
-            {/* Visible elevated divider */}
+            {/* Visible neo-brutalist divider */}
             <div style={{
-              height: '1px', flexShrink: 0,
+              height: '2px', flexShrink: 0,
               margin: '8px 4px',
-              background: 'linear-gradient(to right, transparent, var(--border), transparent)',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+              background: 'var(--line)',
+              opacity: 0.2,
             }} />
             {/* Chat — fills all remaining space */}
             <div style={{ flex: '1 1 0', minHeight: 0 }}>
@@ -593,15 +660,17 @@ export default function GamePage() {
       {!isDesktop && (
         <motion.button
           onClick={() => setMobileDrawerOpen(true)}
-          whileHover={{ scale: 1.1 }}
+          whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.92 }}
           style={{
             position: 'fixed', bottom: '24px', right: '24px',
             width: '56px', height: '56px', borderRadius: '50%',
-            background: 'var(--amber)',
-            color: 'var(--bg)', fontSize: '22px',
+            background: 'var(--yellow)',
+            border: '3px solid var(--line)',
+            boxShadow: '4px 4px 0 var(--shadow)',
+            color: 'var(--text)', fontSize: '24px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 30, border: 'none', cursor: 'pointer',
+            zIndex: 30, cursor: 'pointer',
           }}
         >👥</motion.button>
       )}
@@ -616,7 +685,8 @@ export default function GamePage() {
               onClick={() => setMobileDrawerOpen(false)}
               style={{
                 position: 'fixed', inset: 0, zIndex: 40,
-                background: 'rgba(0,0,0,0.6)',
+                background: 'rgba(20,20,20,0.65)',
+                backdropFilter: 'blur(3px)',
               }}
             />
             <motion.div
@@ -627,25 +697,28 @@ export default function GamePage() {
                 position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
                 height: '70vh',
                 background: 'var(--surface)',
-                borderTop: '1px solid var(--border)',
-                borderRadius: '16px 16px 0 0',
+                borderTop: '3px solid var(--line)',
+                borderRadius: '20px 20px 0 0',
+                boxShadow: '0 -8px 24px rgba(20,20,20,0.15)',
                 display: 'flex', flexDirection: 'column',
+                fontFamily: 'var(--font-body)',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 4px' }}>
-                <div style={{ width: '36px', height: '4px', borderRadius: '99px', background: 'var(--border)' }} />
+                <div style={{ width: '40px', height: '5px', borderRadius: '99px', background: 'var(--line)' }} />
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 16px 8px' }}>
-                <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text)' }}>Players & Chat</span>
+                <span style={{ fontSize: '17px', fontWeight: 800, color: 'var(--text)', fontFamily: 'var(--font-heading)' }}>Players & Chat</span>
                 <button onClick={() => setMobileDrawerOpen(false)} style={{
-                  width: '30px', height: '30px', borderRadius: '8px',
-                  background: 'var(--surface-raised)', border: '1px solid var(--border)',
-                  color: 'var(--text-muted)', fontSize: '14px', cursor: 'pointer',
+                  width: '32px', height: '32px', borderRadius: '8px',
+                  background: 'var(--surface-2)', border: '2px solid var(--line)',
+                  boxShadow: '2px 2px 0 var(--shadow)',
+                  color: 'var(--text)', fontSize: '13px', fontWeight: 800, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>✕</button>
               </div>
               {/* Mobile tab toggle — Players | Chat */}
-              <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', flexShrink: 0, margin: '0 12px' }}>
+              <div style={{ display: 'flex', borderBottom: '2px solid var(--line)', flexShrink: 0, margin: '0 12px', gap: '8px' }}>
                 {[
                   { id: 'players', label: `👥 Players (${players.length})` },
                   { id: 'chat',    label: '💬 Chat & Guess' },
@@ -654,13 +727,16 @@ export default function GamePage() {
                     key={tab.id}
                     onClick={() => setMobileSidebarTab(tab.id)}
                     style={{
-                      flex: 1, padding: '8px 12px',
-                      fontSize: '13px', fontWeight: 700,
-                      background: 'transparent', border: 'none',
-                      color: mobileSidebarTab === tab.id ? 'var(--amber)' : 'var(--text-muted)',
-                      borderBottom: mobileSidebarTab === tab.id ? '2px solid var(--amber)' : '2px solid transparent',
+                      flex: 1, padding: '10px 14px',
+                      fontSize: '14px', fontWeight: 800,
+                      fontFamily: 'var(--font-heading)',
+                      background: mobileSidebarTab === tab.id ? 'var(--yellow)' : 'var(--surface-2)',
+                      border: '2px solid var(--line)',
+                      borderBottom: mobileSidebarTab === tab.id ? '2px solid var(--yellow)' : '2px solid var(--line)',
+                      borderRadius: '10px 10px 0 0',
+                      color: 'var(--text)',
                       cursor: 'pointer', transition: 'all 0.15s ease',
-                      marginBottom: '-1px',
+                      marginBottom: '-2px',
                     }}
                   >
                     {tab.label}

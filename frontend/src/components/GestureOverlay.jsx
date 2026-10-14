@@ -371,14 +371,15 @@ export default function GestureOverlay({
               gap: '8px',
               padding: '8px 14px',
               borderRadius: '999px',
-              background: 'rgba(6,9,24,0.97)',
-              border: '1px solid rgba(99,120,255,0.35)',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.55)',
+              background: 'var(--surface)',
+              border: '2.5px solid var(--line)',
+              boxShadow: '3px 3px 0 var(--shadow)',
+              fontFamily: 'var(--font-body)',
             }}
           >
             <span style={{ fontSize: '16px' }}>✋</span>
             {status === 'active' && (
-              <span style={{ fontSize: '11px', fontWeight: 700, color: info.color }}>
+              <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text)' }}>
                 {info.icon} {info.label}
               </span>
             )}
@@ -393,11 +394,11 @@ export default function GestureOverlay({
               onClick={() => setMinimized(false)}
               title="Expand gesture panel"
               style={{
-                padding: '3px 8px', borderRadius: '8px',
-                background: 'rgba(99,120,255,0.15)',
-                border: '1px solid rgba(99,120,255,0.3)',
-                color: 'var(--text-muted)',
-                fontSize: '11px', fontWeight: 700,
+                padding: '4px 8px', borderRadius: '8px',
+                background: 'var(--surface-2)',
+                border: '1.5px solid var(--line)',
+                color: 'var(--text)',
+                fontSize: '11px', fontWeight: 800,
                 cursor: 'pointer',
               }}
             >▲</button>
@@ -405,11 +406,11 @@ export default function GestureOverlay({
               <button
                 onClick={onClose}
                 style={{
-                  padding: '3px 8px', borderRadius: '8px',
-                  background: 'rgba(248,81,73,0.12)',
-                  border: '1px solid rgba(248,81,73,0.3)',
-                  color: 'var(--red)',
-                  fontSize: '11px', fontWeight: 700,
+                  padding: '4px 8px', borderRadius: '8px',
+                  background: 'var(--coral)',
+                  border: '1.5px solid var(--line)',
+                  color: 'var(--text)',
+                  fontSize: '11px', fontWeight: 800,
                   cursor: 'pointer',
                 }}
               >✕ Stop</button>
@@ -432,17 +433,18 @@ export default function GestureOverlay({
               zIndex:    32,
               borderRadius: '16px',
               overflow:  'hidden',
-              background: 'rgba(6,9,24,0.97)',
-              border:    '1px solid rgba(99,120,255,0.3)',
-              boxShadow: '0 0 32px rgba(99,120,255,0.15), 0 20px 40px rgba(0,0,0,0.65)',
+              background: 'var(--surface)',
+              border:    '3px solid var(--line)',
+              boxShadow: '6px 6px 0 var(--shadow)',
+              fontFamily: 'var(--font-body)',
             }}
           >
             {/* ── Header ── */}
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '8px 12px',
-              borderBottom: '1px solid var(--border-subtle)',
-              background: 'rgba(11,15,35,0.75)',
+              borderBottom: '2px solid var(--line)',
+              background: 'var(--surface-2)',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
                 <span style={{ fontSize: '15px' }}>✋</span>
@@ -613,24 +615,25 @@ export default function GestureOverlay({
             {/* ── Compact Gesture Guide ── */}
             <div style={{
               padding: '8px 12px',
-              borderTop: '1px solid var(--border-subtle)',
-              background: 'rgba(11,15,35,0.65)',
+              borderTop: '2px solid var(--line)',
+              background: 'var(--surface-2)',
             }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
                 {[
-                  { icon: '☝️', label: 'Draw',   color: 'var(--green)' },
-                  { icon: '✌️', label: 'Pause',  color: 'var(--blue)' },
-                  { icon: '✊', label: 'Clear',  color: 'var(--red)' },
-                  { icon: '🤏', label: 'Erase',  color: 'var(--amber)' },
+                  { icon: '☝️', label: 'Draw',   color: 'var(--text)' },
+                  { icon: '✌️', label: 'Pause',  color: 'var(--text)' },
+                  { icon: '✊', label: 'Clear',  color: 'var(--text)' },
+                  { icon: '🤏', label: 'Erase',  color: 'var(--text)' },
                 ].map(g => (
                   <div key={g.label} style={{
-                    display: 'flex', alignItems: 'center', gap: '5px',
-                    padding: '4px 6px', borderRadius: '7px',
-                    background: 'rgba(11,15,35,0.75)',
-                    border: '1px solid var(--border-subtle)',
-                    fontSize: '10px', fontWeight: 600, color: g.color,
+                    display: 'flex', alignItems: 'center', gap: '6px',
+                    padding: '4px 8px', borderRadius: '8px',
+                    background: 'var(--surface)',
+                    border: '1.5px solid var(--line)',
+                    boxShadow: '1.5px 1.5px 0 var(--shadow)',
+                    fontSize: '11px', fontWeight: 800, color: g.color,
                   }}>
-                    <span style={{ fontSize: '12px' }}>{g.icon}</span>
+                    <span style={{ fontSize: '13px' }}>{g.icon}</span>
                     <span>{g.label}</span>
                   </div>
                 ))}
