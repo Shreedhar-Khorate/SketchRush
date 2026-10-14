@@ -1,693 +1,645 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
-import anime from 'animejs'
 import FeedbackModal from '../components/FeedbackModal'
 import { loadProfile, saveProfile } from '../lib/profileCookie'
+import './HomePage.css'
 
 const AVATARS = [
-  { emoji: '🦊', label: 'Fox' },
-  { emoji: '🐱', label: 'Cat' },
-  { emoji: '🐉', label: 'Dragon' },
-  { emoji: '🤖', label: 'Robot' },
-  { emoji: '👽', label: 'Alien' },
-  { emoji: '🧙', label: 'Wizard' },
-  { emoji: '🥷', label: 'Ninja' },
-  { emoji: '🚀', label: 'Rocket' },
-  { emoji: '🦄', label: 'Unicorn' },
-  { emoji: '👻', label: 'Ghost' },
-  { emoji: '💀', label: 'Skull' },
-  { emoji: '🔥', label: 'Fire' },
+  { label: 'Fox', emoji: '🦊' },
+  { label: 'Cat', emoji: '🐱' },
+  { label: 'Dragon', emoji: '🐉' },
+  { label: 'Robot', emoji: '🤖' },
+  { label: 'Alien', emoji: '👽' },
+  { label: 'Wizard', emoji: '🧙' },
+  { label: 'Ninja', emoji: '🥷' },
+  { label: 'Rocket', emoji: '🚀' },
+  { label: 'Unicorn', emoji: '🦄' },
+  { label: 'Ghost', emoji: '👻' },
+  { label: 'Skull', emoji: '💀' },
+  { label: 'Fire', emoji: '🔥' },
 ]
-
-const FEATURES = [
-  { icon: '🎨', text: 'Draw & Guess' },
-  { icon: '✋', text: 'Gesture AI' },
-  { icon: '⚡', text: 'Real-time' },
-  { icon: '🏆', text: 'Leaderboard' },
-]
-
-const ORBS = [
-  { id: 'ember', size: '500px', color: 'rgba(249,115,22,0.42)', blur: '90px', opacity: 0.7, position: { top: '-15%', left: '-10%' } },
-  { id: 'aqua', size: '460px', color: 'rgba(56,189,248,0.36)', blur: '95px', opacity: 0.65, position: { top: '5%', right: '-8%' } },
-  { id: 'lime', size: '400px', color: 'rgba(34,197,94,0.3)', blur: '85px', opacity: 0.5, position: { bottom: '-20%', left: '20%' } },
-  { id: 'sun', size: '300px', color: 'rgba(251,191,36,0.3)', blur: '75px', opacity: 0.55, position: { bottom: '8%', right: '16%' } },
-]
-
-const FLOATERS = [
-  { id: 'spark', emoji: '✨', size: '20px', opacity: 0.6, position: { top: '13%', left: '10%' }, factor: 15 },
-  { id: 'bolt', emoji: '⚡', size: '24px', opacity: 0.7, position: { top: '18%', right: '14%' }, factor: -20 },
-  { id: 'pencil', emoji: '✏️', size: '22px', opacity: 0.6, position: { top: '55%', left: '5%' }, factor: 25 },
-  { id: 'brush', emoji: '🖌️', size: '22px', opacity: 0.6, position: { top: '60%', right: '6%' }, factor: -15 },
-  { id: 'target', emoji: '🎯', size: '20px', opacity: 0.55, position: { bottom: '20%', left: '16%' }, factor: 30 },
-  { id: 'puzzle', emoji: '🧩', size: '20px', opacity: 0.5, position: { bottom: '14%', right: '18%' }, factor: -25 },
-]
-
-const wrapVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
-}
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 30, filter: 'blur(10px)' },
-  visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { type: 'spring', stiffness: 100, damping: 15 } },
-}
-
-const gridVariants = {
-  hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.04
-    }
-  }
-}
-
-const avatarVariants = {
-  hidden: { opacity: 0, scale: 0.6, y: 15 },
-  visible: { 
-    opacity: 1, 
-    scale: 1, 
-    y: 0,
-    transition: {
-      type: 'spring',
-      stiffness: 260,
-      damping: 18
-    }
-  }
-}
 
 export default function HomePage() {
   const navigate = useNavigate()
-  const orbRefs = useRef([])
-  const floaterRefs = useRef([])
-  const sketchRefs = useRef([])
+  const howtoRef = useRef(null)
+
   // ── Restore profile from cookie (auto-fill name + avatar) ─────────────────
   const [playerName, setPlayerName] = useState(() => {
     const saved = loadProfile()
     return saved?.name || ''
   })
+
   const [selectedAvatar, setSelectedAvatar] = useState(() => {
     const saved = loadProfile()
     if (saved?.avatarEmoji) {
       const match = AVATARS.find(a => a.emoji === saved.avatarEmoji)
       if (match) return match
     }
-    return AVATARS[0]
+    // Default to Cat (matching the HTML landing page design)
+    return AVATARS[1]
   })
-  const [joinMode, setJoinMode] = useState('quick')
+
+  const [joinMode, setJoinMode] = useState('quick') // 'quick' | 'private'
   const [roomCode, setRoomCode] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [infoTab, setInfoTab] = useState('how-to-play')
+  const [activeTab, setActiveTab] = useState('how') // 'how' | 'about'
   const [showFeedback, setShowFeedback] = useState(false)
 
-  // ── Persist profile cookie reactively (debounced 400 ms) ─────────────────
-  // Saves as soon as the user types their name or picks an avatar,
-  // so the cookie is always up-to-date even if they close the tab before joining.
+  // ── Theme State (light / dark) ───────────────────────────────────────────
+  const [theme, setTheme] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sr-theme')
+      if (saved === 'light' || saved === 'dark') return saved
+    } catch {}
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    }
+    return 'light'
+  })
+
   useEffect(() => {
-    if (!playerName.trim()) return   // don’t overwrite a valid cookie with blank
+    document.documentElement.setAttribute('data-theme', theme)
+    try {
+      localStorage.setItem('sr-theme', theme)
+    } catch {}
+  }, [theme])
+
+  useEffect(() => {
+    if (!window.matchMedia) return
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const handler = (e) => {
+      try {
+        const saved = localStorage.getItem('sr-theme')
+        if (!saved) {
+          setTheme(e.matches ? 'dark' : 'light')
+        }
+      } catch {}
+    }
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+
+  const toggleTheme = () => {
+    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'))
+  }
+
+  // ── Persist profile cookie reactively (debounced 400 ms) ─────────────────
+  useEffect(() => {
+    if (!playerName.trim()) return
     const id = setTimeout(() => {
       saveProfile({ name: playerName.trim(), avatarEmoji: selectedAvatar.emoji })
     }, 400)
     return () => clearTimeout(id)
   }, [playerName, selectedAvatar])
 
-  // Typewriter tagline
-  const taglineFullText = "Draw fast. Guess faster."
-  const [taglineText, setTaglineText] = useState('')
-  const [showCursor, setShowCursor] = useState(true)
-
-  useEffect(() => {
-    let i = 0
-    const interval = setInterval(() => {
-      setTaglineText(taglineFullText.slice(0, i + 1))
-      i++
-      if (i >= taglineFullText.length) {
-        clearInterval(interval)
-      }
-    }, 60)
-    return () => clearInterval(interval)
-  }, [])
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setShowCursor(prev => !prev)
-    }, 530)
-    return () => clearInterval(timer)
-  }, [])
-
-  // Parallax mouse position
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
-  const handleMouseMove = useCallback((e) => {
-    const x = (e.clientX / window.innerWidth) - 0.5
-    const y = (e.clientY / window.innerHeight) - 0.5
-    setMousePos({ x, y })
-  }, [])
-
-  useEffect(() => {
-    window.addEventListener('mousemove', handleMouseMove)
-    return () => window.removeEventListener('mousemove', handleMouseMove)
-  }, [handleMouseMove])
-
-  useEffect(() => {
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (prefersReduced) return
-    const orbs = orbRefs.current.filter(Boolean)
-    const floaters = floaterRefs.current.filter(Boolean)
-    const sketchLines = sketchRefs.current.filter(Boolean)
-    if (!orbs.length) return
-
-    const orbCfg = [
-      { x: [-28, 55], y: [-18, 45], scale: [1, 1.1], dur: 18000 },
-      { x: [38, -48], y: [28, -38], scale: [1.04, 0.96], dur: 20000 },
-      { x: [-18, 38], y: [45, -28], scale: [1, 1.08], dur: 22000 },
-      { x: [18, -28], y: [-36, 28], scale: [1.02, 0.98], dur: 17000 },
-    ]
-
-    const oa = orbs.map((t, i) => {
-      const c = orbCfg[i % orbCfg.length]
-      return anime({ targets: t, translateX: c.x, translateY: c.y, scale: c.scale, easing: 'easeInOutSine', duration: c.dur, direction: 'alternate', loop: true, delay: i * 200 })
-    })
-
-    const fa = floaters.map((t, i) =>
-      anime({ targets: t, translateY: [0, -16], translateX: [0, i % 2 === 0 ? 12 : -12], rotate: [0, i % 2 === 0 ? 5 : -5], easing: 'easeInOutSine', duration: 11000 + i * 900, direction: 'alternate', loop: true, delay: i * 160 })
-    )
-
-    const sa = anime({
-      targets: sketchLines,
-      strokeDashoffset: [anime.setDashoffset, 0],
-      easing: 'easeInOutCubic',
-      duration: 3500,
-      delay: (t, i) => i * 450,
-      loop: false
-    })
-
-    return () => {
-      oa.forEach(a => a.pause())
-      fa.forEach(a => a.pause())
-      sa.pause()
-      anime.remove(orbs)
-      anime.remove(floaters)
-      anime.remove(sketchLines)
+  // ── Start / Join Room Handler ─────────────────────────────────────────────
+  const handleStart = async () => {
+    const trimmedName = playerName.trim()
+    if (!trimmedName) {
+      setError('Please enter your player name first')
+      return
     }
-  }, [])
 
-  const handleJoin = async () => {
-    if (!playerName.trim()) { setError('Please enter your name first'); return }
-    let code = roomCode
+    let code = roomCode.trim()
     if (joinMode === 'quick') {
       code = Math.random().toString(36).substring(2, 7).toUpperCase()
-    } else if (!roomCode.trim()) {
-      setError('Please enter a room code'); return
+    } else if (!code) {
+      // In private mode, if code is empty, generate a fresh room code
+      code = Math.random().toString(36).substring(2, 7).toUpperCase()
     } else {
-      code = roomCode.toUpperCase()
+      code = code.toUpperCase()
     }
-    // Persist profile so name + avatar are auto-filled on next visit
-    saveProfile({ name: playerName.trim(), avatarEmoji: selectedAvatar.emoji })
+
+    // Persist profile
+    saveProfile({ name: trimmedName, avatarEmoji: selectedAvatar.emoji })
+
+    // Dispatch custom event for interoperability
+    const detail = {
+      name: trimmedName,
+      avatar: selectedAvatar.label,
+      avatarEmoji: selectedAvatar.emoji,
+      mode: joinMode,
+      roomCode: code,
+    }
+    document.dispatchEvent(new CustomEvent('sketchrush:start', { detail }))
+    if (typeof window.onSketchRushStart === 'function') {
+      window.onSketchRushStart(detail)
+    }
+
     setIsLoading(true)
-    await new Promise(r => setTimeout(r, 600))
-    navigate(`/game/${code}`, { state: { playerName: playerName.trim(), avatar: selectedAvatar.emoji } })
+    await new Promise(r => setTimeout(r, 450))
+    navigate(`/game/${code}`, {
+      state: {
+        playerName: trimmedName,
+        avatar: selectedAvatar.emoji,
+      },
+    })
   }
 
+  const handleNavToTab = (tabKey) => {
+    setActiveTab(tabKey)
+    if (howtoRef.current) {
+      howtoRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }
+
+  const isNameReady = playerName.trim().length > 0
+
   return (
-    <div className="home-root min-h-screen w-full relative overflow-y-auto overflow-x-hidden">
+    <div className="sr-landing" data-theme={theme}>
+      <div className="page">
 
-      {/* Background */}
-      <div className="home-bg" aria-hidden="true">
-        <div className="home-gradient" />
-        <div className="home-grid" />
+        {/* ── Header / Topbar ── */}
+        <header className="topbar">
+          <a
+            className="logo"
+            href="#"
+            onClick={(e) => {
+              e.preventDefault()
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+            }}
+            aria-label="SketchRush home"
+          >
+            <span className="logo-mark" aria-hidden="true">✏️</span>
+            <span>SketchRush</span>
+          </a>
 
-        {/* Glowing Sketch Lines (Self-drawing) */}
-        <div 
-          className="home-sketch-container"
-          style={{
-            transform: `translate(${mousePos.x * 35}px, ${mousePos.y * 35}px)`,
-            transition: 'transform 0.5s cubic-bezier(0.1, 0.8, 0.2, 1)'
-          }}
+          <nav className="topnav" aria-label="Main">
+            <button
+              type="button"
+              onClick={() => handleNavToTab('how')}
+            >
+              How to Play
+            </button>
+            <button
+              type="button"
+              onClick={() => handleNavToTab('about')}
+            >
+              About SketchRush
+            </button>
+          </nav>
+
+          <button
+            type="button"
+            className="theme"
+            id="themeBtn"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            <span id="themeIcon" aria-hidden="true">
+              {theme === 'dark' ? '☀️' : '🌙'}
+            </span>
+          </button>
+        </header>
+
+        {/* ── Background Doodles ── */}
+        <svg
+          className="doodle"
+          style={{ left: '2%', top: '90px', width: '46px' }}
+          viewBox="0 0 40 40"
+          aria-hidden="true"
         >
-          <svg className="home-sketch-lines" viewBox="0 0 1000 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              ref={el => { sketchRefs.current[0] = el }}
-              d="M -100,200 C 200,100 300,500 500,400 C 700,300 800,700 1100,600"
-              stroke="url(#sketch-grad-1)"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              opacity="0.38"
-            />
-            <path
-              ref={el => { sketchRefs.current[1] = el }}
-              d="M 1100,150 C 800,250 700,50 400,200 C 100,350 -50,150 -100,300"
-              stroke="url(#sketch-grad-2)"
-              strokeWidth="2"
-              strokeLinecap="round"
-              opacity="0.28"
-            />
-            <path
-              ref={el => { sketchRefs.current[2] = el }}
-              d="M 150,900 C 300,800 450,950 600,850 C 750,750 850,900 1050,800"
-              stroke="url(#sketch-grad-3)"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              opacity="0.32"
-            />
-            
-            <defs>
-              <linearGradient id="sketch-grad-1" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#f97316" stopOpacity="0.8" />
-                <stop offset="50%" stopColor="#38bdf8" stopOpacity="0.8" />
-                <stop offset="100%" stopColor="#22c55e" stopOpacity="0.8" />
-              </linearGradient>
-              <linearGradient id="sketch-grad-2" x1="100%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.7" />
-                <stop offset="100%" stopColor="#a371f7" stopOpacity="0.7" />
-              </linearGradient>
-              <linearGradient id="sketch-grad-3" x1="0%" y1="50%" x2="100%" y2="50%">
-                <stop offset="0%" stopColor="#22c55e" stopOpacity="0.7" />
-                <stop offset="50%" stopColor="#fb923c" stopOpacity="0.7" />
-                <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.7" />
-              </linearGradient>
-            </defs>
-          </svg>
-        </div>
+          <path
+            d="M20 3l4.6 12.4L38 20l-13.4 4.6L20 38l-4.6-13.4L2 20l13.4-4.6z"
+            fill="#ffe500"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinejoin="round"
+          />
+        </svg>
 
-        {/* Particle Rain Background */}
-        <div className="particle-rain">
-          {Array.from({ length: 24 }).map((_, idx) => {
-            const x = `${(idx * 7.7 + 5) % 96}%`
-            const delay = `${(idx * 0.45).toFixed(2)}s`
-            const duration = `${(8 + (idx % 3) * 3)}s`
-            const size = `${(2 + (idx % 2) * 2)}px`
-            const opacity = (0.25 + (idx % 3) * 0.2).toFixed(2)
-            const colorMap = ['rgba(249, 115, 22, 0.6)', 'rgba(56, 189, 248, 0.5)', 'rgba(34, 197, 94, 0.45)']
-            const color = colorMap[idx % 3]
+        <svg
+          className="doodle hide-sm"
+          style={{ left: '44%', top: '30px', width: '70px' }}
+          viewBox="0 0 70 24"
+          aria-hidden="true"
+        >
+          <path
+            d="M3 18l9-12 9 12 9-12 9 12 9-12 9 12 9-12"
+            fill="none"
+            stroke="#ff7a1a"
+            strokeWidth="4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
 
-            return (
-              <div
-                key={idx}
-                className="particle"
-                style={{
-                  '--x': x,
-                  '--delay': delay,
-                  '--duration': duration,
-                  '--size': size,
-                  '--opacity': opacity,
-                  '--color': color
-                }}
-              />
-            )
-          })}
-        </div>
+        <svg
+          className="doodle hide-sm"
+          style={{ right: '1%', top: '44px', width: '54px' }}
+          viewBox="0 0 50 50"
+          aria-hidden="true"
+        >
+          <circle cx="25" cy="25" r="18" fill="none" stroke="currentColor" strokeWidth="4" />
+          <circle cx="25" cy="25" r="6" fill="#c9f03a" stroke="currentColor" strokeWidth="3" />
+        </svg>
 
-        <div className="home-orbs">
-          {ORBS.map((orb, i) => (
-            <div key={orb.id} ref={el => { orbRefs.current[i] = el }} className="home-orb"
-              style={{ '--orb-size': orb.size, '--orb-color': orb.color, '--orb-blur': orb.blur, '--orb-opacity': orb.opacity, ...orb.position }} />
-          ))}
-        </div>
-        <div className="home-floaters">
-          {FLOATERS.map((f, i) => (
-            <div key={f.id} ref={el => { floaterRefs.current[i] = el }} className="home-floater"
-              style={{ fontSize: f.size, opacity: f.opacity, ...f.position }}>
-              <div
-                style={{
-                  transform: `translate(${mousePos.x * f.factor}px, ${mousePos.y * f.factor}px)`,
-                  transition: 'transform 0.4s cubic-bezier(0.1, 0.8, 0.2, 1)'
-                }}
-              >
-                {f.emoji}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+        <svg
+          className="doodle hide-sm"
+          style={{ left: '1%', bottom: '150px', width: '80px' }}
+          viewBox="0 0 90 60"
+          aria-hidden="true"
+        >
+          <path
+            d="M5 45C20 10 55 5 78 28"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+          <path
+            d="M62 26l17 3-6 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
 
-      {/* Content */}
-      <div className="home-content min-h-screen w-full flex items-start sm:items-center justify-center px-4 py-12 relative">
-        <motion.div variants={wrapVariants} initial="hidden" animate="visible"
-          className="w-full max-w-[480px] relative z-10 flex flex-col gap-5">
+        <svg
+          className="doodle"
+          style={{ right: '3%', bottom: '210px', width: '38px' }}
+          viewBox="0 0 40 40"
+          aria-hidden="true"
+        >
+          <path
+            d="M20 3l4.6 12.4L38 20l-13.4 4.6L20 38l-4.6-13.4L2 20l13.4-4.6z"
+            fill="#ffd2bf"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinejoin="round"
+          />
+        </svg>
 
-          {/* ── Logo ── */}
-          <motion.div variants={itemVariants} className="text-center">
+        <svg
+          className="doodle hide-sm"
+          style={{ left: '47%', bottom: '70px', width: '64px' }}
+          viewBox="0 0 64 64"
+          aria-hidden="true"
+        >
+          <path
+            d="M32 32m0 0c0-4 4-6 7-4s3 8-2 10-12-1-12-10 9-15 19-13 16 14 11 24"
+            fill="none"
+            stroke="#ff7a1a"
+            strokeWidth="3.5"
+            strokeLinecap="round"
+          />
+        </svg>
 
+        {/* ── Main Layout ── */}
+        <main className="layout">
 
-            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-2 title-gradient"
-              style={{ letterSpacing: '-0.02em' }}>
-              SketchRush
-            </h1>
-            <p className="text-sm font-medium min-h-[20px]" style={{ color: 'var(--text-muted)' }}>
-              {taglineText.slice(0, 11)}
-              {taglineText.length > 11 && (
-                <span style={{ color: 'var(--amber)' }}>{taglineText.slice(11)}</span>
-              )}
-              <span className={`inline-block w-1.5 h-3.5 ml-0.5 ${showCursor ? 'opacity-100' : 'opacity-0'} transition-opacity`} style={{ background: 'var(--amber)', verticalAlign: 'middle' }} />
+          {/* Left Column: Brand Hero */}
+          <section className="brand">
+            <h1>SketchRush</h1>
+            <p className="tagline">
+              Draw fast.{' '}
+              <span>
+                Guess faster.
+                <svg viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true">
+                  <path
+                    d="M2 8c12-8 20 4 32-2s20 4 32-2 20 4 32-2 20 4 32-2 20 4 32-2"
+                    fill="none"
+                    stroke="#ff7a1a"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </span>
             </p>
 
-            {/* Feature pills */}
-            <div className="flex items-center justify-center gap-2 mt-5 flex-wrap">
-              {FEATURES.map(f => (
-                <span key={f.text} className="badge badge-brand" style={{ fontSize: '11px' }}>
-                  {f.icon} {f.text}
-                </span>
-              ))}
-            </div>
-          </motion.div>
+            <ul className="chips">
+              <li className="chip" style={{ '--c': 'var(--peach)', '--r': '-2deg' }}>
+                <span aria-hidden="true">🎨</span> Draw &amp; Guess
+              </li>
+              <li className="chip" style={{ '--c': 'var(--sky)', '--r': '1.5deg' }}>
+                <span aria-hidden="true">🧠</span> Gesture AI
+              </li>
+              <li className="chip" style={{ '--c': 'var(--yellow)', '--r': '-1deg' }}>
+                <span aria-hidden="true">⚡</span> Real-time
+              </li>
+              <li className="chip" style={{ '--c': 'var(--lime)', '--r': '2deg' }}>
+                <span aria-hidden="true">🏆</span> Leaderboard
+              </li>
+            </ul>
 
-          {/* ── Main card ── */}
-          <motion.div variants={itemVariants} className="home-card p-7 sm:p-9 flex flex-col gap-7">
-
-            {/* Name */}
-            <div className="home-section">
-              <div className="home-label-container">
-                <label className="home-label">Your Name</label>
-                <div className="flex items-center gap-1.5" style={{ color: 'var(--green)' }}>
-                  <span className="status-dot-container">
-                    <span className="status-dot" style={{ background: 'var(--green)' }} />
-                  </span>
-                  <span className="status-dot-text">Ready to play</span>
+            <div className="sketch-wrap" aria-hidden="true">
+              <div className="sketch">
+                <div className="sketch-bar">
+                  <i style={{ '--c': '#ff7a1a' }} />
+                  <i style={{ '--c': '#ffe500' }} />
+                  <i style={{ '--c': '#c9f03a' }} />
                 </div>
+                <svg className="art" viewBox="0 0 300 220">
+                  <path
+                    className="fill"
+                    d="M80 70l12-42 38 24 40 0 38-24 12 42c8 18 8 42-4 62-14 22-40 34-72 34s-58-12-72-34c-12-20-12-44-4-62z"
+                  />
+                  <path className="stroke" pathLength={1} style={{ '--d': '.3s' }} d="M112 108v10" />
+                  <path className="stroke" pathLength={1} style={{ '--d': '.5s' }} d="M188 108v10" />
+                  <path className="stroke" pathLength={1} style={{ '--d': '.7s' }} d="M138 134l12 8 12-8" />
+                  <path className="stroke" pathLength={1} style={{ '--d': '.9s' }} d="M150 142v8" />
+                  <path className="stroke" pathLength={1} style={{ '--d': '1.1s' }} d="M60 128l38 6M60 152l38-8" />
+                  <path className="stroke" pathLength={1} style={{ '--d': '1.3s' }} d="M240 128l-38 6M240 152l-38-8" />
+                  <path className="stroke" pathLength={1} style={{ '--d': '1.5s' }} d="M30 30c10-14 22 8 32-6M244 190c10-14 22 8 32-6" />
+                </svg>
               </div>
-              <div style={{ position: 'relative' }}>
-                <div className="name-input-avatar-badge">
-                  <motion.span 
-                    key={selectedAvatar.emoji}
-                    initial={{ scale: 0.7, rotate: -15 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={{ type: 'spring', stiffness: 450, damping: 15 }}
-                    style={{ display: 'inline-block' }}
-                  >
-                    {selectedAvatar.emoji}
-                  </motion.span>
-                </div>
+              <svg
+                style={{
+                  position: 'absolute',
+                  right: '-26px',
+                  bottom: '-26px',
+                  width: '64px',
+                  transform: 'rotate(12deg)',
+                }}
+                viewBox="0 0 60 60"
+              >
+                <path
+                  d="M8 52l4-14 30-30 10 10-30 30z"
+                  fill="#ffe500"
+                  stroke="currentColor"
+                  strokeWidth="3.5"
+                  strokeLinejoin="round"
+                />
+                <path d="M12 38l10 10" stroke="currentColor" strokeWidth="3.5" />
+                <path
+                  d="M8 52l4-14 10 10z"
+                  fill="#ffd2bf"
+                  stroke="currentColor"
+                  strokeWidth="3.5"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+          </section>
+
+          {/* Right Column: Cards */}
+          <div className="stack">
+
+            {/* Setup Card */}
+            <section className="card setup" aria-label="Player setup">
+
+              {/* Name Field */}
+              <div className="field-head">
+                <label className="label" htmlFor="name">Your Name</label>
+                <span
+                  className={`ready ${isNameReady ? '' : 'warn'}`}
+                  id="ready"
+                  role="status"
+                >
+                  {isNameReady ? 'Ready to play' : 'Enter a name'}
+                </span>
+              </div>
+
+              <div className="name-box">
+                <span className="name-avatar" id="nameAvatar" aria-hidden="true">
+                  {selectedAvatar.emoji}
+                </span>
                 <input
+                  id="name"
                   type="text"
                   maxLength={16}
                   value={playerName}
-                  onChange={e => { setPlayerName(e.target.value); setError('') }}
-                  onKeyDown={e => e.key === 'Enter' && handleJoin()}
-                  placeholder="Enter your player name"
-                  className="name-input-field"
+                  onChange={(e) => {
+                    setPlayerName(e.target.value)
+                    setError('')
+                  }}
+                  onKeyDown={(e) => e.key === 'Enter' && handleStart()}
+                  autoComplete="nickname"
+                  spellCheck={false}
+                  placeholder="Enter your name"
                 />
-                <span className="name-input-char-counter">
+                <span className="count" id="count">
                   {playerName.length}/16
                 </span>
               </div>
-            </div>
 
-            <div className="home-divider" />
+              {/* Avatar Selector */}
+              <div className="section-gap">
+                <div className="field-head">
+                  <span className="label" id="avatarLabel">Choose Avatar</span>
+                  <span className="current">
+                    <span id="curEm" aria-hidden="true">{selectedAvatar.emoji}</span>{' '}
+                    <span id="curName">{selectedAvatar.label}</span>
+                  </span>
+                </div>
 
-            {/* Avatar picker */}
-            <div className="home-section">
-              <div className="home-label-container">
-                <label className="home-label">Choose Avatar</label>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
-                  {selectedAvatar.emoji} {selectedAvatar.label}
-                </span>
+                <div className="avatars" id="avatars" role="radiogroup" aria-labelledby="avatarLabel">
+                  {AVATARS.map((avatar) => {
+                    const isSelected = selectedAvatar.label === avatar.label
+                    return (
+                      <button
+                        key={avatar.label}
+                        type="button"
+                        className="avatar"
+                        role="radio"
+                        aria-checked={isSelected}
+                        aria-label={avatar.label}
+                        onClick={() => setSelectedAvatar(avatar)}
+                      >
+                        <span className="em" aria-hidden="true">{avatar.emoji}</span>
+                        <span className="nm">{avatar.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
-              <motion.div variants={gridVariants} className="avatar-grid">
-                {AVATARS.map(avatar => (
-                  <motion.button
-                    key={avatar.emoji}
-                    variants={avatarVariants}
-                    onClick={() => setSelectedAvatar(avatar)}
-                    whileTap={{ scale: 0.93 }}
-                    title={avatar.label}
-                    aria-pressed={selectedAvatar.emoji === avatar.emoji}
-                    className="avatar-card"
+
+              {/* Room Mode Selector */}
+              <div className="section-gap">
+                <div className="field-head">
+                  <span className="label" id="modeLabel">Room Mode</span>
+                </div>
+
+                <div className="modes" role="radiogroup" aria-labelledby="modeLabel">
+                  <button
+                    type="button"
+                    className="mode"
+                    role="radio"
+                    aria-checked={joinMode === 'quick'}
+                    onClick={() => {
+                      setJoinMode('quick')
+                      setRoomCode('')
+                      setError('')
+                    }}
                   >
-                    <span className="avatar-emoji">{avatar.emoji}</span>
-                    <span className="avatar-label">{avatar.label}</span>
-                    {selectedAvatar.emoji === avatar.emoji && (
-                      <motion.div
-                        layoutId="avatar-ring"
-                        className="absolute inset-0 rounded-2xl pointer-events-none"
-                        style={{ border: '2px solid rgba(249,115,22,0.85)', borderRadius: '14px' }}
-                        transition={{ type: 'spring', stiffness: 450, damping: 28 }}
-                      />
-                    )}
-                  </motion.button>
-                ))}
-              </motion.div>
-            </div>
+                    <span className="ic" aria-hidden="true">⚡</span>
+                    <span>
+                      <b>Quick Play</b>
+                      <small>Join active lobbies automatically</small>
+                    </span>
+                  </button>
 
-            <div className="home-divider" />
+                  <button
+                    type="button"
+                    className="mode"
+                    role="radio"
+                    aria-checked={joinMode === 'private'}
+                    onClick={() => {
+                      setJoinMode('private')
+                      setError('')
+                    }}
+                  >
+                    <span className="ic" aria-hidden="true">🔒</span>
+                    <span>
+                      <b>Private Room</b>
+                      <small>Create/join lobby using a code</small>
+                    </span>
+                  </button>
+                </div>
 
-            {/* Join mode */}
-            <div className="home-section">
-              <div className="home-label-container">
-                <label className="home-label">Room Mode</label>
-              </div>
-              <div className="room-options-grid">
-                <motion.button
-                  type="button"
-                  whileHover={{ scale: 1.02, y: -1 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => { setJoinMode('quick'); setRoomCode(''); setError('') }}
-                  className={`room-option-card ${joinMode === 'quick' ? 'active' : ''}`}
-                >
-                  <div className="room-option-icon">⚡</div>
-                  <div className="room-option-meta">
-                    <span className="room-option-title">Quick Play</span>
-                    <span className="room-option-desc">Join active lobbies automatically</span>
-                  </div>
-                  {joinMode === 'quick' && (
-                    <motion.div layoutId="room-glow" className="room-option-active-border" />
-                  )}
-                </motion.button>
-                
-                <motion.button
-                  type="button"
-                  whileHover={{ scale: 1.02, y: -1 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => { setJoinMode('private'); setError('') }}
-                  className={`room-option-card ${joinMode === 'private' ? 'active' : ''}`}
-                >
-                  <div className="room-option-icon">🔒</div>
-                  <div className="room-option-meta">
-                    <span className="room-option-title">Private Room</span>
-                    <span className="room-option-desc">Create/join lobby using a code</span>
-                  </div>
-                  {joinMode === 'private' && (
-                    <motion.div layoutId="room-glow" className="room-option-active-border" />
-                  )}
-                </motion.button>
+                <div className={`code-row ${joinMode === 'private' ? 'show' : ''}`} id="codeRow">
+                  <input
+                    id="code"
+                    type="text"
+                    maxLength={8}
+                    value={roomCode}
+                    onChange={(e) => {
+                      setRoomCode(e.target.value.toUpperCase())
+                      setError('')
+                    }}
+                    onKeyDown={(e) => e.key === 'Enter' && handleStart()}
+                    placeholder="Room code (leave empty to create one)"
+                    aria-label="Room code"
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                </div>
+
+                <p className="note">
+                  <span aria-hidden="true">🎲</span>{' '}
+                  {joinMode === 'quick'
+                    ? 'A random, optimized room code will be generated for your session.'
+                    : 'Leave empty to generate a new room code, or enter a friend’s code to join.'}
+                </p>
               </div>
 
-              <AnimatePresence mode="wait">
-                {joinMode === 'quick' ? (
-                  <motion.div key="quick"
-                    initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
-                    transition={{ duration: 0.18 }}
-                    className="quick-play-box">
-                    <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                      🎲 A random, optimized room code will be generated for your session.
-                    </p>
-                  </motion.div>
-                ) : (
-                  <motion.div key="private"
-                    initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
-                    transition={{ duration: 0.18 }}>
-                    <input
-                      type="text"
-                      maxLength={5}
-                      value={roomCode}
-                      onChange={e => { setRoomCode(e.target.value.toUpperCase()); setError('') }}
-                      onKeyDown={e => e.key === 'Enter' && handleJoin()}
-                      placeholder="ENTER CODE (E.G. A1B2C)"
-                      className="room-code-input"
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Error */}
-            <AnimatePresence>
+              {/* Error Message */}
               {error && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="error-box">
-                  <span style={{ fontSize: '14px' }}>⚠️</span>
-                  <p style={{ fontSize: '13px', color: 'var(--red)', fontWeight: 500 }}>{error}</p>
-                </motion.div>
+                <div className="error-box-neobrutal" role="alert">
+                  <span aria-hidden="true">⚠️</span>
+                  <span>{error}</span>
+                </div>
               )}
-            </AnimatePresence>
 
-            {/* CTA */}
-            <div className="btn-primary-container">
-              {!isLoading && <div className="btn-glow-ring" />}
-              <motion.button
-                onClick={handleJoin}
-                whileHover={{ scale: isLoading ? 1 : 1.015, y: isLoading ? 0 : -2 }}
-                whileTap={{ scale: isLoading ? 1 : 0.975 }}
+              {/* Start Playing CTA */}
+              <button
+                type="button"
+                className="start"
+                id="start"
+                onClick={handleStart}
                 disabled={isLoading}
-                className="btn-primary"
               >
-                <AnimatePresence mode="wait">
-                  {isLoading ? (
-                    <motion.span key="loading"
-                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                      className="flex items-center justify-center gap-2">
-                      <motion.span animate={{ rotate: 360 }} transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }} style={{ display: 'inline-block', fontSize: '16px' }}>⚡</motion.span>
-                      Joining room…
-                    </motion.span>
-                  ) : (
-                    <motion.span key="idle"
-                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                      className="flex items-center justify-center gap-2">
-                      {joinMode === 'quick' ? '🎯 Start Playing' : '🚀 Join Room'}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </motion.button>
-            </div>
-          </motion.div>
+                <span aria-hidden="true">{isLoading ? '⚡' : '🎯'}</span>{' '}
+                {isLoading
+                  ? 'Joining room…'
+                  : joinMode === 'quick'
+                  ? 'Start Playing'
+                  : roomCode.trim()
+                  ? 'Join Room'
+                  : 'Create Room'}
+              </button>
+            </section>
 
-          {/* ── Info Card (About & How to Play) ── */}
-          <motion.div variants={itemVariants} className="home-info-card p-5 flex flex-col gap-4">
-            <div className="flex pb-2 gap-2" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
-              <button
-                type="button"
-                onClick={() => setInfoTab('how-to-play')}
-                className={`info-tab-btn ${infoTab === 'how-to-play' ? 'active' : ''}`}
-              >
-                🎮 How to Play
-                {infoTab === 'how-to-play' && (
-                  <motion.div layoutId="info-tab-glow" className="info-tab-glow-bar" />
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => setInfoTab('about')}
-                className={`info-tab-btn ${infoTab === 'about' ? 'active' : ''}`}
-              >
-                ✨ About SketchRush
-                {infoTab === 'about' && (
-                  <motion.div layoutId="info-tab-glow" className="info-tab-glow-bar" />
-                )}
-              </button>
-            </div>
-            
-            <AnimatePresence mode="wait">
-              {infoTab === 'how-to-play' ? (
-                <motion.div
-                  key="how-to"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.18 }}
-                  className="flex flex-col gap-2.5"
+            {/* How to Play & About Card */}
+            <section className="card howto" id="howto" ref={howtoRef} aria-label="How to play and about">
+              <div className="tabs" role="tablist">
+                <button
+                  type="button"
+                  className="tab"
+                  role="tab"
+                  id="t-how"
+                  aria-selected={activeTab === 'how'}
+                  aria-controls="p-how"
+                  onClick={() => setActiveTab('how')}
                 >
-                  <div className="info-step">
-                    <div className="info-step-num">1</div>
-                    <p className="info-step-text">
-                      Enter your <strong>Player Name</strong> and pick an <strong>Avatar</strong> character.
-                    </p>
-                  </div>
-                  <div className="info-step">
-                    <div className="info-step-num">2</div>
-                    <p className="info-step-text">
-                      Select <strong>Quick Play</strong> to auto-join a lobby, or create a <strong>Private Room</strong> for friends.
-                    </p>
-                  </div>
-                  <div className="info-step">
-                    <div className="info-step-num">3</div>
-                    <p className="info-step-text">
-                      Draw the word shown on the canvas as fast as possible before the timer runs out!
-                    </p>
-                  </div>
-                  <div className="info-step">
-                    <div className="info-step-num">4</div>
-                    <p className="info-step-text">
-                      Guess other players' drawings in real-time. Faster correct guesses score higher points!
-                    </p>
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="about"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.18 }}
-                  className="flex flex-col gap-2.5 text-[12px] leading-relaxed"
-                  style={{ color: 'var(--text-muted)' }}
+                  <span aria-hidden="true">🎮</span> How to Play
+                </button>
+                <button
+                  type="button"
+                  className="tab"
+                  role="tab"
+                  id="t-about"
+                  aria-selected={activeTab === 'about'}
+                  aria-controls="p-about"
+                  tabIndex={activeTab === 'about' ? 0 : -1}
+                  onClick={() => setActiveTab('about')}
                 >
-                  <p>
-                    <strong>SketchRush</strong> is a real-time multiplayer drawing and guessing game designed for high-speed creative competition.
-                  </p>
-                  <p>
-                    Featuring sub-second WebSocket sync and high-performance interactive drawing canvases, it connects players seamlessly across desktop and mobile devices.
-                  </p>
-                  <p>
-                    Draw with speed, guess with precision, and dominate the scoreboard in a competitive race against the clock!
-                  </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
+                  <span aria-hidden="true">✨</span> About SketchRush
+                </button>
+              </div>
 
-          {/* Footer & Credits */}
-          <motion.div variants={itemVariants} className="home-footer text-center pb-2 flex flex-col items-center gap-2">
-            <p className="text-xs" style={{ color: 'var(--text-faint)' }}>
-              © {new Date().getFullYear()} SketchRush ·All Rights Reserved·
-            </p>
-            <div className="flex items-center justify-center gap-3 text-xs flex-wrap" style={{ color: 'var(--text-muted)' }}>
-              <span>Created by <strong style={{ color: 'var(--text)' }}>Shreedhar Khorate</strong></span>
-              <span className="footer-dot" />
-              <a
-                href="https://github.com/Shreedhar-Khorate"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="footer-link"
-              >
-                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" style={{ display: 'inline-block' }}>
-                  <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-                </svg>
-                <span>GitHub</span>
-              </a>
-              <span className="footer-dot" />
-              <a
-                href="https://www.linkedin.com/in/shreedhar-khorate-83ba002a0"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="footer-link"
-              >
-                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" style={{ display: 'inline-block' }}>
-                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
-                </svg>
-                <span>LinkedIn</span>
-              </a>
-              <span className="footer-dot" />
-              <button
-                type="button"
-                onClick={() => setShowFeedback(true)}
-                className="footer-link"
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: 0,
-                  fontFamily: 'inherit',
-                  fontSize: 'inherit',
-                  color: 'inherit',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
-              >
-                 <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" style={{ display: 'inline-block' }}>
-                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
-                </svg>
-                <span> Feedback </span>
-              </button>
-            </div>
-          </motion.div>
+              <div className="panel" id="p-how" role="tabpanel" aria-labelledby="t-how" hidden={activeTab !== 'how'}>
+                <ol className="steps">
+                  <li>
+                    <span className="n">1</span>
+                    <p>Enter your <b>Player Name</b> and pick an <b>Avatar</b> character.</p>
+                  </li>
+                  <li>
+                    <span className="n">2</span>
+                    <p>Select <b>Quick Play</b> to auto-join a lobby, or create a <b>Private Room</b> for friends.</p>
+                  </li>
+                  <li>
+                    <span className="n">3</span>
+                    <p>Draw the word shown on the canvas as fast as possible before the timer runs out!</p>
+                  </li>
+                  <li>
+                    <span className="n">4</span>
+                    <p>Guess other players' drawings in real-time. Faster correct guesses score higher points!</p>
+                  </li>
+                </ol>
+              </div>
 
-        </motion.div>
+              <div
+                className="panel about"
+                id="p-about"
+                role="tabpanel"
+                aria-labelledby="t-about"
+                hidden={activeTab !== 'about'}
+              >
+                <p>SketchRush is a real-time draw-and-guess game. Race the timer to sketch the word you're given, while everyone else guesses live.</p>
+                <p>Gesture AI recognises your drawing as you go, and the leaderboard ranks the fastest guessers.</p>
+              </div>
+            </section>
+          </div>
+        </main>
+
+        {/* ── Footer ── */}
+        <footer>
+          <p>© 2026 SketchRush<span className="sep">·</span>All Rights Reserved<span className="sep">·</span></p>
+          <p>
+            Created by <strong>Shreedhar Khorate</strong>
+            <span className="sep">·</span>
+            <a
+              href="https://github.com/Shreedhar-Khorate"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              GitHub
+            </a>
+            <span className="sep">·</span>
+            <a
+              href="https://www.linkedin.com/in/shreedhar-khorate-83ba002a0"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              LinkedIn
+            </a>
+            <span className="sep">·</span>
+            <button
+              type="button"
+              className="footer-feedback-btn"
+              onClick={() => setShowFeedback(true)}
+            >
+              Feedback
+            </button>
+          </p>
+        </footer>
       </div>
 
+      {/* ── Retain existing Feedback Modal ── */}
       <FeedbackModal isOpen={showFeedback} onClose={() => setShowFeedback(false)} />
     </div>
   )

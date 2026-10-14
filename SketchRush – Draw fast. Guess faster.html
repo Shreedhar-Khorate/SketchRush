@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SketchRush – Draw fast. Guess faster.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  --bg: #fffbe8;
+  --surface: #ffffff;
+  --surface-2: #fff4d6;
+  --ink: #141414;
+  --muted: #55524a;
+  --line: #141414;
+  --shadow: #141414;
+  --yellow: #ffe500;
+  --lime: #c9f03a;
+  --peach: #ffd2bf;
+  --sky: #bfe6ff;
+  --orange: #ff7a1a;
+  --green: #17b26a;
+  --dot: rgba(20,20,20,.13);
+  --font-display: "Fredoka", "Trebuchet MS", system-ui, sans-serif;
+  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #17150f; --surface: #26221a; --surface-2: #332d20; --ink: #fff8e1; --muted: #cbc3a8;
+    --line: #fff8e1; --shadow: #000; --dot: rgba(255,248,225,.12);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #17150f; --surface: #26221a; --surface-2: #332d20; --ink: #fff8e1; --muted: #cbc3a8;
+  --line: #fff8e1; --shadow: #000; --dot: rgba(255,248,225,.12);
+}
+*, *::before, *::after { box-sizing: inherit; }
+html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
+body {
+  margin: 0; min-height: 100%;
+  background-color: var(--bg);
+  background-image: radial-gradient(var(--dot) 1.4px, transparent 1.4px);
+  background-size: 26px 26px;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px; line-height: 1.5;
+  overflow-x: hidden;
+}
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
+
+/* header */
+.topbar {
+  position: relative; z-index: 2; display: flex; align-items: center; gap: 16px;
+  padding: 10px 12px 10px 14px; margin-bottom: 24px;
+  background: var(--surface); border: 3px solid var(--line); border-radius: 20px; box-shadow: 5px 5px 0 var(--shadow);
+}
+.logo { display: inline-flex; align-items: center; gap: 10px; margin-right: auto; color: var(--ink); text-decoration: none; font-family: var(--font-display); font-weight: 700; font-size: 1.35rem; }
+.logo-mark { width: 40px; height: 40px; display: grid; place-items: center; background: var(--yellow); border: 3px solid var(--line); border-radius: 12px; font-size: 1.2rem; transform: rotate(-6deg); }
+.topnav { display: flex; gap: 6px; }
+.topnav a { padding: 8px 14px; border: 3px solid transparent; border-radius: 999px; color: var(--ink); text-decoration: none; font-weight: 700; font-size: .95rem; }
+.topnav a:hover { background: var(--lime); color: #141414; border-color: #141414; }
+.theme { width: 46px; height: 46px; flex: none; display: grid; place-items: center; font-size: 1.3rem; background: var(--yellow); color: #141414; border: 3px solid var(--line); border-radius: 50%; box-shadow: 3px 3px 0 var(--shadow); transition: transform .12s ease, box-shadow .12s ease; }
+.theme:hover { transform: translate(-1px, -2px) rotate(-12deg); box-shadow: 5px 5px 0 var(--shadow); }
+.theme:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--shadow); }
+@media (max-width: 640px) { .topnav { display: none; } }
+
+/* decorative doodles */
+.doodle { position: absolute; pointer-events: none; z-index: 0; }
+.page { position: relative; max-width: 1120px; margin: 0 auto; padding: 40px 24px 28px; }
+.layout {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 500px);
+  gap: 56px; align-items: start;
+}
+
+/* ---------- left: brand ---------- */
+.brand { padding-top: 24px; position: sticky; top: 32px; }
+h1 {
+  margin: 0; font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(3.4rem, 9vw, 6.4rem); line-height: .95; letter-spacing: -.02em;
+  text-shadow: 5px 5px 0 var(--orange);
+}
+.tagline {
+  margin: 22px 0 0; font-family: var(--font-display); font-weight: 500;
+  font-size: clamp(1.4rem, 3vw, 2rem); line-height: 1.2;
+}
+.tagline span { position: relative; display: inline-block; white-space: nowrap; }
+.tagline svg { position: absolute; left: -2%; bottom: -10px; width: 104%; height: 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 12px; margin: 32px 0 0; padding: 0; list-style: none; }
+.chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 16px; border: 3px solid var(--line); border-radius: 999px;
+  background: var(--c, var(--yellow)); color: #141414;
+  font-weight: 700; font-size: .95rem; box-shadow: 3px 3px 0 var(--shadow);
+  transform: rotate(var(--r, 0deg));
+}
+.sketch-wrap { margin-top: 44px; position: relative; max-width: 360px; }
+.sketch {
+  background: var(--surface); border: 3px solid var(--line); border-radius: 22px;
+  box-shadow: 8px 8px 0 var(--shadow); padding: 14px; transform: rotate(-2.5deg);
+}
+.sketch-bar { display: flex; gap: 7px; padding: 2px 4px 12px; }
+.sketch-bar i { width: 12px; height: 12px; border: 2.5px solid var(--line); border-radius: 50%; background: var(--c); }
+.sketch svg.art { display: block; width: 100%; height: auto; background: #fff4d6; border: 3px solid var(--line); border-radius: 14px; }
+.art .stroke { fill: none; stroke: #141414; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+.art .fill { fill: var(--yellow); stroke: #141414; stroke-width: 5; stroke-linejoin: round; }
+.art path[pathLength] { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 1s ease forwards; animation-delay: var(--d, 0s); }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+
+/* ---------- right: cards ---------- */
+.stack { display: grid; gap: 28px; }
+.card {
+  background: var(--surface); border: 3px solid var(--line); border-radius: 24px;
+  box-shadow: 8px 8px 0 var(--shadow); padding: 24px;
+}
+.card.setup { background: var(--surface); }
+.field-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 0 0 10px; }
+.label { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; }
+.ready {
+  display: inline-flex; align-items: center; gap: 7px; padding: 3px 12px 3px 10px;
+  background: var(--lime); color: #141414; border: 2.5px solid var(--line); border-radius: 999px;
+  font-weight: 700; font-size: .82rem;
+}
+.ready::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--green); border: 2px solid #141414; }
+.ready.warn { background: var(--peach); }
+.ready.warn::before { background: var(--orange); }
+
+.name-box {
+  display: flex; align-items: center; gap: 12px; padding: 8px 14px 8px 8px;
+  background: var(--surface-2); border: 3px solid var(--line); border-radius: 16px;
+}
+.name-box:focus-within { box-shadow: 4px 4px 0 var(--orange); }
+.name-avatar {
+  width: 44px; height: 44px; flex: none; display: grid; place-items: center; font-size: 1.5rem;
+  background: var(--yellow); border: 3px solid var(--line); border-radius: 12px;
+}
+.name-box input { flex: 1; min-width: 0; border: 0; background: transparent; outline: 0; font-size: 1.1rem; font-weight: 700; padding: 8px 0; }
+.count { font-size: .85rem; font-weight: 700; color: var(--muted); }
+
+.section-gap { margin-top: 24px; }
+.avatars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.avatar {
+  display: grid; justify-items: center; gap: 2px; padding: 12px 4px 10px;
+  background: var(--surface); border: 3px solid var(--line); border-radius: 16px;
+  box-shadow: 3px 3px 0 var(--shadow);
+  transition: transform .12s ease, box-shadow .12s ease, background-color .12s ease;
+}
+.avatar .em { font-size: 1.9rem; line-height: 1.2; }
+.avatar .nm { font-size: .8rem; font-weight: 700; }
+.avatar:hover { transform: translate(-1px, -2px) rotate(-2deg); box-shadow: 5px 6px 0 var(--shadow); }
+.avatar[aria-checked="true"] {
+  background: var(--yellow); color: #141414; transform: translate(3px, 3px); box-shadow: 0 0 0 var(--shadow);
+}
+.current { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: .95rem; }
+
+.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.mode {
+  display: flex; align-items: center; gap: 12px; text-align: left; padding: 12px;
+  background: var(--surface); border: 3px solid var(--line); border-radius: 16px; box-shadow: 3px 3px 0 var(--shadow);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.mode .ic {
+  width: 42px; height: 42px; flex: none; display: grid; place-items: center; font-size: 1.3rem;
+  background: var(--sky); border: 3px solid var(--line); border-radius: 12px; color: #141414;
+}
+.mode b { display: block; font-family: var(--font-display); font-size: 1.05rem; line-height: 1.2; }
+.mode small { display: block; color: var(--muted); font-size: .78rem; line-height: 1.3; margin-top: 2px; }
+.mode[aria-checked="true"] { background: var(--lime); color: #141414; transform: translate(3px, 3px); box-shadow: 0 0 0 var(--shadow); }
+.mode[aria-checked="true"] small { color: #3a3a33; }
+.mode[aria-checked="true"] .ic { background: var(--yellow); }
+.mode:not([aria-checked="true"]):hover { transform: translate(-1px, -2px); box-shadow: 5px 6px 0 var(--shadow); }
+
+.code-row { display: none; margin-top: 14px; }
+.code-row.show { display: block; }
+.code-row input {
+  width: 100%; padding: 12px 14px; border: 3px solid var(--line); border-radius: 14px;
+  background: var(--surface-2); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; outline: 0;
+}
+.code-row input::placeholder { letter-spacing: 0; text-transform: none; font-weight: 500; color: var(--muted); }
+.code-row input:focus { box-shadow: 4px 4px 0 var(--orange); }
+.note {
+  margin: 16px 0 0; padding: 10px 14px; text-align: center; font-size: .88rem; color: var(--muted);
+  border: 2.5px dashed var(--line); border-radius: 14px;
+}
+
+.start {
+  display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; margin-top: 22px;
+  padding: 16px 20px; background: var(--yellow); color: #141414; border: 3px solid var(--line); border-radius: 18px;
+  font-family: var(--font-display); font-weight: 700; font-size: 1.35rem;
+  box-shadow: 6px 6px 0 var(--shadow); transition: transform .12s ease, box-shadow .12s ease, background-color .12s ease;
+}
+.start:hover { background: var(--lime); transform: translate(-2px, -2px); box-shadow: 8px 8px 0 var(--shadow); }
+.start:active { transform: translate(6px, 6px); box-shadow: 0 0 0 var(--shadow); }
+
+/* how to / about */
+.howto { padding: 0; overflow: hidden; background: var(--peach); color: #141414; }
+.tabs { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 3px solid var(--line); }
+.tab { padding: 14px 10px; background: transparent; border: 0; font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; color: #141414; }
+.tab + .tab { border-left: 3px solid var(--line); }
+.tab[aria-selected="true"] { background: #141414; color: #fff8e1; }
+.panel { padding: 20px 22px 22px; }
+.panel[hidden] { display: none; }
+.steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 14px; }
+.steps li { display: flex; gap: 14px; align-items: flex-start; }
+.steps .n {
+  flex: none; width: 32px; height: 32px; display: grid; place-items: center;
+  background: var(--yellow); border: 3px solid #141414; border-radius: 50%;
+  font-family: var(--font-display); font-weight: 700; font-size: .95rem;
+}
+.steps p { margin: 3px 0 0; font-size: .95rem; }
+.about p { margin: 0 0 12px; font-size: .98rem; }
+.about p:last-child { margin: 0; }
+
+footer { position: relative; z-index: 1; margin-top: 56px; text-align: center; font-size: .9rem; color: var(--muted); }
+footer p { margin: 4px 0; }
+footer a { color: var(--ink); font-weight: 700; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+footer a:hover { text-decoration-color: var(--orange); }
+footer strong { color: var(--ink); }
+.sep { margin: 0 6px; opacity: .6; }
+
+/* responsive */
+@media (max-width: 920px) {
+  .layout { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+  .brand { position: static; padding-top: 8px; text-align: center; }
+  .chips { justify-content: center; }
+  .sketch-wrap { display: none; }
+  .tagline svg { display: block; }
+}
+@media (max-width: 520px) {
+  .page { padding: 28px 16px 24px; }
+  .card { padding: 18px; border-radius: 20px; box-shadow: 6px 6px 0 var(--shadow); }
+  .avatars { gap: 9px; }
+  .avatar .em { font-size: 1.6rem; }
+  .modes { grid-template-columns: 1fr; }
+  .doodle.hide-sm { display: none; }
+  h1 { text-shadow: 4px 4px 0 var(--orange); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .art path[pathLength] { animation: none; stroke-dashoffset: 0; }
+  * { transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="topbar">
+    <a class="logo" href="#" aria-label="SketchRush home"><span class="logo-mark" aria-hidden="true">✏️</span><span>SketchRush</span></a>
+    <nav class="topnav" aria-label="Main">
+      <a href="#howto" data-tab="0">How to Play</a>
+      <a href="#howto" data-tab="1">About SketchRush</a>
+    </nav>
+    <button type="button" class="theme" id="themeBtn" aria-label="Switch to dark mode"><span id="themeIcon" aria-hidden="true">🌙</span></button>
+  </header>
+
+  <!-- background doodles -->
+  <svg class="doodle" style="left:2%;top:90px;width:46px" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 3l4.6 12.4L38 20l-13.4 4.6L20 38l-4.6-13.4L2 20l13.4-4.6z" fill="#ffe500" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></svg>
+  <svg class="doodle hide-sm" style="left:44%;top:30px;width:70px" viewBox="0 0 70 24" aria-hidden="true"><path d="M3 18l9-12 9 12 9-12 9 12 9-12 9 12 9-12" fill="none" stroke="#ff7a1a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <svg class="doodle hide-sm" style="right:1%;top:44px;width:54px" viewBox="0 0 50 50" aria-hidden="true"><circle cx="25" cy="25" r="18" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="25" cy="25" r="6" fill="#c9f03a" stroke="currentColor" stroke-width="3"/></svg>
+  <svg class="doodle hide-sm" style="left:1%;bottom:150px;width:80px" viewBox="0 0 90 60" aria-hidden="true"><path d="M5 45C20 10 55 5 78 28" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M62 26l17 3-6 16" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <svg class="doodle" style="right:3%;bottom:210px;width:38px" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 3l4.6 12.4L38 20l-13.4 4.6L20 38l-4.6-13.4L2 20l13.4-4.6z" fill="#ffd2bf" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></svg>
+  <svg class="doodle hide-sm" style="left:47%;bottom:70px;width:64px" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 32m0 0c0-4 4-6 7-4s3 8-2 10-12-1-12-10 9-15 19-13 16 14 11 24" fill="none" stroke="#ff7a1a" stroke-width="3.5" stroke-linecap="round"/></svg>
+
+  <main class="layout">
+
+    <!-- brand / hero -->
+    <section class="brand">
+      <h1>SketchRush</h1>
+      <p class="tagline">Draw fast. <span>Guess faster.
+        <svg viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true"><path d="M2 8c12-8 20 4 32-2s20 4 32-2 20 4 32-2 20 4 32-2 20 4 32-2" fill="none" stroke="#ff7a1a" stroke-width="4" stroke-linecap="round"/></svg></span></p>
+
+      <ul class="chips">
+        <li class="chip" style="--c:var(--peach);--r:-2deg"><span aria-hidden="true">🎨</span> Draw &amp; Guess</li>
+        <li class="chip" style="--c:var(--sky);--r:1.5deg"><span aria-hidden="true">🧠</span> Gesture AI</li>
+        <li class="chip" style="--c:var(--yellow);--r:-1deg"><span aria-hidden="true">⚡</span> Real-time</li>
+        <li class="chip" style="--c:var(--lime);--r:2deg"><span aria-hidden="true">🏆</span> Leaderboard</li>
+      </ul>
+
+      <div class="sketch-wrap" aria-hidden="true">
+        <div class="sketch">
+          <div class="sketch-bar"><i style="--c:#ff7a1a"></i><i style="--c:#ffe500"></i><i style="--c:#c9f03a"></i></div>
+          <svg class="art" viewBox="0 0 300 220">
+            <path class="fill" d="M80 70l12-42 38 24 40 0 38-24 12 42c8 18 8 42-4 62-14 22-40 34-72 34s-58-12-72-34c-12-20-12-44-4-62z"/>
+            <path class="stroke" pathLength="1" style="--d:.3s" d="M112 108v10"/>
+            <path class="stroke" pathLength="1" style="--d:.5s" d="M188 108v10"/>
+            <path class="stroke" pathLength="1" style="--d:.7s" d="M138 134l12 8 12-8"/>
+            <path class="stroke" pathLength="1" style="--d:.9s" d="M150 142v8"/>
+            <path class="stroke" pathLength="1" style="--d:1.1s" d="M60 128l38 6M60 152l38-8"/>
+            <path class="stroke" pathLength="1" style="--d:1.3s" d="M240 128l-38 6M240 152l-38-8"/>
+            <path class="stroke" pathLength="1" style="--d:1.5s" d="M30 30c10-14 22 8 32-6M244 190c10-14 22 8 32-6"/>
+          </svg>
+        </div>
+        <svg style="position:absolute;right:-26px;bottom:-26px;width:64px;transform:rotate(12deg)" viewBox="0 0 60 60">
+          <path d="M8 52l4-14 30-30 10 10-30 30z" fill="#ffe500" stroke="currentColor" stroke-width="3.5" stroke-linejoin="round"/>
+          <path d="M12 38l10 10" stroke="currentColor" stroke-width="3.5"/>
+          <path d="M8 52l4-14 10 10z" fill="#ffd2bf" stroke="currentColor" stroke-width="3.5" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </section>
+
+    <!-- interactive column -->
+    <div class="stack">
+      <section class="card setup" aria-label="Player setup">
+        <div class="field-head">
+          <label class="label" for="name">Your Name</label>
+          <span class="ready" id="ready" role="status">Ready to play</span>
+        </div>
+        <div class="name-box">
+          <span class="name-avatar" id="nameAvatar" aria-hidden="true">🐱</span>
+          <input id="name" type="text" maxlength="16" value="vedANT" autocomplete="nickname" spellcheck="false">
+          <span class="count" id="count">6/16</span>
+        </div>
+
+        <div class="section-gap">
+          <div class="field-head">
+            <span class="label" id="avatarLabel">Choose Avatar</span>
+            <span class="current"><span id="curEm" aria-hidden="true">🐱</span><span id="curName">Cat</span></span>
+          </div>
+          <div class="avatars" id="avatars" role="radiogroup" aria-labelledby="avatarLabel"></div>
+        </div>
+
+        <div class="section-gap">
+          <div class="field-head"><span class="label" id="modeLabel">Room Mode</span></div>
+          <div class="modes" role="radiogroup" aria-labelledby="modeLabel">
+            <button type="button" class="mode" role="radio" aria-checked="true" data-mode="quick">
+              <span class="ic" aria-hidden="true">⚡</span>
+              <span><b>Quick Play</b><small>Join active lobbies automatically</small></span>
+            </button>
+            <button type="button" class="mode" role="radio" aria-checked="false" data-mode="private">
+              <span class="ic" aria-hidden="true">🔒</span>
+              <span><b>Private Room</b><small>Create/join lobby using a code</small></span>
+            </button>
+          </div>
+          <div class="code-row" id="codeRow">
+            <input id="code" type="text" maxlength="8" placeholder="Room code (leave empty to create one)" aria-label="Room code" autocomplete="off" spellcheck="false">
+          </div>
+          <p class="note"><span aria-hidden="true">🎲</span> A random, optimized room code will be generated for your session.</p>
+        </div>
+
+        <button type="button" class="start" id="start"><span aria-hidden="true">🎯</span> Start Playing</button>
+      </section>
+
+      <section class="card howto" id="howto" aria-label="How to play and about">
+        <div class="tabs" role="tablist">
+          <button class="tab" role="tab" id="t-how" aria-selected="true" aria-controls="p-how"><span aria-hidden="true">🎮</span> How to Play</button>
+          <button class="tab" role="tab" id="t-about" aria-selected="false" aria-controls="p-about" tabindex="-1"><span aria-hidden="true">✨</span> About SketchRush</button>
+        </div>
+        <div class="panel" id="p-how" role="tabpanel" aria-labelledby="t-how">
+          <ol class="steps">
+            <li><span class="n">1</span><p>Enter your <b>Player Name</b> and pick an <b>Avatar</b> character.</p></li>
+            <li><span class="n">2</span><p>Select <b>Quick Play</b> to auto-join a lobby, or create a <b>Private Room</b> for friends.</p></li>
+            <li><span class="n">3</span><p>Draw the word shown on the canvas as fast as possible before the timer runs out!</p></li>
+            <li><span class="n">4</span><p>Guess other players' drawings in real-time. Faster correct guesses score higher points!</p></li>
+          </ol>
+        </div>
+        <div class="panel about" id="p-about" role="tabpanel" aria-labelledby="t-about" hidden>
+          <p>SketchRush is a real-time draw-and-guess game. Race the timer to sketch the word you're given, while everyone else guesses live.</p>
+          <p>Gesture AI recognises your drawing as you go, and the leaderboard ranks the fastest guessers.</p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <p>© 2026 SketchRush<span class="sep">·</span>All Rights Reserved<span class="sep">·</span></p>
+    <p>Created by <strong>Shreedhar Khorate</strong><span class="sep">·</span><a href="#">GitHub</a><span class="sep">·</span><a href="#">LinkedIn</a><span class="sep">·</span><a href="#">Feedback</a></p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var AVATARS = [
+    ["Fox","🦊"],["Cat","🐱"],["Dragon","🐉"],["Robot","🤖"],
+    ["Alien","👽"],["Wizard","🧙"],["Ninja","🥷"],["Rocket","🚀"],
+    ["Unicorn","🦄"],["Ghost","👻"],["Skull","💀"],["Fire","🔥"]
+  ];
+  var state = { avatar: "Cat", mode: "quick" };
+  var $ = function (id) { return document.getElementById(id); };
+  var grid = $("avatars"), nameEl = $("name");
+
+  function renderAvatars() {
+    grid.innerHTML = "";
+    AVATARS.forEach(function (a) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "avatar"; b.setAttribute("role", "radio");
+      b.setAttribute("aria-checked", String(a[0] === state.avatar));
+      b.setAttribute("aria-label", a[0]);
+      b.innerHTML = '<span class="em" aria-hidden="true">' + a[1] + '</span><span class="nm">' + a[0] + '</span>';
+      b.addEventListener("click", function () {
+        state.avatar = a[0];
+        $("nameAvatar").textContent = a[1];
+        $("curEm").textContent = a[1];
+        $("curName").textContent = a[0];
+        renderAvatars();
+        var sel = grid.querySelector('[aria-checked="true"]'); if (sel) sel.focus();
+      });
+      grid.appendChild(b);
+    });
+  }
+  renderAvatars();
+
+  function updateName() {
+    var len = nameEl.value.length;
+    $("count").textContent = len + "/16";
+    var ok = nameEl.value.trim().length > 0, r = $("ready");
+    r.textContent = ok ? "Ready to play" : "Enter a name";
+    r.classList.toggle("warn", !ok);
+  }
+  nameEl.addEventListener("input", updateName);
+
+  document.querySelectorAll(".mode").forEach(function (m) {
+    m.addEventListener("click", function () {
+      state.mode = m.dataset.mode;
+      document.querySelectorAll(".mode").forEach(function (x) {
+        x.setAttribute("aria-checked", String(x === m));
+      });
+      $("codeRow").classList.toggle("show", state.mode === "private");
+    });
+  });
+
+  // tabs
+  var tabs = [$("t-how"), $("t-about")], panels = [$("p-how"), $("p-about")];
+  function selectTab(i) {
+    tabs.forEach(function (t, j) {
+      t.setAttribute("aria-selected", String(i === j));
+      t.tabIndex = i === j ? 0 : -1;
+      panels[j].hidden = i !== j;
+    });
+  }
+  tabs.forEach(function (t, i) {
+    t.addEventListener("click", function () { selectTab(i); });
+    t.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+        var n = (i + 1) % 2; selectTab(n); tabs[n].focus();
+      }
+    });
+  });
+
+  // header nav → tabs
+  document.querySelectorAll("[data-tab]").forEach(function (a) {
+    a.addEventListener("click", function (e) {
+      e.preventDefault();
+      selectTab(Number(a.dataset.tab));
+      $("howto").scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  });
+
+  // light / dark theme (follows system until the person picks one)
+  var root = document.documentElement, btn = $("themeBtn");
+  function systemDark() { return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches; }
+  function paint() {
+    var t = root.getAttribute("data-theme");
+    var dark = t ? t === "dark" : systemDark();
+    $("themeIcon").textContent = dark ? "☀️" : "🌙";
+    btn.setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
+  }
+  try { var saved = localStorage.getItem("sr-theme"); if (saved === "light" || saved === "dark") root.setAttribute("data-theme", saved); } catch (e) {}
+  paint();
+  btn.addEventListener("click", function () {
+    var t = root.getAttribute("data-theme");
+    var dark = t ? t === "dark" : systemDark();
+    var next = dark ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("sr-theme", next); } catch (e) {}
+    paint();
+  });
+  if (window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener("change", paint);
+
+  // start: hook for your game logic
+  $("start").addEventListener("click", function () {
+    var name = nameEl.value.trim();
+    if (!name) { nameEl.focus(); return; }
+    var detail = { name: name, avatar: state.avatar, mode: state.mode, roomCode: state.mode === "private" ? $("code").value.trim().toUpperCase() : "" };
+    document.dispatchEvent(new CustomEvent("sketchrush:start", { detail: detail }));
+    if (typeof window.onSketchRushStart === "function") window.onSketchRushStart(detail);
+  });
+})();
+</script>
+</body>
+</html>
