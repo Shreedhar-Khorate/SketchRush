@@ -1,7 +1,10 @@
 import { motion, AnimatePresence } from 'framer-motion'
 
-const RANK_ICONS  = ['👑', '🥈', '🥉']
-const RANK_COLORS = ['#ffd166', '#c0c0c0', '#cd7f32']
+const RANK_BADGES = [
+  { rank: '1ST', icon: '👑', color: '#FFD84D' },
+  { rank: '2ND', icon: '🥈', color: '#FFFFFF' },
+  { rank: '3RD', icon: '🥉', color: '#FF9F43' },
+]
 
 export default function PlayerList({ players = [], currentPlayerId = null, hostId = null }) {
   const safePlayers = Array.isArray(players) ? players.filter(Boolean) : []
@@ -9,148 +12,101 @@ export default function PlayerList({ players = [], currentPlayerId = null, hostI
   const maxScore = sorted[0]?.score || 1
 
   return (
-    <div
-      style={{
-        width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
-        borderRadius: '16px', overflow: 'hidden',
-        background: 'var(--surface)',
-        border: '1px solid var(--border)',
-      }}
-    >
+    <div className="w-full h-full flex flex-col bg-white border-[2.5px] border-[#171717] shadow-[4px_4px_0px_#171717] rounded-[4px] overflow-hidden">
+      
       {/* Header */}
-      <div style={{
-        padding: '10px 14px', flexShrink: 0,
-        borderBottom: '1px solid var(--border)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '14px' }}>👥</span>
-          <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>Players</span>
+      <div className="bg-[#FFF8E7] border-b-[2px] border-[#171717] px-3.5 py-2.5 flex items-center justify-between flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <span className="text-base">👥</span>
+          <span className="font-black text-xs uppercase tracking-wide">LEADERBOARD</span>
         </div>
-        <span className="badge badge-brand">{players.length}/8</span>
+        <span className="neo-badge neo-badge-white text-[10px] py-0.5">
+          {players.length}/8 PLAYERS
+        </span>
       </div>
 
-      {/* List */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '10px', display: 'flex', flexDirection: 'column', gap: '6px', minHeight: 0 }}>
+      {/* Player List Items */}
+      <div className="flex-1 overflow-y-auto p-2 sm:p-2.5 flex flex-col gap-1.5 sm:gap-2 min-h-0 bg-[#FFFDF7]">
         <AnimatePresence>
           {sorted.map((player, index) => {
-            const isMe       = player.id === currentPlayerId
-            const isHost     = hostId && player.id === hostId
-            const isTop      = index === 0 && player.score > 0
-            const scoreRatio = player.score / maxScore
+            const isMe   = player.id === currentPlayerId
+            const isHost = hostId && player.id === hostId
+            const rankMeta = RANK_BADGES[index]
+            const scoreRatio = Math.max(player.score / maxScore, 0.05)
 
             return (
               <motion.div
                 key={player.id}
                 layout
-                initial={{ opacity: 0, x: 12 }}
+                initial={{ opacity: 0, x: 8 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{  opacity: 0, x: -12 }}
-                transition={{ duration: 0.35, ease: [0.22,1,0.36,1], delay: index * 0.05 }}
-                style={{
-                  position: 'relative',
-                  borderRadius: '12px',
-                  overflow: 'hidden',
-                  background: player.is_drawing
-                    ? 'var(--blue-bg)'
+                exit={{ opacity: 0, x: -8 }}
+                className={`relative border-2 border-[#171717] p-1.5 sm:p-2 flex items-center gap-2 sm:gap-2.5 transition-all overflow-hidden ${
+                  player.is_drawing
+                    ? 'bg-[#7BA7FF]/25 shadow-[3px_3px_0px_#171717]'
                     : isMe
-                    ? 'rgba(47,129,247,0.06)'
-                    : 'var(--surface-raised)',
-                  border: player.is_drawing
-                    ? '1px solid rgba(47,129,247,0.5)'
-                    : isMe
-                    ? '1px solid rgba(47,129,247,0.2)'
-                    : '1px solid var(--border-subtle)',
-                }}
+                    ? 'bg-[#FFD84D]/35 shadow-[2px_2px_0px_#171717]'
+                    : 'bg-white shadow-[2px_2px_0px_#171717]'
+                }`}
               >
-                {/* Score bar */}
-                <div style={{
-                  position: 'absolute', bottom: 0, left: 0,
-                  height: '2px',
-                  width: `${scoreRatio * 100}%`,
-                  background: isTop
-                    ? 'var(--amber)'
-                    : 'var(--amber)',
-                  opacity: 0.7,
-                  transition: 'width 0.7s ease',
-                }} />
+                {/* Score Progress Bar Fill on bottom edge */}
+                <div
+                  className="absolute bottom-0 left-0 h-1 bg-[#171717] opacity-80"
+                  style={{ width: `${scoreRatio * 100}%` }}
+                />
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px' }}>
-                  {/* Rank */}
-                  <span style={{
-                    width: '20px', textAlign: 'center', flexShrink: 0,
-                    fontSize: index < 3 ? '16px' : '11px',
-                    fontWeight: 800,
-                    color: RANK_COLORS[index] || 'var(--text-muted)',
-                  }}>
-                    {index < 3 ? RANK_ICONS[index] : `#${index+1}`}
-                  </span>
+                {/* Rank Pill */}
+                <div
+                  className="w-6 h-6 sm:w-7 sm:h-7 flex-shrink-0 border-2 border-[#171717] flex items-center justify-center font-black text-[11px] sm:text-xs"
+                  style={{ backgroundColor: rankMeta ? rankMeta.color : '#FFFFFF' }}
+                  title={`Rank #${index + 1}`}
+                >
+                  {rankMeta ? rankMeta.icon : `#${index + 1}`}
+                </div>
 
-                  {/* Avatar */}
-                  <div style={{
-                    position: 'relative', width: '36px', height: '36px',
-                    borderRadius: '10px', flexShrink: 0,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '20px',
-                    background: 'var(--surface)',
-                    border: player.is_drawing
-                      ? '1.5px solid rgba(47,129,247,0.6)'
-                      : '1.5px solid var(--border)',
-                  }}>
-                    {player.avatar || '🙂'}
-                    {player.is_drawing && (
-                      <motion.div
-                        animate={{ scale: [1, 1.25, 1] }}
-                        transition={{ repeat: Infinity, duration: 1 }}
-                        style={{
-                          position: 'absolute', top: '-6px', right: '-6px',
-                          width: '16px', height: '16px', borderRadius: '50%',
-                          background: 'var(--blue)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: '9px',
-                        }}
-                      >✏</motion.div>
+                {/* Avatar */}
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded bg-white border-2 border-[#171717] flex items-center justify-center text-base sm:text-lg flex-shrink-0 relative">
+                  <span>{player.avatar || '🦊'}</span>
+                  {player.is_drawing && (
+                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[#7BA7FF] border border-black flex items-center justify-center text-[8px] text-white font-black animate-bounce">
+                      ✏️
+                    </span>
+                  )}
+                </div>
+
+                {/* Player Name and Badges */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
+                    <span className="font-black text-xs truncate max-w-[90px] sm:max-w-[130px] text-[#171717]">
+                      {player.name || 'Player'}
+                    </span>
+                    {isMe && (
+                      <span className="px-1 py-0.2 bg-[#FFD84D] border border-black text-[8px] sm:text-[9px] font-black uppercase">
+                        YOU
+                      </span>
+                    )}
+                    {isHost && (
+                      <span className="px-1 py-0.2 bg-white border border-black text-[8px] sm:text-[9px] font-black uppercase text-[#6B7280]">
+                        HOST
+                      </span>
                     )}
                   </div>
-
-                  {/* Info */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                      <span style={{
-                        fontSize: '13px', fontWeight: 600,
-                        color: 'var(--text-primary)',
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                      }}>
-                        {player.name || 'Player'}
-                      </span>
-                      {isHost && (
-                        <span className="badge badge-brand" style={{ fontSize: '9px', padding: '1px 5px' }}>
-                          👑 host
-                        </span>
-                      )}
-                      {isMe && (
-                        <span className="badge badge-brand" style={{ fontSize: '9px', padding: '1px 5px' }}>you</span>
-                      )}
-                    </div>
-                    <span style={{ fontSize: '11px', fontWeight: 700 }}>
-                      <span style={{ color: isTop ? 'var(--amber)' : 'var(--amber)' }}>
-                        {(player.score ?? 0).toLocaleString()}
-                      </span>
-                      <span style={{ color: 'var(--text-muted)' }}> pts</span>
-                    </span>
-                  </div>
+                  <span className="text-[9px] sm:text-[10px] text-[#6B7280] font-semibold">
+                    {player.is_drawing ? 'Drawing now' : 'Guessing'}
+                  </span>
                 </div>
+
+                {/* Score Pill */}
+                <div className="px-1.5 sm:px-2 py-0.5 bg-[#FFF8E7] border-2 border-[#171717] font-mono font-black text-xs text-[#171717] flex-shrink-0">
+                  {player.score ?? 0} <span className="text-[8px] sm:text-[9px] font-sans font-bold text-[#6B7280]">PTS</span>
+                </div>
+
               </motion.div>
             )
           })}
         </AnimatePresence>
-
-        {players.length === 0 && (
-          <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', marginTop: '16px' }}>
-            Waiting for players to join…
-          </div>
-        )}
       </div>
+
     </div>
   )
 }

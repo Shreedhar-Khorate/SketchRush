@@ -5,48 +5,44 @@ export default function NotFound() {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center relative">
-
+    <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 sm:p-6 text-center relative bg-[#FFF8E7]">
       <motion.div
-        initial={{ opacity: 0, y: 32 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 space-y-6"
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="w-full max-w-md bg-white border-[3px] border-[#171717] shadow-[6px_6px_0px_#171717] sm:shadow-[8px_8px_0px_#171717] p-6 sm:p-8 flex flex-col items-center gap-4 sm:gap-5"
       >
-        <motion.div
-          animate={{ rotate: [0, -5, 5, -3, 0] }}
-          transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-          className="text-8xl"
-        >
+        <div className="flex items-center gap-2">
+          <span className="neo-badge neo-badge-coral text-xs">ERROR 404</span>
+          <span className="neo-badge neo-badge-lavender text-xs">BLANK CANVAS</span>
+        </div>
+
+        <div className="text-6xl animate-bounce">
           🎨
-        </motion.div>
+        </div>
 
         <div>
           <h1
-            className="text-8xl font-black"
-            style={{
-              fontFamily: "'Inter', sans-serif",
-              color: 'var(--text)',
-            }}
+            className="text-7xl font-black tracking-tight uppercase"
+            style={{ fontFamily: "'Archivo Black', sans-serif" }}
           >
             404
           </h1>
-          <p className="text-xl font-semibold mt-2" style={{ color: 'var(--text-primary)' }}>
-            Page Not Found
-          </p>
-          <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
-            Looks like this canvas is empty. Let's go back to where the fun is!
+          <h2 className="text-lg font-black uppercase mt-1 text-[#171717]">
+            CANVAS DOES NOT EXIST!
+          </h2>
+          <p className="text-xs font-semibold text-[#454545] mt-2 leading-relaxed">
+            This room code or link vanished into thin air. Return to the main lobby and join an active match!
           </p>
         </div>
 
-        <motion.button
+        <button
+          type="button"
           onClick={() => navigate('/')}
-          whileHover={{ scale: 1.05, y: -2 }}
-          whileTap={{ scale: 0.97 }}
-          className="btn-primary px-8 py-3 text-base"
+          className="neo-btn neo-btn-primary w-full"
         >
-          🏠 Back to Home
-        </motion.button>
+          🏠 RETURN TO LOBBY
+        </button>
       </motion.div>
     </div>
   )

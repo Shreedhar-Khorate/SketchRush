@@ -13,7 +13,7 @@ import { useSocket }   from '../hooks/useSocket'
 import FeedbackModal from '../components/FeedbackModal'
 
 function useIsDesktop() {
-  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 1024)
+  const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 1024 : true)
   useEffect(() => {
     const handler = () => setIsDesktop(window.innerWidth >= 1024)
     window.addEventListener('resize', handler)
@@ -26,140 +26,91 @@ function useIsDesktop() {
 function WordChoiceModal({ choices, onSelect }) {
   if (!choices || choices.length === 0) return null
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 70,
-      background: 'rgba(13,17,23,0.9)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '20px',
-    }}>
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
       <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
+        initial={{ scale: 0.85, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        style={{
-          background: 'var(--surface)',
-          border: '1px solid var(--border)',
-          borderRadius: '16px',
-          padding: '40px',
-          maxWidth: '500px',
-          width: '100%',
-          textAlign: 'center',
-        }}
+        className="w-full max-w-sm sm:max-w-md max-h-[92dvh] overflow-y-auto bg-white border-[3px] border-[#171717] shadow-[6px_6px_0px_#171717] sm:shadow-[8px_8px_0px_#171717] p-4 sm:p-6 text-center flex flex-col gap-3.5 sm:gap-5"
       >
-        <h1 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '12px', color: 'var(--text)' }}>
-          🎯 Choose a Word
-        </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '28px' }}>
-          Select which word you want to draw
+        <div className="bg-[#FFD84D] border-2 border-[#171717] shadow-[2.5px_2.5px_0px_#171717] py-2 px-3 sm:px-4">
+          <h2 className="font-black text-lg sm:text-xl uppercase tracking-tight text-[#171717]">
+            🎯 CHOOSE YOUR WORD
+          </h2>
+        </div>
+
+        <p className="text-[11px] sm:text-xs font-bold text-[#454545] uppercase">
+          Pick which secret word you want to sketch on the canvas!
         </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '4px' }}>
-          {choices.map((word, idx) => (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+          {choices.map((word) => (
             <motion.button
               key={word}
               onClick={() => onSelect(word)}
-              whileHover={{ scale: 1.05, translateY: -2 }}
-              whileTap={{ scale: 0.97 }}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.08 }}
-              style={{
-                padding: '16px 20px',
-                borderRadius: '12px',
-                background: 'var(--surface-raised)',
-                border: '1px solid var(--border)',
-                color: 'var(--text)',
-                fontWeight: 600,
-                fontSize: '14px',
-                cursor: 'pointer',
-                textTransform: 'capitalize',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.background = 'var(--amber-bg)'
-                e.target.style.borderColor = 'var(--amber)'
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.background = 'var(--surface-raised)'
-                e.target.style.borderColor = 'var(--border)'
-              }}
+              whileHover={{ scale: 1.04, y: -2 }}
+              whileTap={{ scale: 0.96 }}
+              className="p-2.5 sm:p-3 bg-[#FFF8E7] hover:bg-[#B7F56A] border-2 border-[#171717] shadow-[2.5px_2.5px_0px_#171717] font-black text-xs sm:text-sm uppercase tracking-wide transition-all cursor-pointer"
             >
               {word}
             </motion.button>
           ))}
         </div>
-        <p style={{ fontSize: '12px', color: 'var(--text-faint)', marginTop: '16px' }}>
-          One of these is very hard! 😈
-        </p>
+
+        <span className="text-[10px] sm:text-[11px] text-[#6B7280] font-bold">
+          One of these will challenge your drawing speed! ⚡
+        </span>
       </motion.div>
     </div>
   )
 }
 
 // ── Round End Overlay ─────────────────────────────────────────────────────────
-function RoundEndModal({ result, countdown, onDismiss }) {
+function RoundEndModal({ result, countdown }) {
   if (!result) return null
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 60,
-      background: 'rgba(13,17,23,0.75)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-    }}>
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
       <motion.div
         initial={{ scale: 0.88, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        style={{
-          background: 'var(--surface)',
-          border: '1px solid var(--border)',
-          borderRadius: '16px',
-          padding: '32px 36px',
-          minWidth: '320px', maxWidth: '440px',
-          textAlign: 'center',
-        }}
+        className="w-full max-w-sm sm:max-w-md max-h-[92dvh] overflow-y-auto bg-white border-[3px] border-[#171717] shadow-[6px_6px_0px_#171717] sm:shadow-[8px_8px_0px_#171717] p-4 sm:p-6 text-center flex flex-col gap-3 sm:gap-4"
       >
-        <div style={{ fontSize: '48px', marginBottom: '10px' }}>⏱️</div>
-        <h2 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '4px', color: 'var(--text)' }}>
-          Round Over!
-        </h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '20px' }}>
-          The word was{' '}
-          <span style={{ fontWeight: 700, color: 'var(--amber)', fontFamily: "'Fira Code', monospace" }}>
-            "{result.word}"
+        <div className="flex items-center justify-center gap-2">
+          <span className="text-2xl sm:text-3xl">⏱️</span>
+          <h2 className="font-black text-xl sm:text-2xl uppercase tracking-tight text-[#171717]">
+            ROUND OVER!
+          </h2>
+        </div>
+
+        <div className="p-2.5 sm:p-3 bg-[#FFF8E7] border-2 border-[#171717] shadow-[2.5px_2.5px_0px_#171717]">
+          <span className="text-[10px] sm:text-xs font-black uppercase text-[#6B7280] block mb-1">THE SECRET WORD WAS</span>
+          <span className="font-mono font-black text-xl sm:text-2xl uppercase tracking-wider text-[#171717] bg-[#FFD84D] px-3 py-1 border border-black inline-block">
+            {result.word}
           </span>
-        </p>
-        {result.leaderboard?.slice(0, 5).map((p, i) => (
-          <div key={p.id} style={{
-            display: 'flex', alignItems: 'center', gap: '10px',
-            padding: '8px 10px', borderRadius: '10px',
-            background: i === 0 ? 'var(--amber-bg)' : 'var(--surface-raised)',
-            border: i === 0 ? '1px solid rgba(240,165,0,0.3)' : '1px solid var(--border-subtle)',
-            marginBottom: '6px',
-          }}>
-            <span style={{ width: '22px', fontSize: i === 0 ? '18px' : '12px', color: ['#ffd166','#c0c0c0','#cd7f32'][i] || 'var(--text-muted)' }}>
-              {['👑','🥈','🥉'][i] || `#${i+1}`}
-            </span>
-            <span style={{ fontSize: '18px' }}>{p.avatar}</span>
-            <span style={{ flex: 1, fontSize: '13px', fontWeight: 600, textAlign: 'left', color: 'var(--text)' }}>{p.name}</span>
-            <span style={{ fontSize: '13px', fontWeight: 700, color: i === 0 ? 'var(--amber)' : 'var(--amber)' }}>
-              {p.score} pts
-            </span>
-          </div>
-        ))}
-        <p style={{ marginTop: '16px', fontSize: '12px', color: 'var(--text-faint)' }}>
-          {countdown ? (
-            <motion.span
-              key={countdown}
-              initial={{ scale: 1.2, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              transition={{ duration: 0.3 }}
+        </div>
+
+        {/* Mini Leaderboard podium */}
+        <div className="flex flex-col gap-1.5 text-left">
+          <span className="text-[10px] sm:text-xs font-black uppercase text-[#171717] mb-0.5">TOP PLAYERS THIS MATCH:</span>
+          {result.leaderboard?.slice(0, 4).map((p, i) => (
+            <div
+              key={p.id}
+              className={`p-2 border-2 border-[#171717] flex items-center justify-between text-xs font-black ${
+                i === 0 ? 'bg-[#FFD84D] shadow-[2px_2px_0px_#171717]' : 'bg-white'
+              }`}
             >
-              Next round in {countdown} second{countdown !== 1 ? 's' : ''}...
-            </motion.span>
-          ) : (
-            'Next round starting…'
-          )}
-        </p>
+              <div className="flex items-center gap-2">
+                <span>{['👑', '🥈', '🥉'][i] || `#${i + 1}`}</span>
+                <span>{p.avatar}</span>
+                <span className="uppercase">{p.name}</span>
+              </div>
+              <span className="font-mono">{p.score} PTS</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="p-2 bg-[#DCCBFF] border-2 border-[#171717] text-xs font-black uppercase text-[#171717]">
+          {countdown ? `NEXT ROUND IN ${countdown}S...` : 'STARTING NEXT ROUND...'}
+        </div>
       </motion.div>
     </div>
   )
@@ -168,94 +119,49 @@ function RoundEndModal({ result, countdown, onDismiss }) {
 // ── Select Rounds Modal ───────────────────────────────────────────────────────
 function SelectRoundsModal({ isHost, initialRounds = 3, onConfirmRounds }) {
   const [selectedRounds, setSelectedRounds] = useState(initialRounds)
-  
   if (!isHost) return null
-  
+
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 70,
-      background: 'rgba(13,17,23,0.9)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '20px',
-    }}>
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
       <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
+        initial={{ scale: 0.88, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        style={{
-          background: 'var(--surface)',
-          border: '1px solid var(--border)',
-          borderRadius: '16px',
-          padding: '40px',
-          maxWidth: '500px',
-          width: '100%',
-          textAlign: 'center',
-        }}
+        className="w-full max-w-sm sm:max-w-md max-h-[92dvh] overflow-y-auto bg-white border-[3px] border-[#171717] shadow-[6px_6px_0px_#171717] sm:shadow-[8px_8px_0px_#171717] p-4 sm:p-6 text-center flex flex-col gap-4 sm:gap-5"
       >
-        <h1 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '12px', color: 'var(--text)' }}>
-          🎮 How Many Rounds?
-        </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '28px' }}>
-          Select the number of rounds to play in this game
+        <div className="bg-[#FFD84D] border-2 border-[#171717] shadow-[2.5px_2.5px_0px_#171717] py-2 px-3 sm:px-4">
+          <h2 className="font-black text-lg sm:text-xl uppercase tracking-tight text-[#171717]">
+            🎮 SELECT MATCH ROUNDS
+          </h2>
+        </div>
+
+        <p className="text-[11px] sm:text-xs font-bold text-[#454545] uppercase">
+          As the host, choose how many rounds this game will last:
         </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', marginBottom: '24px' }}>
-          {[1, 2, 3, 4, 5].map((num) => (
-            <motion.button
+        <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+            <button
               key={num}
+              type="button"
               onClick={() => setSelectedRounds(num)}
-              whileHover={{ scale: 1.05, translateY: -2 }}
-              whileTap={{ scale: 0.97 }}
-              style={{
-                padding: '16px 12px',
-                borderRadius: '12px',
-                background: selectedRounds === num ? 'var(--amber-bg)' : 'var(--surface-raised)',
-                border: selectedRounds === num ? '2px solid var(--amber)' : '1px solid var(--border)',
-                color: 'var(--text)',
-                fontWeight: 600,
-                fontSize: '18px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
+              className={`p-2 sm:p-2.5 font-mono font-black text-xs sm:text-sm border-2 border-[#171717] transition-all cursor-pointer ${
+                selectedRounds === num
+                  ? 'bg-[#FFD84D] shadow-[2.5px_2.5px_0px_#171717] scale-105'
+                  : 'bg-white hover:bg-[#FFF8E7]'
+              }`}
             >
               {num}
-            </motion.button>
+            </button>
           ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', marginBottom: '28px' }}>
-          {[6, 7, 8, 9, 10].map((num) => (
-            <motion.button
-              key={num}
-              onClick={() => setSelectedRounds(num)}
-              whileHover={{ scale: 1.05, translateY: -2 }}
-              whileTap={{ scale: 0.97 }}
-              style={{
-                padding: '16px 12px',
-                borderRadius: '12px',
-                background: selectedRounds === num ? 'var(--amber-bg)' : 'var(--surface-raised)',
-                border: selectedRounds === num ? '2px solid var(--amber)' : '1px solid var(--border)',
-                color: 'var(--text)',
-                fontWeight: 600,
-                fontSize: '18px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              {num}
-            </motion.button>
-          ))}
-        </div>
-
-        <motion.button
+        <button
+          type="button"
           onClick={() => onConfirmRounds(selectedRounds)}
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.97 }}
-          className="btn-primary"
-          style={{ width: '100%', padding: '14px', fontSize: '14px', borderRadius: '12px', fontWeight: 600 }}
+          className="neo-btn neo-btn-primary w-full"
         >
-          Confirm {selectedRounds} Round{selectedRounds !== 1 ? 's' : ''}
-        </motion.button>
+          CONFIRM {selectedRounds} ROUNDS 🚀
+        </button>
       </motion.div>
     </div>
   )
@@ -265,112 +171,71 @@ function SelectRoundsModal({ isHost, initialRounds = 3, onConfirmRounds }) {
 function GameEndModal({ result, isHost, onPlayAgain, onBackToLobby, onShowFeedback }) {
   if (!result) return null
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 60,
-      background: 'rgba(13,17,23,0.82)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-    }}>
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
       <motion.div
         initial={{ scale: 0.88, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        style={{
-          background: 'var(--surface)',
-          border: '1px solid var(--border)',
-          borderRadius: '16px', padding: '36px 40px',
-          minWidth: '340px', maxWidth: '480px',
-          textAlign: 'center',
-        }}
+        className="w-full max-w-sm sm:max-w-md max-h-[92dvh] overflow-y-auto bg-white border-[3px] border-[#171717] shadow-[8px_8px_0px_#171717] sm:shadow-[10px_10px_0px_#171717] p-4 sm:p-6 text-center flex flex-col gap-3.5 sm:gap-4"
       >
-        <motion.div
-          animate={{ rotate: [0, -8, 8, -4, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }}
-          style={{ fontSize: '56px', marginBottom: '12px' }}
-        >🏆</motion.div>
-        <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--amber)', marginBottom: '6px' }}>
-          Game Over!
+        <div className="text-3xl sm:text-4xl animate-bounce">🏆</div>
+        
+        <h2 className="font-black text-xl sm:text-2xl uppercase tracking-tight text-[#171717]">
+          GAME OVER!
         </h2>
+
         {result.winner && (
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '20px' }}>
-            🎉 <span style={{ fontWeight: 700, color: 'var(--text)' }}>{result.winner.name}</span> wins with{' '}
-            <span style={{ color: 'var(--amber)', fontWeight: 700 }}>{result.winner.score} pts</span>
-          </p>
-        )}
-        {result.leaderboard?.map((p, i) => (
-          <div key={p.id} style={{
-            display: 'flex', alignItems: 'center', gap: '10px',
-            padding: '10px 12px', borderRadius: '12px',
-            background: i === 0 ? 'var(--amber-bg)' : 'var(--surface-raised)',
-            border: i === 0 ? '1px solid rgba(240,165,0,0.3)' : '1px solid var(--border-subtle)',
-            marginBottom: '8px',
-          }}>
-            <span style={{ width: '24px', fontSize: i === 0 ? '20px' : '13px', color: ['#ffd166','#c0c0c0','#cd7f32'][i] || 'var(--text-muted)' }}>
-              {['👑','🥈','🥉'][i] || `#${i+1}`}
-            </span>
-            <span style={{ fontSize: '20px' }}>{p.avatar}</span>
-            <span style={{ flex: 1, fontSize: '14px', fontWeight: 700, textAlign: 'left', color: 'var(--text)' }}>{p.name}</span>
-            <span style={{ fontSize: '15px', fontWeight: 700, color: i === 0 ? 'var(--amber)' : 'var(--amber)' }}>
-              {p.score} pts
+          <div className="p-2.5 sm:p-3 bg-[#B7F56A] border-2 border-[#171717] shadow-[2.5px_2.5px_0px_#171717] flex items-center justify-center gap-2">
+            <span className="text-xl sm:text-2xl">{result.winner.avatar}</span>
+            <span className="font-black text-xs sm:text-base uppercase text-[#171717]">
+              {result.winner.name} WINS! ({result.winner.score} PTS)
             </span>
           </div>
-        ))}
-        <div style={{ display: 'grid', gridTemplateColumns: isHost ? '1fr 1fr' : '1fr', gap: '12px', marginTop: '24px' }}>
-          {isHost && (
-            <motion.button
-              onClick={onPlayAgain}
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.97 }}
-              style={{
-                padding: '12px', fontSize: '14px', fontWeight: 700, borderRadius: '12px',
-                background: 'var(--surface-raised)', border: '1px solid var(--border)',
-                color: 'var(--text)', cursor: 'pointer',
-              }}
+        )}
+
+        <div className="flex flex-col gap-1.5 text-left max-h-48 overflow-y-auto">
+          {result.leaderboard?.map((p, i) => (
+            <div
+              key={p.id}
+              className={`p-2 border-2 border-[#171717] flex items-center justify-between text-xs font-black ${
+                i === 0 ? 'bg-[#FFD84D]' : 'bg-white'
+              }`}
             >
-              🔄 Play Again
-            </motion.button>
-          )}
-          <motion.button
-            onClick={onBackToLobby}
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.97 }}
-            className="btn-primary"
-            style={{ padding: '12px', fontSize: '14px', borderRadius: '12px' }}
-          >
-            🚀 Back to Lobby
-          </motion.button>
+              <div className="flex items-center gap-2">
+                <span>{['👑', '🥈', '🥉'][i] || `#${i + 1}`}</span>
+                <span>{p.avatar}</span>
+                <span className="uppercase">{p.name}</span>
+              </div>
+              <span className="font-mono">{p.score} PTS</span>
+            </div>
+          ))}
         </div>
 
-        <motion.button
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1 sm:mt-2">
+          {isHost && (
+            <button
+              type="button"
+              onClick={onPlayAgain}
+              className="neo-btn neo-btn-sm neo-btn-white w-full"
+            >
+              🔄 PLAY AGAIN
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onBackToLobby}
+            className="neo-btn neo-btn-sm neo-btn-primary w-full"
+          >
+            🏠 HOME LOBBY
+          </button>
+        </div>
+
+        <button
+          type="button"
           onClick={onShowFeedback}
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.97 }}
-          style={{
-            width: '100%',
-            marginTop: '12px',
-            padding: '10px',
-            fontSize: '13px',
-            fontWeight: 600,
-            borderRadius: '12px',
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid var(--border)',
-            color: 'var(--text-muted)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
-            transition: 'color 0.2s, border-color 0.2s',
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.color = 'var(--text)'
-            e.target.style.borderColor = 'var(--amber)'
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.color = 'var(--text-muted)'
-            e.target.style.borderColor = 'var(--border)'
-          }}
+          className="text-xs font-bold text-[#6B7280] hover:text-[#171717] underline cursor-pointer mt-1"
         >
-           Share Feedback
-        </motion.button>
+          💬 Share Your Game Feedback
+        </button>
       </motion.div>
     </div>
   )
@@ -386,24 +251,22 @@ export default function GamePage() {
   const playerName   = location.state?.playerName
   const playerAvatar = location.state?.avatar || '🦊'
 
-  // Redirect if no player state
   useEffect(() => {
     if (!playerName) navigate('/')
   }, [playerName, navigate])
 
-  // ── Drawing tool state ───────────────────────────────────────────────────
-  const [selectedColor,   setSelectedColor]   = useState('#0D1117')
-  const [brushSize,       setBrushSize]       = useState(5)
-  const [isEraser,        setIsEraser]        = useState(false)
-  const [clearSignal,     setClearSignal]     = useState(0)
-  const [gestureMode,     setGestureMode]     = useState(false)
-  const [showGesture,     setShowGesture]     = useState(false)
+  // Drawing tool state
+  const [selectedColor, setSelectedColor] = useState('#171717')
+  const [brushSize, setBrushSize] = useState(5)
+  const [isEraser, setIsEraser] = useState(false)
+  const [clearSignal, setClearSignal] = useState(0)
+  const [gestureMode, setGestureMode] = useState(false)
+  const [selectedRounds, setSelectedRounds] = useState(null)
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
-  const [selectedRounds,  setSelectedRounds]  = useState(null)  // Track if host selected rounds
-  const [mobileSidebarTab, setMobileSidebarTab] = useState('chat') // 'players' | 'chat'
+  const [mobileSidebarTab, setMobileSidebarTab] = useState('chat')
   const [showFeedback, setShowFeedback] = useState(false)
 
-  // ── Socket ───────────────────────────────────────────────────────────────
+  // Socket
   const {
     connected, playerId, isHost, hostId,
     players, messages, gameState,
@@ -421,23 +284,13 @@ export default function GamePage() {
   const hostName = hostPlayer?.name || ''
   const hostAvatar = hostPlayer?.avatar || '👑'
 
-  // ── Debug logging for game state ───────────────────────────────────────────
-  useEffect(() => {
-    console.log('[GamePage] Game state changed to:', gameState, '| Drawer:', currentDrawerId, '| isDrawing:', isDrawing)
-  }, [gameState, currentDrawerId, isDrawing])
-
-  // ── Gesture draw: draws LOCALLY on this canvas + broadcasts to server ──────
-  // onRemoteDraw.current is set by DrawingCanvas to its own _applyRemoteDraw
-  // which handles normalised coords (0-1) exactly like remote socket strokes.
   const handleGestureDraw = useCallback((data) => {
-    if (onRemoteDraw.current) onRemoteDraw.current(data)  // paint locally
-    sendDraw(data)                                         // broadcast to others
+    if (onRemoteDraw.current) onRemoteDraw.current(data)
+    sendDraw(data)
   }, [onRemoteDraw, sendDraw])
 
-  // ── Gesture mode toggle ───────────────────────────────────────────────────
   const handleToggleGesture = (on) => {
     setGestureMode(on)
-    setShowGesture(on)
   }
 
   const handleClear = () => {
@@ -451,7 +304,6 @@ export default function GamePage() {
 
   const handleConfirmRounds = (rounds) => {
     setSelectedRounds(rounds)
-    // If we're in game_end, immediately restart with the chosen rounds
     if (gameState === 'game_end') {
       restartGame(rounds)
     }
@@ -463,7 +315,6 @@ export default function GamePage() {
   }
 
   const handlePlayAgain = () => {
-    // Reset selectedRounds so the host must pick again before restarting
     setSelectedRounds(null)
   }
 
@@ -473,7 +324,6 @@ export default function GamePage() {
 
   const handleSendMessage = (text) => {
     if (hasGuessedCorrectly) return
-    // If game is running, treat as guess; otherwise plain message
     if (gameState === 'drawing' && !isDrawing) {
       sendGuess(text)
     } else {
@@ -481,31 +331,23 @@ export default function GamePage() {
     }
   }
 
-  // Stop gesture mode when round ends or when we're no longer the drawer
   useEffect(() => {
     if (!isDrawing && gestureMode) {
       setGestureMode(false)
-      setShowGesture(false)
     }
   }, [isDrawing, gestureMode])
 
-  // Also stop on round_end / game_end game states
   useEffect(() => {
     if ((gameState === 'round_end' || gameState === 'game_end') && gestureMode) {
       setGestureMode(false)
-      setShowGesture(false)
     }
   }, [gameState, gestureMode])
 
   if (!playerName) return null
 
   return (
-    <div style={{
-      background: 'var(--bg-deep)',
-      width: '100vw', height: '100vh',
-      display: 'flex', flexDirection: 'column',
-      overflow: 'hidden',
-    }}>
+    <div className="game-viewport">
+      
       {/* Header */}
       <GameHeader
         roomCode={roomId}
@@ -528,7 +370,7 @@ export default function GamePage() {
         selectedRounds={selectedRounds}
       />
 
-      {/* Toolbar — only show for the drawer */}
+      {/* Toolbar for the Drawer */}
       {isDrawing && (
         <DrawingToolbar
           selectedColor={selectedColor}
@@ -543,11 +385,11 @@ export default function GamePage() {
         />
       )}
 
-      {/* Main content */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', padding: '12px', gap: '12px', minHeight: 0 }}>
-
-        {/* Canvas */}
-        <div style={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      {/* Main Workspace */}
+      <div className="flex-1 w-full max-w-[1600px] mx-auto flex overflow-hidden p-2 sm:p-3.5 gap-2 sm:gap-3.5 min-h-0">
+        
+        {/* Drawing Board Area */}
+        <div className="flex-1 min-w-0 min-h-0 flex flex-col relative">
           <DrawingCanvas
             color={selectedColor}
             brushSize={brushSize}
@@ -561,22 +403,16 @@ export default function GamePage() {
           />
         </div>
 
-        {/* Desktop sidebar */}
+        {/* Desktop Sidebar (Players + Chat) */}
         {isDesktop && (
-          <div style={{ width: '276px', flexShrink: 0, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-            {/* Players — fixed height cap with own internal scroll */}
-            <div style={{ flexShrink: 0, height: '220px', minHeight: 0 }}>
+          <div className="w-[300px] lg:w-[330px] flex-shrink-0 flex flex-col gap-2.5 sm:gap-3 min-h-0 pb-1.5">
+            {/* Player Leaderboard (Top half) */}
+            <div className="flex-shrink-0 h-[210px] lg:h-[230px] min-h-0">
               <PlayerList players={players} currentPlayerId={playerId} hostId={hostId} />
             </div>
-            {/* Visible elevated divider */}
-            <div style={{
-              height: '1px', flexShrink: 0,
-              margin: '8px 4px',
-              background: 'linear-gradient(to right, transparent, var(--border), transparent)',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
-            }} />
-            {/* Chat — fills all remaining space */}
-            <div style={{ flex: '1 1 0', minHeight: 0 }}>
+
+            {/* Chat & Guess Stream (Bottom half) */}
+            <div className="flex-1 min-h-0">
               <ChatPanel
                 messages={messages}
                 playerName={playerName}
@@ -587,91 +423,73 @@ export default function GamePage() {
             </div>
           </div>
         )}
+
       </div>
 
-      {/* Mobile FAB */}
+      {/* Mobile Floating Action Button */}
       {!isDesktop && (
-        <motion.button
+        <button
+          type="button"
           onClick={() => setMobileDrawerOpen(true)}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.92 }}
-          style={{
-            position: 'fixed', bottom: '24px', right: '24px',
-            width: '56px', height: '56px', borderRadius: '50%',
-            background: 'var(--amber)',
-            color: 'var(--bg)', fontSize: '22px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 30, border: 'none', cursor: 'pointer',
-          }}
-        >👥</motion.button>
+          className="fixed bottom-4 right-4 z-40 w-13 h-13 sm:w-14 sm:h-14 bg-[#FFD84D] border-[2.5px] border-[#171717] shadow-[3.5px_3.5px_0px_#171717] flex items-center justify-center text-2xl active:translate-y-1 transition-all cursor-pointer"
+          title="Open Chat & Players"
+        >
+          💬
+        </button>
       )}
 
-      {/* Mobile bottom drawer */}
+      {/* Mobile Drawer (Players & Chat toggle) */}
       <AnimatePresence>
         {mobileDrawerOpen && !isDesktop && (
           <>
             <motion.div
               key="overlay"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               onClick={() => setMobileDrawerOpen(false)}
-              style={{
-                position: 'fixed', inset: 0, zIndex: 40,
-                background: 'rgba(0,0,0,0.6)',
-              }}
+              className="fixed inset-0 z-40 bg-black/60"
             />
             <motion.div
               key="drawer"
-              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-              transition={{ type: 'spring', stiffness: 340, damping: 32 }}
-              style={{
-                position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
-                height: '70vh',
-                background: 'var(--surface)',
-                borderTop: '1px solid var(--border)',
-                borderRadius: '16px 16px 0 0',
-                display: 'flex', flexDirection: 'column',
-              }}
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+              className="fixed bottom-0 left-0 right-0 z-50 h-[80vh] max-h-[82vh] bg-white border-t-[3px] border-[#171717] flex flex-col shadow-[0_-6px_0px_rgba(23,23,23,0.15)] pb-safe"
             >
-              <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 4px' }}>
-                <div style={{ width: '36px', height: '4px', borderRadius: '99px', background: 'var(--border)' }} />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 16px 8px' }}>
-                <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text)' }}>Players & Chat</span>
-                <button onClick={() => setMobileDrawerOpen(false)} style={{
-                  width: '30px', height: '30px', borderRadius: '8px',
-                  background: 'var(--surface-raised)', border: '1px solid var(--border)',
-                  color: 'var(--text-muted)', fontSize: '14px', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>✕</button>
-              </div>
-              {/* Mobile tab toggle — Players | Chat */}
-              <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', flexShrink: 0, margin: '0 12px' }}>
-                {[
-                  { id: 'players', label: `👥 Players (${players.length})` },
-                  { id: 'chat',    label: '💬 Chat & Guess' },
-                ].map(tab => (
+              <div className="p-2.5 sm:p-3 bg-[#FFF8E7] border-b-2 border-[#171717] flex items-center justify-between flex-shrink-0">
+                <div className="flex items-center gap-1.5 sm:gap-2">
                   <button
-                    key={tab.id}
-                    onClick={() => setMobileSidebarTab(tab.id)}
-                    style={{
-                      flex: 1, padding: '8px 12px',
-                      fontSize: '13px', fontWeight: 700,
-                      background: 'transparent', border: 'none',
-                      color: mobileSidebarTab === tab.id ? 'var(--amber)' : 'var(--text-muted)',
-                      borderBottom: mobileSidebarTab === tab.id ? '2px solid var(--amber)' : '2px solid transparent',
-                      cursor: 'pointer', transition: 'all 0.15s ease',
-                      marginBottom: '-1px',
-                    }}
+                    type="button"
+                    onClick={() => setMobileSidebarTab('chat')}
+                    className={`px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-black uppercase border-2 border-[#171717] ${
+                      mobileSidebarTab === 'chat' ? 'bg-[#FFD84D] shadow-[2px_2px_0px_#171717]' : 'bg-white'
+                    }`}
                   >
-                    {tab.label}
+                    💬 CHAT & GUESS
                   </button>
-                ))}
+                  <button
+                    type="button"
+                    onClick={() => setMobileSidebarTab('players')}
+                    className={`px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-black uppercase border-2 border-[#171717] ${
+                      mobileSidebarTab === 'players' ? 'bg-[#FFD84D] shadow-[2px_2px_0px_#171717]' : 'bg-white'
+                    }`}
+                  >
+                    👥 PLAYERS ({players.length})
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMobileDrawerOpen(false)}
+                  className="w-7 h-7 sm:w-8 sm:h-8 bg-white border-2 border-[#171717] font-black text-xs sm:text-sm flex items-center justify-center cursor-pointer"
+                >
+                  ✕
+                </button>
               </div>
-              {/* Active panel */}
-              <div style={{ flex: 1, minHeight: 0, padding: '8px 12px 16px', overflow: 'hidden' }}>
-                {mobileSidebarTab === 'players' ? (
-                  <PlayerList players={players} currentPlayerId={playerId} hostId={hostId} />
-                ) : (
+
+              <div className="flex-1 p-2.5 pb-4 min-h-0 overflow-hidden">
+                {mobileSidebarTab === 'chat' ? (
                   <ChatPanel
                     messages={messages}
                     playerName={playerName}
@@ -679,6 +497,8 @@ export default function GamePage() {
                     isDrawing={isDrawing}
                     isInputLocked={hasGuessedCorrectly}
                   />
+                ) : (
+                  <PlayerList players={players} currentPlayerId={playerId} hostId={hostId} />
                 )}
               </div>
             </motion.div>
@@ -686,22 +506,22 @@ export default function GamePage() {
         )}
       </AnimatePresence>
 
-      {/* Select rounds modal — host must select before starting or restarting */}
+      {/* Select Rounds Modal (Host) */}
       {(gameState === 'waiting' || gameState === 'game_end') && isHost && selectedRounds === null && (
         <SelectRoundsModal isHost={isHost} onConfirmRounds={handleConfirmRounds} />
       )}
 
-      {/* Word choice modal (only for drawer when choosing word) */}
+      {/* Word Choice Modal (Drawer) */}
       {isDrawing && wordChoices && gameState === 'choosing_word' && (
         <WordChoiceModal choices={wordChoices} onSelect={selectWord} />
       )}
 
-      {/* Round end modal — show during round_end state */}
+      {/* Round End Modal */}
       {gameState === 'round_end' && roundResult && (
-        <RoundEndModal result={roundResult} countdown={roundCountdown} onDismiss={() => {}} />
+        <RoundEndModal result={roundResult} countdown={roundCountdown} />
       )}
 
-      {/* Gesture overlay — client-side MediaPipe, no server webcam needed */}
+      {/* Air Canvas Gesture Overlay */}
       <GestureOverlay
         active={gestureMode}
         onDraw={handleGestureDraw}
@@ -712,10 +532,17 @@ export default function GamePage() {
         isEraser={isEraser}
       />
 
-      {/* Game end modal */}
-      <GameEndModal result={gameResult} isHost={isHost} onPlayAgain={handlePlayAgain} onBackToLobby={handleBackToLobby} onShowFeedback={() => setShowFeedback(true)} />
+      {/* Game End Modal */}
+      <GameEndModal
+        result={gameResult}
+        isHost={isHost}
+        onPlayAgain={handlePlayAgain}
+        onBackToLobby={handleBackToLobby}
+        onShowFeedback={() => setShowFeedback(true)}
+      />
 
       <FeedbackModal isOpen={showFeedback} onClose={() => setShowFeedback(false)} />
+
     </div>
   )
 }
