@@ -145,64 +145,131 @@ export default function DrawingToolbar({
         {/* Divider */}
         <div className="h-8 w-px hidden lg:block" style={{ background: 'var(--line)' }} />
 
-        {/* Tools */}
-        <div className="flex items-center gap-2">
-          {/* Eraser */}
+        {/* Tools (Pencil, Grid, Hand) */}
+        <div
+          className="flex items-center gap-2 sm:gap-2.5 shrink-0 ml-auto lg:ml-0"
+          role="toolbar"
+          aria-label="Drawing tools"
+        >
+          {/* Pencil Tool */}
           <motion.button
+            key="tool-pencil"
             onClick={() => onToggleEraser(!isEraser)}
-            whileHover={{ scale: 1.05, y: -1 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all"
+            whileHover={{ scale: 1.06, y: -2, boxShadow: '4px 4px 0 var(--shadow)' }}
+            whileTap={{ scale: 0.94, y: 1, boxShadow: '1px 1px 0 var(--shadow)' }}
+            className="relative flex items-center justify-center rounded-xl transition-all select-none"
             style={{
-              background: isEraser ? 'var(--peach)' : 'var(--surface-2)',
-              border: '2px solid var(--line)',
-              boxShadow: '2px 2px 0 var(--shadow)',
+              width: '48px',
+              height: '48px',
+              minWidth: '48px',
+              minHeight: '48px',
+              background: (!isEraser && !gestureMode) ? 'var(--yellow)' : isEraser ? 'var(--peach)' : 'var(--surface-2)',
+              border: '2.5px solid var(--line)',
+              boxShadow: (!isEraser && !gestureMode) || isEraser ? '3px 3px 0 var(--shadow)' : '2px 2px 0 var(--shadow)',
               color: 'var(--text)',
-              fontFamily: 'var(--font-display)',
+              cursor: 'pointer',
             }}
-            title="Eraser"
+            title={isEraser ? 'Eraser' : 'Pencil'}
+            aria-label="Pencil"
+            data-tool="pencil"
+            data-testid="pencil-tool"
           >
-            🧹 <span className="hidden sm:inline">Eraser</span>
+            <span
+              style={{ fontSize: '26px', lineHeight: 1 }}
+              role="img"
+              aria-label={isEraser ? 'Eraser' : 'Pencil'}
+            >
+              {isEraser ? '🧹' : '✏️'}
+            </span>
+            <span className="sr-only">Pencil</span>
+            {!isEraser && !gestureMode && (
+              <span
+                className="absolute bottom-1 right-1 w-2 h-2 rounded-full"
+                style={{ background: 'var(--line)' }}
+                title="Active"
+              />
+            )}
           </motion.button>
 
-          {/* Clear */}
+          {/* Grid Tool */}
           <motion.button
+            key="tool-grid"
             onClick={onClear}
-            whileHover={{ scale: 1.05, y: -1 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold"
+            whileHover={{ scale: 1.06, y: -2, boxShadow: '4px 4px 0 var(--shadow)' }}
+            whileTap={{ scale: 0.94, y: 1, boxShadow: '1px 1px 0 var(--shadow)' }}
+            className="relative flex items-center justify-center rounded-xl transition-all select-none"
             style={{
+              width: '48px',
+              height: '48px',
+              minWidth: '48px',
+              minHeight: '48px',
               background: 'var(--surface-2)',
-              border: '2px solid var(--line)',
+              border: '2.5px solid var(--line)',
               boxShadow: '2px 2px 0 var(--shadow)',
               color: 'var(--text)',
-              fontFamily: 'var(--font-display)',
+              cursor: 'pointer',
             }}
-            title="Clear Canvas"
+            title="Grid"
+            aria-label="Grid"
+            data-tool="grid"
+            data-testid="grid-tool"
           >
-            🗑️ <span className="hidden sm:inline">Clear</span>
+            <svg
+              width="26"
+              height="26"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="3" />
+              <path d="M3 9h18" />
+              <path d="M3 15h18" />
+              <path d="M9 3v18" />
+              <path d="M15 3v18" />
+            </svg>
+            <span className="sr-only">Grid</span>
           </motion.button>
 
-          {/* Gesture Mode */}
+          {/* Hand Tool (Gesture Mode) */}
           <motion.button
+            key="tool-hand"
             onClick={() => onToggleGesture(!gestureMode)}
-            whileHover={{ scale: 1.05, y: -1 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all"
+            whileHover={{ scale: 1.06, y: -2, boxShadow: '4px 4px 0 var(--shadow)' }}
+            whileTap={{ scale: 0.94, y: 1, boxShadow: '1px 1px 0 var(--shadow)' }}
+            className="relative flex items-center justify-center rounded-xl transition-all select-none"
             style={{
-              background: gestureMode ? 'var(--lime)' : 'var(--surface-2)',
-              border: '2px solid var(--line)',
-              boxShadow: '2px 2px 0 var(--shadow)',
+              width: '48px',
+              height: '48px',
+              minWidth: '48px',
+              minHeight: '48px',
+              background: gestureMode ? 'var(--yellow)' : 'var(--surface-2)',
+              border: '2.5px solid var(--line)',
+              boxShadow: gestureMode ? '3px 3px 0 var(--shadow)' : '2px 2px 0 var(--shadow)',
               color: 'var(--text)',
-              fontFamily: 'var(--font-display)',
+              cursor: 'pointer',
             }}
-            title="Toggle Gesture Drawing"
+            title="Hand"
+            aria-label="Hand"
+            data-tool="hand"
+            data-testid="hand-tool"
           >
-            ✋ <span className="hidden sm:inline">Gesture</span>
+            <span
+              style={{ fontSize: '26px', lineHeight: 1 }}
+              role="img"
+              aria-label="Hand"
+            >
+              ✋
+            </span>
+            <span className="sr-only">Hand</span>
             {gestureMode && (
               <span
-                className="w-2 h-2 rounded-full ml-1 animate-pulse"
-                style={{ background: 'var(--green)', border: '1px solid var(--line)' }}
+                className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full animate-pulse"
+                style={{ background: 'var(--green)', border: '1.5px solid var(--line)' }}
+                title="Active"
               />
             )}
           </motion.button>
