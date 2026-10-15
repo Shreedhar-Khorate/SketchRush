@@ -22,16 +22,16 @@ function QuestionCard({ label, rating, onChange, required = false, isMobile }) {
 
   return (
     <div style={{
-      background: 'var(--surface-raised)',
-      border: '1px solid var(--border)',
+      background: 'var(--surface-2)',
+      border: '2px solid var(--line)',
       borderRadius: '14px',
       padding: isMobile ? '14px' : '18px',
       display: 'flex',
       flexDirection: 'column',
       gap: '12px',
-      transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-      boxShadow: rating > 0 ? '0 4px 16px rgba(240,165,0,0.06)' : 'none',
-      borderLeft: rating > 0 ? '4px solid var(--amber)' : '1px solid var(--border)',
+      transition: 'all 0.2s ease',
+      boxShadow: rating > 0 ? '3px 3px 0 var(--shadow)' : '2px 2px 0 var(--shadow)',
+      borderLeft: rating > 0 ? '5px solid var(--line)' : '2px solid var(--line)',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
         <span style={{ fontSize: isMobile ? '12px' : '13px', fontWeight: 700, color: 'var(--text)', lineHeight: 1.4 }}>
@@ -211,11 +211,11 @@ export default function FeedbackModal({ isOpen, onClose }) {
     <AnimatePresence>
       <div style={{
         position: 'fixed', inset: 0, zIndex: 100,
-        background: 'rgba(6,9,24,0.94)',
+        background: 'rgba(20,20,20,0.65)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: isMobile ? '12px' : '20px',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
+        backdropFilter: 'blur(3px)',
+        WebkitBackdropFilter: 'blur(3px)',
       }}>
         {/* Backdrop closer click */}
         <div style={{ position: 'absolute', inset: 0, zIndex: 1 }} onClick={handleClose} />
@@ -227,25 +227,26 @@ export default function FeedbackModal({ isOpen, onClose }) {
           transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
           style={{
             background: 'var(--surface)',
-            border: '1px solid rgba(255,255,255,0.06)',
-            borderRadius: '24px',
+            border: '3px solid var(--line)',
+            borderRadius: '20px',
             padding: isMobile ? '20px' : '32px',
             maxWidth: '480px',
             width: '100%',
             position: 'relative',
             zIndex: 2,
-            boxShadow: '0 30px 60px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255,255,255,0.04) inset',
+            boxShadow: '8px 8px 0 var(--shadow)',
             maxHeight: '92vh',
             overflowY: 'auto',
+            fontFamily: 'var(--font-body)',
           }}
         >
           {/* Header */}
           <div style={{ marginBottom: '24px', paddingRight: '24px', position: 'relative' }}>
-            <h2 style={{ fontSize: isMobile ? '18px' : '22px', fontWeight: 800, margin: 0, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 800, margin: 0, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'var(--font-heading)' }}>
               ⚡ Share Your Thoughts
             </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '6px', marginBottom: 0, lineHeight: 1.5 }}>
-              All ratings are required. Help me make SketchRush better!
+            <p style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600, marginTop: '6px', marginBottom: 0, lineHeight: 1.5 }}>
+              All ratings are required. Help make SketchRush even better!
             </p>
 
             {/* Close button */}
@@ -256,28 +257,26 @@ export default function FeedbackModal({ isOpen, onClose }) {
                 position: 'absolute',
                 top: isMobile ? '-4px' : '-10px',
                 right: isMobile ? '-12px' : '-10px',
-                width: '30px',
-                height: '30px',
-                borderRadius: '50%',
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid var(--border)',
-                color: 'var(--text-muted)',
-                fontSize: '11px',
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                background: 'var(--surface-2)',
+                border: '2px solid var(--line)',
+                boxShadow: '2px 2px 0 var(--shadow)',
+                color: 'var(--text)',
+                fontSize: '13px',
+                fontWeight: 800,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                transition: 'all 0.2s ease',
+                transition: 'all 0.15s ease',
               }}
               onMouseEnter={(e) => {
-                e.target.style.background = 'var(--red-bg)'
-                e.target.style.color = 'var(--red)'
-                e.target.style.borderColor = 'rgba(248,81,73,0.3)'
+                e.currentTarget.style.background = 'var(--yellow)'
               }}
               onMouseLeave={(e) => {
-                e.target.style.background = 'rgba(255,255,255,0.03)'
-                e.target.style.color = 'var(--text-muted)'
-                e.target.style.borderColor = 'var(--border)'
+                e.currentTarget.style.background = 'var(--surface-2)'
               }}
             >
               ✕

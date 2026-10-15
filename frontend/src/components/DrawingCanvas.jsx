@@ -248,10 +248,12 @@ export default function DrawingCanvas({
   return (
     <div ref={containerRef} className="w-full h-full flex items-center justify-center relative" style={{ minHeight: 0 }}>
       <div
-        className="relative rounded-2xl overflow-hidden shadow-lg"
+        className="relative overflow-hidden"
         style={{
           background: '#FFFFFF',
-          border: '1px solid var(--border)',
+          border: '3px solid var(--line)',
+          borderRadius: '20px',
+          boxShadow: '6px 6px 0 var(--shadow)',
           width: `${canvasSize.width}px`,
           height: `${canvasSize.height}px`,
           // Ensure it stays strictly proportional to our 800x600 backing buffer
@@ -267,7 +269,7 @@ export default function DrawingCanvas({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4 }}
               className="absolute inset-0 z-10 pointer-events-none"
-              style={{ background: 'var(--amber-bg)' }}
+              style={{ background: 'var(--yellow)' }}
             />
           )}
         </AnimatePresence>
@@ -281,10 +283,10 @@ export default function DrawingCanvas({
         ].map(({ pos, r }, i) => (
           <div key={i} className={`absolute ${pos} w-5 h-5 pointer-events-none z-10`}
             style={{
-              borderTop:    i < 2   ? '2px solid var(--border)' : 'none',
-              borderBottom: i >= 2  ? '2px solid var(--border)' : 'none',
-              borderLeft:   i % 2 === 0 ? '2px solid var(--border)' : 'none',
-              borderRight:  i % 2 !== 0 ? '2px solid var(--border)' : 'none',
+              borderTop:    i < 2   ? '2.5px solid var(--line)' : 'none',
+              borderBottom: i >= 2  ? '2.5px solid var(--line)' : 'none',
+              borderLeft:   i % 2 === 0 ? '2.5px solid var(--line)' : 'none',
+              borderRight:  i % 2 !== 0 ? '2.5px solid var(--line)' : 'none',
               borderRadius: r,
             }}
           />
@@ -296,8 +298,17 @@ export default function DrawingCanvas({
             className="absolute inset-0 z-10 flex items-end justify-center pb-4 pointer-events-none"
           >
             <span
-              className="badge badge-brand text-xs px-3 py-1"
-              style={{ opacity: 0.7 }}
+              style={{
+                background: 'var(--yellow)',
+                color: '#141414',
+                border: '2px solid var(--line)',
+                borderRadius: '999px',
+                boxShadow: '2.5px 2.5px 0 var(--shadow)',
+                fontFamily: 'var(--font-display)',
+                fontWeight: 700,
+                fontSize: '13px',
+                padding: '6px 16px',
+              }}
             >
               👀 Watch & Guess — it&apos;s not your turn
             </span>
@@ -345,7 +356,19 @@ export default function DrawingCanvas({
 
         {/* Brush info badge */}
         <div className="absolute bottom-3 left-3 z-10 pointer-events-none">
-          <span className="badge badge-brand" style={{ opacity: 0.65 }}>
+          <span
+            style={{
+              background: 'var(--surface-2)',
+              color: 'var(--text)',
+              border: '2px solid var(--line)',
+              borderRadius: '999px',
+              boxShadow: '2px 2px 0 var(--shadow)',
+              fontWeight: 700,
+              fontSize: '11px',
+              padding: '4px 12px',
+              display: 'inline-block',
+            }}
+          >
             {isEraser ? '🧹 Eraser' : '🖌️ Brush'} · {brushSize}px
           </span>
         </div>

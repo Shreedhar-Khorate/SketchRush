@@ -12,26 +12,33 @@ export default function PlayerList({ players = [], currentPlayerId = null, hostI
     <div
       style={{
         width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
-        borderRadius: '16px', overflow: 'hidden',
+        borderRadius: '20px', overflow: 'hidden',
         background: 'var(--surface)',
-        border: '1px solid var(--border)',
+        border: '3px solid var(--line)',
+        boxShadow: '5px 5px 0 var(--shadow)',
       }}
     >
       {/* Header */}
       <div style={{
         padding: '10px 14px', flexShrink: 0,
-        borderBottom: '1px solid var(--border)',
+        borderBottom: '2.5px solid var(--line)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        background: 'var(--surface)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '14px' }}>👥</span>
-          <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>Players</span>
+          <span style={{ fontSize: '15px' }}>👥</span>
+          <span style={{
+            fontSize: '15px', fontWeight: 700,
+            color: 'var(--text)', fontFamily: 'var(--font-display)',
+          }}>
+            Players
+          </span>
         </div>
         <span className="badge badge-brand">{players.length}/8</span>
       </div>
 
       {/* List */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '10px', display: 'flex', flexDirection: 'column', gap: '6px', minHeight: 0 }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px', minHeight: 0 }}>
         <AnimatePresence>
           {sorted.map((player, index) => {
             const isMe       = player.id === currentPlayerId
@@ -45,33 +52,28 @@ export default function PlayerList({ players = [], currentPlayerId = null, hostI
                 layout
                 initial={{ opacity: 0, x: 12 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{  opacity: 0, x: -12 }}
-                transition={{ duration: 0.35, ease: [0.22,1,0.36,1], delay: index * 0.05 }}
+                exit={{ opacity: 0, x: -12 }}
+                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1], delay: index * 0.05 }}
                 style={{
                   position: 'relative',
-                  borderRadius: '12px',
+                  borderRadius: '14px',
                   overflow: 'hidden',
                   background: player.is_drawing
-                    ? 'var(--blue-bg)'
+                    ? 'var(--lime)'
                     : isMe
-                    ? 'rgba(47,129,247,0.06)'
-                    : 'var(--surface-raised)',
-                  border: player.is_drawing
-                    ? '1px solid rgba(47,129,247,0.5)'
-                    : isMe
-                    ? '1px solid rgba(47,129,247,0.2)'
-                    : '1px solid var(--border-subtle)',
+                    ? 'var(--peach)'
+                    : 'var(--surface-2)',
+                  border: '2px solid var(--line)',
+                  boxShadow: '2.5px 2.5px 0 var(--shadow)',
                 }}
               >
                 {/* Score bar */}
                 <div style={{
                   position: 'absolute', bottom: 0, left: 0,
-                  height: '2px',
+                  height: '3px',
                   width: `${scoreRatio * 100}%`,
-                  background: isTop
-                    ? 'var(--amber)'
-                    : 'var(--amber)',
-                  opacity: 0.7,
+                  background: 'var(--line)',
+                  opacity: 0.5,
                   transition: 'width 0.7s ease',
                 }} />
 
@@ -79,23 +81,23 @@ export default function PlayerList({ players = [], currentPlayerId = null, hostI
                   {/* Rank */}
                   <span style={{
                     width: '20px', textAlign: 'center', flexShrink: 0,
-                    fontSize: index < 3 ? '16px' : '11px',
+                    fontSize: index < 3 ? '16px' : '12px',
                     fontWeight: 800,
-                    color: RANK_COLORS[index] || 'var(--text-muted)',
+                    color: index < 3 ? 'var(--text)' : 'var(--text-muted)',
+                    fontFamily: 'var(--font-display)',
                   }}>
                     {index < 3 ? RANK_ICONS[index] : `#${index+1}`}
                   </span>
 
                   {/* Avatar */}
                   <div style={{
-                    position: 'relative', width: '36px', height: '36px',
+                    position: 'relative', width: '38px', height: '38px',
                     borderRadius: '10px', flexShrink: 0,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '20px',
                     background: 'var(--surface)',
-                    border: player.is_drawing
-                      ? '1.5px solid rgba(47,129,247,0.6)'
-                      : '1.5px solid var(--border)',
+                    border: '2px solid var(--line)',
+                    boxShadow: '1.5px 1.5px 0 var(--shadow)',
                   }}>
                     {player.avatar || '🙂'}
                     {player.is_drawing && (
@@ -104,10 +106,12 @@ export default function PlayerList({ players = [], currentPlayerId = null, hostI
                         transition={{ repeat: Infinity, duration: 1 }}
                         style={{
                           position: 'absolute', top: '-6px', right: '-6px',
-                          width: '16px', height: '16px', borderRadius: '50%',
-                          background: 'var(--blue)',
+                          width: '18px', height: '18px', borderRadius: '50%',
+                          background: 'var(--yellow)',
+                          border: '1.5px solid var(--line)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: '9px',
+                          fontSize: '10px',
+                          boxShadow: '1px 1px 0 var(--shadow)',
                         }}
                       >✏</motion.div>
                     )}
@@ -117,23 +121,39 @@ export default function PlayerList({ players = [], currentPlayerId = null, hostI
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                       <span style={{
-                        fontSize: '13px', fontWeight: 600,
-                        color: 'var(--text-primary)',
+                        fontSize: '13px', fontWeight: 700,
+                        color: 'var(--text)',
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                       }}>
                         {player.name || 'Player'}
                       </span>
                       {isHost && (
-                        <span className="badge badge-brand" style={{ fontSize: '9px', padding: '1px 5px' }}>
+                        <span
+                          style={{
+                            fontSize: '10px', padding: '1px 6px',
+                            background: 'var(--yellow)', color: '#141414',
+                            border: '1.5px solid var(--line)', borderRadius: '999px',
+                            fontWeight: 700,
+                          }}
+                        >
                           👑 host
                         </span>
                       )}
                       {isMe && (
-                        <span className="badge badge-brand" style={{ fontSize: '9px', padding: '1px 5px' }}>you</span>
+                        <span
+                          style={{
+                            fontSize: '10px', padding: '1px 6px',
+                            background: 'var(--sky)', color: '#141414',
+                            border: '1.5px solid var(--line)', borderRadius: '999px',
+                            fontWeight: 700,
+                          }}
+                        >
+                          you
+                        </span>
                       )}
                     </div>
-                    <span style={{ fontSize: '11px', fontWeight: 700 }}>
-                      <span style={{ color: isTop ? 'var(--amber)' : 'var(--amber)' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'var(--font-display)' }}>
+                      <span style={{ color: isTop ? 'var(--orange)' : 'var(--text)' }}>
                         {(player.score ?? 0).toLocaleString()}
                       </span>
                       <span style={{ color: 'var(--text-muted)' }}> pts</span>
@@ -146,7 +166,7 @@ export default function PlayerList({ players = [], currentPlayerId = null, hostI
         </AnimatePresence>
 
         {players.length === 0 && (
-          <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', marginTop: '16px' }}>
+          <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px', marginTop: '16px', fontWeight: 500 }}>
             Waiting for players to join…
           </div>
         )}
