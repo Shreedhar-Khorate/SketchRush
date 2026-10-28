@@ -2,13 +2,13 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export default function DrawingCanvas({
-  color = '#0D1117',
+  color = '#171717',
   brushSize = 5,
   isEraser = false,
   clearSignal = 0,
   isDrawing = false,          // true = this client is the drawer
-  onDraw = null,              // (strokeData) → void  sent to server
-  onClearCanvas = null,       // () → void  sent to server
+  onDraw = null,              // (strokeData) → void sent to server
+  onClearCanvas = null,       // () → void sent to server
   onRemoteDraw = null,        // ref — set to the remote-draw handler
   onRemoteClear = null,       // ref — set to the remote-clear handler
 }) {
@@ -19,7 +19,7 @@ export default function DrawingCanvas({
   const [cursorPos, setCursorPos]       = useState({ x: -200, y: -200 })
   const [isOnCanvas, setIsOnCanvas]     = useState(false)
 
-  // ── Canvas utilities (MUST define FIRST before useEffects use them) ──────
+  // ── Canvas utilities ───────────────────────────────────────────────────────
   const _clearCanvas = useCallback(() => {
     try {
       const canvas = canvasRef.current
@@ -29,7 +29,7 @@ export default function DrawingCanvas({
       ctx.fillStyle = '#FFFFFF'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
       setShowClearFx(true)
-      setTimeout(() => setShowClearFx(false), 500)
+      setTimeout(() => setShowClearFx(false), 400)
     } catch (err) {
       console.error('[DrawingCanvas] Error clearing canvas:', err)
     }
@@ -37,7 +37,7 @@ export default function DrawingCanvas({
 
   const _drawSegment = useCallback((
     canvas, x0, y0, x1, y1,
-    strokeColor = '#0D1117', strokeSize = 5, eraser = false
+    strokeColor = '#171717', strokeSize = 5, eraser = false
   ) => {
     try {
       if (!canvas) return
@@ -45,7 +45,6 @@ export default function DrawingCanvas({
       if (!ctx) return
       
       if (!Number.isFinite(x0) || !Number.isFinite(y0) || !Number.isFinite(x1) || !Number.isFinite(y1)) {
-        console.warn('[DrawingCanvas] Invalid coordinates:', { x0, y0, x1, y1 })
         return
       }
       
@@ -54,12 +53,12 @@ export default function DrawingCanvas({
       ctx.moveTo(x0, y0)
       ctx.lineTo(x1, y1)
       ctx.strokeStyle = eraser ? '#FFFFFF' : strokeColor
-      ctx.lineWidth   = eraser ? strokeSize * 3 : strokeSize
+      ctx.lineWidth   = eraser ? strokeSize * 3.5 : strokeSize
       ctx.lineCap     = 'round'
       ctx.lineJoin    = 'round'
       ctx.stroke()
       ctx.beginPath()
-      ctx.arc(x1, y1, (eraser ? strokeSize * 3 : strokeSize) / 2, 0, Math.PI * 2)
+      ctx.arc(x1, y1, (eraser ? strokeSize * 3.5 : strokeSize) / 2, 0, Math.PI * 2)
       ctx.fillStyle = eraser ? '#FFFFFF' : strokeColor
       ctx.fill()
       ctx.restore()
@@ -75,10 +74,7 @@ export default function DrawingCanvas({
       if (!canvas) return
       
       const { x, y, prevX, prevY, color: c, size, isEraser: erase } = data
-      if (typeof x !== 'number' || typeof y !== 'number') {
-        console.warn('[DrawingCanvas] Invalid draw data:', data)
-        return
-      }
+      if (typeof x !== 'number' || typeof y !== 'number') return
       
       const w = canvas.width
       const h = canvas.height
@@ -91,7 +87,7 @@ export default function DrawingCanvas({
         canvas,
         toAbs(prevX ?? x, w), toAbs(prevY ?? y, h),
         toAbs(x, w),          toAbs(y, h),
-        c || '#0D1117', size || 5, erase || false
+        c || '#171717', size || 5, erase || false
       )
     } catch (err) {
       console.error('[DrawingCanvas] Error in _applyRemoteDraw:', err)
@@ -101,39 +97,30 @@ export default function DrawingCanvas({
   // ── Canvas init ────────────────────────────────────────────────────────────
   useEffect(() => {
     const canvas = canvasRef.current
-    if (!canvas) {
-      console.warn('[DrawingCanvas] Canvas ref is null during init')
-      return
-    }
+    if (!canvas) return
     try {
       const ctx = canvas.getContext('2d')
-      if (!ctx) {
-        console.error('[DrawingCanvas] Failed to get 2D context')
-        return
-      }
+      if (!ctx) return
       canvas.width  = 800
       canvas.height = 600
       ctx.fillStyle = '#FFFFFF'
       ctx.fillRect(0, 0, 800, 600)
-      console.log('[DrawingCanvas] Canvas initialized: 800x600')
     } catch (err) {
       console.error('[DrawingCanvas] Error initializing canvas:', err)
     }
   }, [])
 
-  // ── Clear signal (local toolbar button) ───────────────────────────────────
+  // ── Clear signal ───────────────────────────────────────────────────────────
   useEffect(() => {
     if (clearSignal < 1) return
     _clearCanvas()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clearSignal])
+  }, [clearSignal, _clearCanvas])
 
-  // ── Register remote draw/clear handlers via refs ──────────────────────────
+  // ── Register remote draw/clear handlers ────────────────────────────────────
   useEffect(() => {
     if (onRemoteDraw)  onRemoteDraw.current  = _applyRemoteDraw
     if (onRemoteClear) onRemoteClear.current = _clearCanvas
-  // Don't include _applyRemoteDraw and _clearCanvas in deps - they're stable useCallbacks
-  }, [onRemoteDraw, onRemoteClear])
+  }, [onRemoteDraw, onRemoteClear, _applyRemoteDraw, _clearCanvas])
 
   // ── Pointer coordinate helpers ─────────────────────────────────────────────
   const _getCanvasCoords = (e) => {
@@ -144,7 +131,6 @@ export default function DrawingCanvas({
     const scaleX = canvas.width  / rect.width
     const scaleY = canvas.height / rect.height
     
-    // Get client coordinates from mouse or touch
     let clientX = 0
     let clientY = 0
     
@@ -185,7 +171,7 @@ export default function DrawingCanvas({
 
       const canvas = canvasRef.current
       if (!canvas) return
-      const prev   = lastPos.current
+      const prev = lastPos.current
 
       // Draw locally
       _drawSegment(canvas, prev.x, prev.y, x, y, color, brushSize, isEraser)
@@ -212,7 +198,7 @@ export default function DrawingCanvas({
 
   const handlePointerUp = () => { isMouseDown.current = false }
 
-  const containerRef  = useRef(null)
+  const containerRef = useRef(null)
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 })
 
   // ── Maintain exact 4:3 aspect ratio ────────────────────────────────────────
@@ -220,14 +206,16 @@ export default function DrawingCanvas({
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const { width, height } = entry.contentRect
-        // Calculate max 4:3 rectangle that fits
-        let newWidth = width
-        let newHeight = width * (3 / 4)
-        if (newHeight > height) {
-          newHeight = height
-          newWidth = height * (4 / 3)
+        // Account for 6px offset shadow and 3px border to avoid container overflow
+        const availW = Math.max(width - 12, 120)
+        const availH = Math.max(height - 12, 90)
+        let newWidth = availW
+        let newHeight = availW * (3 / 4)
+        if (newHeight > availH) {
+          newHeight = availH
+          newWidth = availH * (4 / 3)
         }
-        setCanvasSize({ width: newWidth, height: newHeight })
+        setCanvasSize({ width: Math.floor(newWidth), height: Math.floor(newHeight) })
       }
     })
     if (containerRef.current) {
@@ -236,75 +224,66 @@ export default function DrawingCanvas({
     return () => observer.disconnect()
   }, [])
 
-  // ── Render ────────────────────────────────────────────────────────────────
-  // Scale the visual cursor so it matches the line width on screen
   const scale = canvasSize.width / 800
   const scaledBrushSize = brushSize * scale
-  const cursorSize = isEraser ? scaledBrushSize * 3 + 8 : scaledBrushSize + 6
+  const cursorSize = isEraser ? scaledBrushSize * 3.5 + 8 : Math.max(scaledBrushSize + 4, 10)
   const cursorBorder = isEraser
-    ? '2px dashed rgba(248,81,73,0.8)'
-    : `2px solid ${color === '#E6EDF3' || color === '#FFFFFF' ? '#30363D' : color}`
+    ? '2px dashed #FF6B6B'
+    : `2px solid ${color === '#FFFFFF' ? '#171717' : color}`
 
   return (
-    <div ref={containerRef} className="w-full h-full flex items-center justify-center relative" style={{ minHeight: 0 }}>
+    <div ref={containerRef} className="w-full h-full flex items-center justify-center relative p-1" style={{ minHeight: 0 }}>
+      
+      {/* Desk Board Shadow & Frame */}
       <div
-        className="relative rounded-2xl overflow-hidden shadow-lg"
+        className="canvas-desk relative"
         style={{
-          background: '#FFFFFF',
-          border: '1px solid var(--border)',
           width: `${canvasSize.width}px`,
           height: `${canvasSize.height}px`,
-          // Ensure it stays strictly proportional to our 800x600 backing buffer
+          boxShadow: '6px 6px 0px #171717',
+          border: '3px solid #171717',
+          borderRadius: '4px',
         }}
       >
-        {/* Clear flash */}
+        {/* Wipe Flash Effect */}
         <AnimatePresence>
           {showClearFx && (
             <motion.div
               key="clearfx"
-              initial={{ opacity: 0.5 }}
+              initial={{ opacity: 0.6 }}
               animate={{ opacity: 0 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.4 }}
-              className="absolute inset-0 z-10 pointer-events-none"
-              style={{ background: 'var(--amber-bg)' }}
+              transition={{ duration: 0.35 }}
+              className="absolute inset-0 z-30 pointer-events-none bg-[#FFD84D]"
             />
           )}
         </AnimatePresence>
 
-        {/* Corner accents */}
-        {[
-          { pos: 'top-0 left-0',    r: '12px 0 0 0' },
-          { pos: 'top-0 right-0',   r: '0 12px 0 0' },
-          { pos: 'bottom-0 left-0', r: '0 0 0 12px' },
-          { pos: 'bottom-0 right-0',r: '0 0 12px 0' },
-        ].map(({ pos, r }, i) => (
-          <div key={i} className={`absolute ${pos} w-5 h-5 pointer-events-none z-10`}
-            style={{
-              borderTop:    i < 2   ? '2px solid var(--border)' : 'none',
-              borderBottom: i >= 2  ? '2px solid var(--border)' : 'none',
-              borderLeft:   i % 2 === 0 ? '2px solid var(--border)' : 'none',
-              borderRight:  i % 2 !== 0 ? '2px solid var(--border)' : 'none',
-              borderRadius: r,
-            }}
-          />
-        ))}
+        {/* Paper Corner Accents (Neo-Brutalist Drafting Style) */}
+        <div className="absolute top-1 left-1 w-3 h-3 border-t-2 border-l-2 border-[#171717] z-10 pointer-events-none" />
+        <div className="absolute top-1 right-1 w-3 h-3 border-t-2 border-r-2 border-[#171717] z-10 pointer-events-none" />
+        <div className="absolute bottom-1 left-1 w-3 h-3 border-b-2 border-l-2 border-[#171717] z-10 pointer-events-none" />
+        <div className="absolute bottom-1 right-1 w-3 h-3 border-b-2 border-r-2 border-[#171717] z-10 pointer-events-none" />
 
-        {/* "Not your turn" overlay */}
+        {/* Spectator Overlay Banner */}
         {!isDrawing && (
-          <div
-            className="absolute inset-0 z-10 flex items-end justify-center pb-4 pointer-events-none"
-          >
-            <span
-              className="badge badge-brand text-xs px-3 py-1"
-              style={{ opacity: 0.7 }}
-            >
-              👀 Watch & Guess — it&apos;s not your turn
-            </span>
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+            <div className="neo-badge neo-badge-lavender text-xs py-1 px-3 shadow-[2px_2px_0px_#171717]">
+              👀 WATCH & GUESS THE WORD IN THE CHAT
+            </div>
           </div>
         )}
 
-        {/* Canvas */}
+        {/* Brush Info Badge */}
+        {isDrawing && (
+          <div className="absolute top-2 left-2 z-20 pointer-events-none">
+            <div className="neo-badge neo-badge-white text-[10px] py-0.5 px-2">
+              {isEraser ? '🧹 ERASER' : '🖌️ BRUSH'} · {brushSize}PX
+            </div>
+          </div>
+        )}
+
+        {/* The HTML5 Canvas Surface */}
         <canvas
           ref={canvasRef}
           onMouseDown={handlePointerDown}
@@ -320,15 +299,15 @@ export default function DrawingCanvas({
             width: '100%',
             height: '100%',
             touchAction: 'none',
-            cursor: 'none',
+            cursor: isDrawing ? 'none' : 'default',
             background: '#FFFFFF',
           }}
         />
 
-        {/* Custom cursor */}
+        {/* Custom Sharp Drawing Cursor */}
         {isOnCanvas && isDrawing && (
           <div
-            className="absolute pointer-events-none z-20"
+            className="absolute pointer-events-none z-30"
             style={{
               left: cursorPos.x,
               top:  cursorPos.y,
@@ -336,19 +315,13 @@ export default function DrawingCanvas({
               width:  `${cursorSize}px`,
               height: `${cursorSize}px`,
               border: cursorBorder,
-              borderRadius: isEraser ? '4px' : '50%',
-              boxShadow: 'none',
-              transition: 'width 0.1s, height 0.1s',
+              borderRadius: isEraser ? '2px' : '50%',
+              backgroundColor: isEraser ? 'rgba(255,107,107,0.15)' : 'transparent',
+              transition: 'width 0.08s, height 0.08s',
             }}
           />
         )}
 
-        {/* Brush info badge */}
-        <div className="absolute bottom-3 left-3 z-10 pointer-events-none">
-          <span className="badge badge-brand" style={{ opacity: 0.65 }}>
-            {isEraser ? '🧹 Eraser' : '🖌️ Brush'} · {brushSize}px
-          </span>
-        </div>
       </div>
     </div>
   )

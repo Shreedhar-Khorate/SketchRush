@@ -8,9 +8,9 @@ export default function ChatPanel({
   isDrawing = false,
   isInputLocked = false,
 }) {
-  const [input, setInput]     = useState('')
-  const messagesEndRef        = useRef(null)
-  const inputRef              = useRef(null)
+  const [input, setInput] = useState('')
+  const messagesEndRef = useRef(null)
+  const inputRef = useRef(null)
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -25,95 +25,76 @@ export default function ChatPanel({
   }, [input, onSend])
 
   return (
-    <div style={{
-      width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
-      borderRadius: '16px', overflow: 'hidden',
-      background: 'var(--surface)',
-      border: '1px solid var(--border)',
-    }}>
+    <div className="w-full h-full flex flex-col bg-white border-[2.5px] border-[#171717] shadow-[4px_4px_0px_#171717] rounded-[4px] overflow-hidden">
+      
       {/* Header */}
-      <div style={{
-        padding: '10px 14px', flexShrink: 0,
-        borderBottom: '1px solid var(--border)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '14px' }}>💬</span>
-          <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
-            {isDrawing ? 'Chat' : 'Chat & Guess'}
+      <div className="bg-[#FFF8E7] border-b-[2px] border-[#171717] px-3.5 py-2.5 flex items-center justify-between flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <span className="text-base">💬</span>
+          <span className="font-black text-xs uppercase tracking-wide">
+            {isDrawing ? 'CHAT STREAM' : 'CHAT & GUESS'}
           </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <span style={{
-            width: '7px', height: '7px', borderRadius: '50%',
-            background: 'var(--green)',
-            display: 'inline-block',
-            animation: 'pulse 2s infinite',
-          }} />
-          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--green)' }}>Live</span>
+        <div className="flex items-center gap-1.5 bg-white border border-[#171717] px-2 py-0.5">
+          <span className="w-2 h-2 rounded-full bg-[#B7F56A] border border-black animate-pulse" />
+          <span className="text-[10px] font-black uppercase text-[#171717]">SYNCED</span>
         </div>
       </div>
 
-      {/* Messages */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '10px', display: 'flex', flexDirection: 'column', gap: '5px', minHeight: 0 }}>
+      {/* Messages Stream */}
+      <div className="flex-1 overflow-y-auto p-2 sm:p-2.5 flex flex-col gap-1.5 min-h-0 bg-[#FFFDF7]">
         <AnimatePresence initial={false}>
           {messages.map((msg) => (
             <motion.div
               key={msg.id}
-              initial={{ opacity: 0, y: 10, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.18 }}
             >
               {msg.type === 'system' ? (
-                <div style={{ display: 'flex', justifyContent: 'center', margin: '3px 0' }}>
-                  <span style={{
-                    fontSize: '11px', padding: '3px 10px', borderRadius: '99px',
-                    background: 'var(--amber-bg)',
-                    border: '1px solid rgba(240,165,0,0.3)',
-                    color: 'var(--amber)',
-                  }}>{msg.content}</span>
+                <div className="flex justify-center my-0.5">
+                  <span className="px-2 py-0.5 bg-[#DCCBFF] border border-[#171717] shadow-[1.5px_1.5px_0px_#171717] text-[10px] font-black uppercase text-[#171717]">
+                    📢 {msg.content}
+                  </span>
                 </div>
               ) : msg.type === 'correct' ? (
                 <motion.div
                   animate={{ scale: [1, 1.02, 1] }}
-                  transition={{ duration: 0.3 }}
-                  style={{
-                    display: 'flex', alignItems: 'flex-start', gap: '7px',
-                    padding: '8px 10px', borderRadius: '10px',
-                    background: 'var(--green-bg)',
-                    border: '1px solid rgba(63,185,80,0.3)',
-                  }}
+                  className="p-2 sm:p-2.5 bg-[#B7F56A] border-2 border-[#171717] shadow-[2.5px_2.5px_0px_#171717] flex items-center justify-between gap-2"
                 >
-                  <span style={{ fontSize: '16px', flexShrink: 0 }}>{msg.avatar}</span>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--green)' }}>
-                        ✅ {msg.player}
-                      </span>
-                      <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>guessed correctly!</span>
-                      <span className="badge badge-green" style={{ fontSize: '10px', padding: '1px 6px' }}>
-                        +{msg.points} pts
-                      </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-base sm:text-lg">{msg.avatar}</span>
+                    <div>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-black text-xs text-[#171717] uppercase">
+                          {msg.player}
+                        </span>
+                        <span className="text-[9px] sm:text-[10px] font-black text-[#171717]/80 uppercase">
+                          GUESSED IT!
+                        </span>
+                      </div>
+                      {msg.content && (
+                        <span className="font-mono font-black text-[11px] text-[#171717] uppercase">
+                          &quot;{msg.content}&quot;
+                        </span>
+                      )}
                     </div>
-                    {msg.content ? (
-                      <p style={{ fontSize: '11px', color: 'var(--green)', marginTop: '2px' }}>
-                        "{msg.content}"
-                      </p>
-                    ) : null}
                   </div>
+                  <span className="px-1.5 sm:px-2 py-0.5 bg-white border-2 border-[#171717] font-mono font-black text-xs text-[#171717] shadow-[1.5px_1.5px_0px_#171717] flex-shrink-0">
+                    +{msg.points} PTS
+                  </span>
                 </motion.div>
               ) : (
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
-                  <span style={{ fontSize: '15px', flexShrink: 0, marginTop: '1px' }}>
-                    {msg.avatar || '💬'}
-                  </span>
-                  <p style={{ fontSize: '12px', lineHeight: '1.4', margin: 0 }}>
-                    <span style={{ fontWeight: 700, color: 'var(--blue)' }}>
+                <div className="p-1.5 bg-white border border-[#171717] shadow-[1.5px_1.5px_0px_#171717] flex items-start gap-1.5 sm:gap-2">
+                  <span className="text-sm flex-shrink-0 mt-0.5">{msg.avatar || '💬'}</span>
+                  <div className="min-w-0 text-xs">
+                    <span className="font-black text-[#171717] uppercase mr-1">
                       {msg.player}:
                     </span>
-                    {' '}
-                    <span style={{ color: 'var(--text-secondary)' }}>{msg.content}</span>
-                  </p>
+                    <span className="text-[#333333] font-medium break-words">
+                      {msg.content}
+                    </span>
+                  </div>
                 </div>
               )}
             </motion.div>
@@ -122,59 +103,40 @@ export default function ChatPanel({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div style={{
-        padding: '10px 12px', flexShrink: 0,
-        borderTop: '1px solid var(--border)',
-      }}>
+      {/* Input / Control Footer */}
+      <div className="bg-white border-t-2 border-[#171717] p-2.5 sm:p-3 flex-shrink-0">
         {isDrawing ? (
-          <p style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center', margin: 0 }}>
-            ✏️ You are drawing — others are guessing
-          </p>
+          <div className="p-2 bg-[#FFF8E7] border border-[#171717] text-center text-[11px] sm:text-xs font-black uppercase text-[#6B7280]">
+            ✏️ You are drawing — other players are guessing!
+          </div>
         ) : isInputLocked ? (
-          <p style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center', margin: 0 }}>
-            ✅ You guessed the word — chat locked until next round
-          </p>
+          <div className="p-2 bg-[#B7F56A] border-2 border-[#171717] text-center text-[11px] sm:text-xs font-black uppercase text-[#171717]">
+            ✅ Correct guess! Chat locked until next round.
+          </div>
         ) : (
-          <>
-            <div style={{ display: 'flex', gap: '7px', alignItems: 'center' }}>
-              <input
-                ref={inputRef}
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="Type your guess…"
-                style={{ fontSize: '13px', padding: '9px 12px', borderRadius: '10px', flex: 1 }}
-                disabled={isInputLocked}
-              />
-              <motion.button
-                onClick={handleSend}
-                whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.92 }}
-                disabled={isInputLocked || !input.trim()}
-                style={{
-                  flexShrink: 0,
-                  width: '38px', height: '38px',
-                  borderRadius: '10px',
-                  background: !isInputLocked && input.trim() ? 'var(--amber)' : 'var(--surface-raised)',
-                  border: !isInputLocked && input.trim() ? '1px solid var(--amber)' : '1px solid var(--border)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: !isInputLocked && input.trim() ? 'var(--bg)' : 'var(--text-muted)',
-                  cursor: !isInputLocked && input.trim() ? 'pointer' : 'not-allowed',
-                  opacity: !isInputLocked && input.trim() ? 1 : 0.4,
-                  fontSize: '16px',
-                }}
-              >
-                ↑
-              </motion.button>
-            </div>
-            <p style={{ fontSize: '10px', color: 'var(--text-muted)', textAlign: 'center', marginTop: '5px', marginBottom: 0 }}>
-              Enter to send your guess
-            </p>
-          </>
+          <div className="flex gap-2">
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+              placeholder="Type your guess here..."
+              className="flex-1 px-3 py-2 bg-white border-2 border-[#171717] shadow-[2px_2px_0px_#171717] font-semibold text-xs text-[#171717] outline-none focus:shadow-[2.5px_2.5px_0px_#171717]"
+              disabled={isInputLocked}
+            />
+            <button
+              type="button"
+              onClick={handleSend}
+              disabled={isInputLocked || !input.trim()}
+              className="px-3.5 py-2 bg-[#FFD84D] border-2 border-[#171717] shadow-[2px_2px_0px_#171717] font-black text-xs uppercase hover:bg-[#FFE066] active:translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer flex-shrink-0"
+            >
+              GUESS
+            </button>
+          </div>
         )}
       </div>
+
     </div>
   )
 }
