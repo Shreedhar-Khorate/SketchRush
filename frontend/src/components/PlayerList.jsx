@@ -41,7 +41,7 @@ export default function PlayerList({ players = [], currentPlayerId = null, hostI
                 initial={{ opacity: 0, x: 8 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -8 }}
-                className={`relative border-2 border-[#171717] p-1.5 sm:p-2 flex items-center gap-2 sm:gap-2.5 transition-all overflow-hidden ${
+                className={`relative border-2 border-[#171717] p-2 sm:p-2.5 flex items-center gap-2.5 sm:gap-3 transition-all overflow-hidden ${
                   player.is_drawing
                     ? 'bg-[#7BA7FF]/25 shadow-[3px_3px_0px_#171717]'
                     : isMe
@@ -57,7 +57,7 @@ export default function PlayerList({ players = [], currentPlayerId = null, hostI
 
                 {/* Rank Pill */}
                 <div
-                  className="w-6 h-6 sm:w-7 sm:h-7 flex-shrink-0 border-2 border-[#171717] flex items-center justify-center font-black text-[11px] sm:text-xs"
+                  className="w-7 h-7 sm:w-8 sm:h-8 flex-shrink-0 border-2 border-[#171717] shadow-[1px_1px_0px_#171717] flex items-center justify-center font-black text-xs"
                   style={{ backgroundColor: rankMeta ? rankMeta.color : '#FFFFFF' }}
                   title={`Rank #${index + 1}`}
                 >
@@ -65,7 +65,7 @@ export default function PlayerList({ players = [], currentPlayerId = null, hostI
                 </div>
 
                 {/* Avatar */}
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded bg-white border-2 border-[#171717] flex items-center justify-center text-base sm:text-lg flex-shrink-0 relative">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded bg-white border-2 border-[#171717] shadow-[1px_1px_0px_#171717] flex items-center justify-center text-lg sm:text-xl flex-shrink-0 relative">
                   <span>{player.avatar || '🦊'}</span>
                   {player.is_drawing && (
                     <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[#7BA7FF] border border-black flex items-center justify-center text-[8px] text-white font-black animate-bounce">

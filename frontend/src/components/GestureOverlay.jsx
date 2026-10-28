@@ -142,13 +142,13 @@ export default function GestureOverlay({
   }, [])
 
   // ── Main rAF prediction loop ──────────────────────────────────────────────
-  const predictLoop = useCallback(() => {
+  const predictLoop = useCallback(function loop() {
     const video     = videoRef.current
     const canvas    = canvasRef.current
     const landmarker = landmarkerRef.current
 
     if (!video || !canvas || !landmarker || video.readyState < 2) {
-      rafRef.current = requestAnimationFrame(predictLoop)
+      rafRef.current = requestAnimationFrame(loop)
       return
     }
 
@@ -261,7 +261,7 @@ export default function GestureOverlay({
     }
 
     setGesture(detectedGesture)
-    rafRef.current = requestAnimationFrame(predictLoop)
+    rafRef.current = requestAnimationFrame(loop)
   }, [])
 
   // ── Initialize MediaPipe & webcam when active ─────────────────────────────

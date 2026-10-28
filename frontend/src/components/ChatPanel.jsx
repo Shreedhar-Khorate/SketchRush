@@ -85,13 +85,15 @@ export default function ChatPanel({
                   </span>
                 </motion.div>
               ) : (
-                <div className="p-1.5 bg-white border border-[#171717] shadow-[1.5px_1.5px_0px_#171717] flex items-start gap-1.5 sm:gap-2">
+                <div className={`p-2 border border-[#171717] shadow-[1.5px_1.5px_0px_#171717] flex items-start gap-2 ${
+                  msg.player === playerName ? 'bg-[#FFF8E7]' : 'bg-white'
+                }`}>
                   <span className="text-sm flex-shrink-0 mt-0.5">{msg.avatar || '💬'}</span>
                   <div className="min-w-0 text-xs">
-                    <span className="font-black text-[#171717] uppercase mr-1">
+                    <span className="font-black text-[#171717] uppercase mr-1.5">
                       {msg.player}:
                     </span>
-                    <span className="text-[#333333] font-medium break-words">
+                    <span className="text-[#222222] font-semibold break-words">
                       {msg.content}
                     </span>
                   </div>
@@ -106,11 +108,11 @@ export default function ChatPanel({
       {/* Input / Control Footer */}
       <div className="bg-white border-t-2 border-[#171717] p-2.5 sm:p-3 flex-shrink-0">
         {isDrawing ? (
-          <div className="p-2 bg-[#FFF8E7] border border-[#171717] text-center text-[11px] sm:text-xs font-black uppercase text-[#6B7280]">
+          <div className="p-2 sm:p-2.5 bg-[#FFF8E7] border-2 border-[#171717] shadow-[1.5px_1.5px_0px_#171717] text-center text-[11px] sm:text-xs font-black uppercase text-[#6B7280]">
             ✏️ You are drawing — other players are guessing!
           </div>
         ) : isInputLocked ? (
-          <div className="p-2 bg-[#B7F56A] border-2 border-[#171717] text-center text-[11px] sm:text-xs font-black uppercase text-[#171717]">
+          <div className="p-2 sm:p-2.5 bg-[#B7F56A] border-2 border-[#171717] shadow-[2px_2px_0px_#171717] text-center text-[11px] sm:text-xs font-black uppercase text-[#171717]">
             ✅ Correct guess! Chat locked until next round.
           </div>
         ) : (
@@ -122,14 +124,14 @@ export default function ChatPanel({
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               placeholder="Type your guess here..."
-              className="flex-1 px-3 py-2 bg-white border-2 border-[#171717] shadow-[2px_2px_0px_#171717] font-semibold text-xs text-[#171717] outline-none focus:shadow-[2.5px_2.5px_0px_#171717]"
+              className="flex-1 px-3 py-2 bg-white border-2 border-[#171717] shadow-[2px_2px_0px_#171717] font-bold text-xs text-[#171717] outline-none focus:shadow-[3px_3px_0px_#171717] transition-all"
               disabled={isInputLocked}
             />
             <button
               type="button"
               onClick={handleSend}
               disabled={isInputLocked || !input.trim()}
-              className="px-3.5 py-2 bg-[#FFD84D] border-2 border-[#171717] shadow-[2px_2px_0px_#171717] font-black text-xs uppercase hover:bg-[#FFE066] active:translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer flex-shrink-0"
+              className="px-4 py-2 bg-[#FFD84D] border-2 border-[#171717] shadow-[2px_2px_0px_#171717] font-black text-xs uppercase hover:bg-[#FFE066] active:translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer flex-shrink-0"
             >
               GUESS
             </button>

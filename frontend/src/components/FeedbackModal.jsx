@@ -11,7 +11,7 @@ function useIsMobile() {
   return isMobile
 }
 
-function QuestionCard({ label, rating, onChange, required = false, isMobile }) {
+function QuestionCard({ label, rating, onChange, required = false }) {
   const [hovered, setHovered] = useState(null)
   const emojis = ['😠', '😟', '😐', '🙂', '😍']
   const ratingText = ['Bad', 'Poor', 'Average', 'Good', 'Excellent']
