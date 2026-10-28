@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -271,18 +271,21 @@ export default function GamePage() {
     connected, playerId, isHost, hostId,
     players, messages, gameState,
     round, maxRounds, drawerName, drawerAvatar,
-    currentDrawerId, currentWord, wordHint, wordChoices,
+    currentWord, wordHint, wordChoices,
     timeLeft, roundResult, gameResult, roundCountdown,
     isDrawing, hasGuessedCorrectly,
     onRemoteDraw, onRemoteClear,
     sendDraw, sendClear,
     sendGuess, sendMessage,
-    startGame, startGameWithRounds, restartGame, selectWord,
+    startGameWithRounds, restartGame, selectWord,
   } = useSocket({ roomCode: roomId, playerName, avatar: playerAvatar })
 
   const hostPlayer = players.find((p) => p && p.id === hostId)
   const hostName = hostPlayer?.name || ''
   const hostAvatar = hostPlayer?.avatar || '👑'
+
+  // Only activate gesture air-canvas when user is actively drawing and in drawing phase
+  const isGestureActive = gestureMode && isDrawing && gameState !== 'round_end' && gameState !== 'game_end'
 
   const handleGestureDraw = useCallback((data) => {
     if (onRemoteDraw.current) onRemoteDraw.current(data)
@@ -331,18 +334,6 @@ export default function GamePage() {
     }
   }
 
-  useEffect(() => {
-    if (!isDrawing && gestureMode) {
-      setGestureMode(false)
-    }
-  }, [isDrawing, gestureMode])
-
-  useEffect(() => {
-    if ((gameState === 'round_end' || gameState === 'game_end') && gestureMode) {
-      setGestureMode(false)
-    }
-  }, [gameState, gestureMode])
-
   if (!playerName) return null
 
   return (
@@ -380,13 +371,13 @@ export default function GamePage() {
           isEraser={isEraser}
           onToggleEraser={handleToggleEraser}
           onClear={handleClear}
-          gestureMode={gestureMode}
+          gestureMode={isGestureActive}
           onToggleGesture={handleToggleGesture}
         />
       )}
 
       {/* Main Workspace */}
-      <div className="flex-1 w-full max-w-[1600px] mx-auto flex overflow-hidden p-2 sm:p-3.5 gap-2 sm:gap-3.5 min-h-0">
+      <div className="flex-1 w-full max-w-[1600px] mx-auto flex overflow-hidden p-3 sm:p-4 lg:p-5 gap-3.5 sm:gap-4.5 min-h-0">
         
         {/* Drawing Board Area */}
         <div className="flex-1 min-w-0 min-h-0 flex flex-col relative">
@@ -397,7 +388,6 @@ export default function GamePage() {
             clearSignal={clearSignal}
             isDrawing={isDrawing}
             onDraw={sendDraw}
-            onClearCanvas={sendClear}
             onRemoteDraw={onRemoteDraw}
             onRemoteClear={onRemoteClear}
           />
@@ -405,9 +395,9 @@ export default function GamePage() {
 
         {/* Desktop Sidebar (Players + Chat) */}
         {isDesktop && (
-          <div className="w-[300px] lg:w-[330px] flex-shrink-0 flex flex-col gap-2.5 sm:gap-3 min-h-0 pb-1.5">
+          <div className="w-[310px] lg:w-[340px] flex-shrink-0 flex flex-col gap-3 sm:gap-3.5 min-h-0 pb-1">
             {/* Player Leaderboard (Top half) */}
-            <div className="flex-shrink-0 h-[210px] lg:h-[230px] min-h-0">
+            <div className="flex-shrink-0 h-[215px] lg:h-[235px] min-h-0">
               <PlayerList players={players} currentPlayerId={playerId} hostId={hostId} />
             </div>
 
@@ -523,7 +513,7 @@ export default function GamePage() {
 
       {/* Air Canvas Gesture Overlay */}
       <GestureOverlay
-        active={gestureMode}
+        active={isGestureActive}
         onDraw={handleGestureDraw}
         onClear={handleClear}
         onClose={() => handleToggleGesture(false)}

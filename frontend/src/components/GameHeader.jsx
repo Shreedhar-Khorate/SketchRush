@@ -34,40 +34,40 @@ export default function GameHeader({
   }
 
   return (
-    <header className="game-header w-full bg-white border-b-[3px] border-[#171717] px-3 sm:px-6 py-2 sm:py-2.5 shadow-[0_4px_0px_rgba(23,23,23,0.06)]">
-      <div className="w-full max-w-[1600px] mx-auto flex flex-col gap-1.5 sm:gap-2">
+    <header className="game-header w-full bg-white border-b-[3px] border-[#171717] px-3.5 sm:px-6 lg:px-8 py-2.5 sm:py-3 shadow-[0_4px_0px_rgba(23,23,23,0.06)]">
+      <div className="w-full max-w-[1600px] mx-auto flex flex-col gap-2 sm:gap-2.5">
         {/* ── Main Navigation & Status ── */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-2 sm:gap-3">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-2.5 sm:gap-4">
         
         {/* Top line on mobile / Left group on desktop */}
-        <div className="w-full md:w-auto flex items-center justify-between md:justify-start gap-2 sm:gap-3 flex-shrink-0">
+        <div className="w-full md:w-auto flex items-center justify-between md:justify-start gap-2.5 sm:gap-3.5 flex-shrink-0">
           
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-[#FFD84D] border-2 border-[#171717] shadow-[2px_2px_0px_#171717] flex items-center justify-center text-sm sm:text-base flex-shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3.5">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 bg-[#FFD84D] border-2 border-[#171717] shadow-[2.5px_2.5px_0px_#171717] flex items-center justify-center text-base flex-shrink-0">
               ✏️
             </div>
-            <span className="font-black text-sm sm:text-base uppercase tracking-tight hidden sm:inline" style={{ fontFamily: "'Archivo Black', sans-serif" }}>
+            <span className="font-black text-base sm:text-lg uppercase tracking-tight hidden sm:inline" style={{ fontFamily: "'Archivo Black', sans-serif" }}>
               SketchRush
             </span>
 
             {/* Room Code Badge with Copy button */}
-            <div className="flex items-center bg-[#FFF8E7] border-2 border-[#171717] shadow-[2px_2px_0px_#171717] px-2 sm:px-2.5 py-1">
-              <span className="text-[10px] font-black uppercase text-[#6B7280] mr-1.5 hidden sm:inline">ROOM</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 bg-[#FFF8E7] border-2 border-[#171717] shadow-[2px_2px_0px_#171717] px-2.5 sm:px-3 py-1 sm:py-1.5">
+              <span className="text-[10px] font-black uppercase text-[#6B7280] hidden sm:inline">ROOM</span>
               <span className="font-mono font-black text-xs sm:text-sm tracking-wider text-[#171717]">{roomCode}</span>
               <button
                 type="button"
                 onClick={handleCopyCode}
                 title="Copy room code"
-                className="ml-1.5 sm:ml-2 px-1.5 py-0.5 bg-white border border-[#171717] text-[9px] sm:text-[10px] font-black uppercase hover:bg-[#FFD84D] active:translate-y-0.5 transition-all cursor-pointer"
+                className="px-2 py-0.5 bg-white border border-[#171717] text-[10px] font-black uppercase hover:bg-[#FFD84D] active:translate-y-0.5 transition-all cursor-pointer shadow-[1px_1px_0px_#171717]"
               >
                 {copied ? '✓ COPIED' : '📋 COPY'}
               </button>
             </div>
 
             {/* Connection status */}
-            <div className="hidden lg:flex items-center gap-1.5 px-2 py-1 bg-white border-2 border-[#171717] shadow-[2px_2px_0px_#171717]">
-              <span className={`w-2 h-2 rounded-full border border-black ${connected ? 'bg-[#B7F56A]' : 'bg-[#FF6B6B]'}`} />
-              <span className="text-[10px] font-black uppercase">{connected ? 'ONLINE' : 'CONNECTING'}</span>
+            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 bg-white border-2 border-[#171717] shadow-[2px_2px_0px_#171717]">
+              <span className={`w-2.5 h-2.5 rounded-full border border-black ${connected ? 'bg-[#B7F56A]' : 'bg-[#FF6B6B]'}`} />
+              <span className="text-[10px] font-black uppercase tracking-wider">{connected ? 'ONLINE' : 'CONNECTING'}</span>
             </div>
           </div>
 
@@ -230,35 +230,38 @@ export default function GameHeader({
       </div>
 
       {/* ── Sub-bar: Active Drawer / Host meta line during game ── */}
-      <div className="flex items-center justify-between text-[10px] sm:text-[11px] font-bold text-[#454545] pt-1 border-t border-[#171717]/15">
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          {drawerName && (gameState === 'drawing' || gameState === 'choosing_word') && (
-            <div className="flex items-center gap-1.5">
-              <span>{drawerAvatar}</span>
-              <span className="font-black text-[#171717] uppercase truncate max-w-[120px] sm:max-w-none">{drawerName}</span>
-              <span className="text-[9px] sm:text-[10px] bg-[#7BA7FF] text-white px-1.5 py-0.2 border border-black uppercase">
-                {gameState === 'choosing_word' ? 'CHOOSING' : 'DRAWING'}
-              </span>
-            </div>
-          )}
-          {gameState === 'waiting' && (
-            <span className="truncate max-w-[200px] sm:max-w-none">
-              HOST: <strong className="text-[#171717] uppercase">{hostAvatar} {hostName}</strong>
-            </span>
-          )}
-        </div>
+      {Boolean((drawerName && (gameState === 'drawing' || gameState === 'choosing_word')) || (gameState === 'waiting' && hostName) || (isHost && gameState === 'waiting' && selectedRounds)) && (
+        <div className="flex items-center justify-between text-[10px] sm:text-[11px] font-bold text-[#454545] pt-1.5 sm:pt-2 border-t-2 border-[#171717]/15">
+          <div className="flex items-center gap-2">
+            {drawerName && (gameState === 'drawing' || gameState === 'choosing_word') && (
+              <div className="flex items-center gap-1.5 bg-[#FFF8E7] border border-[#171717] px-2 py-0.5 shadow-[1px_1px_0px_#171717]">
+                <span className="text-xs">{drawerAvatar}</span>
+                <span className="font-black text-[#171717] uppercase truncate max-w-[120px] sm:max-w-none">{drawerName}</span>
+                <span className="text-[9px] sm:text-[10px] bg-[#7BA7FF] text-white px-1.5 py-0.2 border border-black uppercase font-black">
+                  {gameState === 'choosing_word' ? 'CHOOSING' : 'DRAWING'}
+                </span>
+              </div>
+            )}
+            {gameState === 'waiting' && hostName && (
+              <div className="flex items-center gap-1.5 bg-[#FFF8E7] border border-[#171717] px-2 py-0.5 shadow-[1px_1px_0px_#171717]">
+                <span className="text-[10px] font-black uppercase text-[#6B7280]">HOST</span>
+                <span className="font-black text-[#171717] uppercase">{hostAvatar} {hostName}</span>
+              </div>
+            )}
+          </div>
 
-        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-          {isHost && gameState === 'waiting' && (
-            <span className="text-[9px] sm:text-[10px] bg-[#FFD84D] px-1.5 sm:px-2 py-0.5 border border-black uppercase font-black">
-              {selectedRounds ? `${selectedRounds} ROUNDS` : 'SELECT ROUNDS'}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {isHost && gameState === 'waiting' && (
+              <span className="text-[9px] sm:text-[10px] bg-[#FFD84D] px-2 py-0.5 border border-black uppercase font-black shadow-[1px_1px_0px_#171717]">
+                {selectedRounds ? `${selectedRounds} ROUNDS` : 'SELECT ROUNDS'}
+              </span>
+            )}
+            <span className="font-mono text-[9px] sm:text-[10px] text-[#6B7280] hidden sm:inline font-bold">
+              SKETCHRUSH
             </span>
-          )}
-          <span className="font-mono text-[9px] sm:text-[10px] text-[#6B7280] hidden sm:inline">
-            SKETCHRUSH
-          </span>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   </header>
   )

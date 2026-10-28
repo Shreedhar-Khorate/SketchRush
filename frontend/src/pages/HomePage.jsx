@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import FeedbackModal from '../components/FeedbackModal'
@@ -87,25 +87,25 @@ export default function HomePage() {
       {/* ── Top Neo-Brutalist Navbar ───────────────────────────────────────── */}
       <nav className="neo-nav">
         <div className="neo-nav-inner">
-          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
             <div className="neo-nav-icon">
               <span>✏️</span>
             </div>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <span className="neo-nav-title text-lg sm:text-2xl">SketchRush</span>
-              <span className="neo-badge neo-badge-coral text-[9px] sm:text-[10px] py-0.5 px-1.5 hidden sm:inline">v2.0</span>
+            <div className="flex items-center gap-2">
+              <span className="neo-nav-title text-xl sm:text-2xl">SketchRush</span>
+              <span className="neo-badge neo-badge-coral text-[9px] sm:text-[10px] py-0.5 px-2 font-black hidden sm:inline-block">v2.0</span>
             </div>
           </div>
 
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-4">
             <span className="neo-nav-tagline">DRAW FAST. GUESS FASTER.</span>
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-white border-2 border-black shadow-[2px_2px_0px_#171717]">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#B7F56A] border border-black animate-pulse" />
-              <span className="text-xs font-black uppercase">LIVE MULTIPLAYER</span>
+            <div className="flex items-center gap-2 px-3.5 py-1.5 bg-white border-2 border-black shadow-[2px_2px_0px_#171717] rounded-sm">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#B7F56A] border border-black animate-pulse flex-shrink-0" />
+              <span className="text-xs font-black uppercase tracking-wide">LIVE MULTIPLAYER</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 flex-shrink-0">
             <button
               type="button"
               onClick={() => setShowFeedback(true)}
@@ -128,20 +128,20 @@ export default function HomePage() {
       </nav>
 
       {/* ── Main Content Area ──────────────────────────────────────────────── */}
-      <main className="page-container py-6 sm:py-10 flex flex-col gap-8 sm:gap-12">
+      <main className="page-container py-8 sm:py-12 flex flex-col gap-10 sm:gap-14">
 
         {/* ── Hero & Terminal Grid ─────────────────────────────────────────── */}
         <div className="hero-layout-grid">
           
           {/* Left Column: Bold Typography & Arcade Preview ──────────────────── */}
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-7 sm:gap-8">
             
             {/* Top Badge Strip */}
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2.5">
               {BADGES.map((b, i) => (
                 <div
                   key={i}
-                  className="neo-badge"
+                  className="neo-badge font-black text-xs py-1 px-3 shadow-[2px_2px_0px_#171717]"
                   style={{
                     backgroundColor: b.color,
                     transform: `rotate(${b.rotate})`,
@@ -155,30 +155,30 @@ export default function HomePage() {
 
             {/* Headline */}
             <div>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight leading-[0.98]" style={{ fontFamily: "'Archivo Black', sans-serif" }}>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight leading-[1.05]" style={{ fontFamily: "'Archivo Black', sans-serif" }}>
                 DRAW FAST. <br />
-                <span className="bg-[#FFD84D] px-3.5 py-1 border-[3px] border-[#171717] shadow-[5px_5px_0px_#171717] inline-block mt-2">
+                <span className="bg-[#FFD84D] px-4 sm:px-5 py-1.5 sm:py-2 border-[3px] border-[#171717] shadow-[5px_5px_0px_#171717] inline-block mt-3">
                   GUESS FASTER.
                 </span>
               </h1>
-              <p className="text-base sm:text-lg font-medium text-[#454545] mt-4 leading-relaxed max-w-xl">
+              <p className="text-base sm:text-lg font-medium text-[#454545] mt-5 leading-relaxed max-w-xl">
                 Your friends draw the chaos. You guess the masterpiece. Jump into instant multiplayer lobbies with ultra-smooth drawing and AI-powered air canvas hand gestures!
               </p>
             </div>
 
             {/* Playful Arcade Artboard Preview Card */}
-            <div className="neo-card p-4 sm:p-5 bg-white relative overflow-hidden">
+            <div className="neo-card p-5 sm:p-6 bg-white relative overflow-hidden">
               {/* Card top banner */}
-              <div className="flex items-center justify-between pb-3 mb-3 border-b-2 border-[#171717]">
+              <div className="flex items-center justify-between pb-3.5 mb-3.5 border-b-2 border-[#171717]">
                 <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-[#FF6B6B] border border-black" />
-                  <span className="w-3 h-3 rounded-full bg-[#FFD84D] border border-black" />
-                  <span className="w-3 h-3 rounded-full bg-[#B7F56A] border border-black" />
-                  <span className="text-xs font-black uppercase ml-1">MATCH IN PROGRESS</span>
+                  <span className="w-3.5 h-3.5 rounded-full bg-[#FF6B6B] border border-black inline-block" />
+                  <span className="w-3.5 h-3.5 rounded-full bg-[#FFD84D] border border-black inline-block" />
+                  <span className="w-3.5 h-3.5 rounded-full bg-[#B7F56A] border border-black inline-block" />
+                  <span className="text-xs font-black uppercase tracking-wider ml-1">MATCH IN PROGRESS</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="neo-badge neo-badge-coral text-[10px] py-0.5">⏱ 45s</span>
-                  <span className="neo-badge neo-badge-lavender text-[10px] py-0.5">ROUND 2/5</span>
+                  <span className="neo-badge neo-badge-coral text-[10px] py-0.5 px-2">⏱ 45s</span>
+                  <span className="neo-badge neo-badge-lavender text-[10px] py-0.5 px-2">ROUND 2/5</span>
                 </div>
               </div>
 
@@ -207,54 +207,54 @@ export default function HomePage() {
                 </svg>
 
                 {/* Floating stickers on canvas */}
-                <div className="absolute top-2 right-2 neo-badge neo-badge-green text-[10px] transform rotate-3 whitespace-nowrap">
+                <div className="absolute top-3.5 right-3.5 neo-badge neo-badge-green text-[10.5px] py-1 px-2.5 transform rotate-3 shadow-[2px_2px_0px_#171717] whitespace-nowrap">
                   ✅ GUESSED: CAT! (+150 PTS)
                 </div>
 
-                <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-white border-2 border-black px-2 py-0.5 shadow-[2px_2px_0px_#171717] whitespace-nowrap">
+                <div className="absolute bottom-3.5 left-3.5 flex items-center gap-1.5 bg-white border-2 border-black px-2.5 py-1 shadow-[2px_2px_0px_#171717] whitespace-nowrap">
                   <span className="text-xs">✋</span>
                   <span className="text-[10px] font-black uppercase">AIR CANVAS AI</span>
                 </div>
               </div>
 
               {/* Mini player strip under doodle */}
-              <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t-2 border-[#171717]">
-                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[#FFD84D] border border-black text-xs font-black uppercase">
+              <div className="flex items-center justify-between gap-2.5 mt-4 pt-3.5 border-t-2 border-[#171717]">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#FFD84D] border-2 border-black shadow-[1.5px_1.5px_0px_#171717] text-xs font-black uppercase">
                   <span>👑 Alex: 420 pts</span>
                 </div>
-                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-white border border-black text-xs font-black uppercase">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white border-2 border-black shadow-[1.5px_1.5px_0px_#171717] text-xs font-black uppercase">
                   <span>🥈 Maya: 380 pts</span>
                 </div>
-                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[#FF9F43]/30 border border-black text-xs font-black uppercase">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#FF9F43]/30 border-2 border-black shadow-[1.5px_1.5px_0px_#171717] text-xs font-black uppercase">
                   <span>🥉 Leo: 290 pts</span>
                 </div>
               </div>
             </div>
 
             {/* Feature Callout Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
-              <div className="p-3 bg-white border-2 border-[#171717] shadow-[3px_3px_0px_#171717] text-center flex flex-col items-center justify-center gap-0.5">
-                <div className="text-xl sm:text-2xl mb-0.5">🎨</div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              <div className="p-3.5 sm:p-4 bg-white border-2 border-[#171717] shadow-[3.5px_3.5px_0px_#171717] rounded-sm text-center flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 transition-transform">
+                <div className="w-10 h-10 rounded-md bg-[#FFF8E7] border-2 border-[#171717] flex items-center justify-center text-xl mb-1 shadow-[1.5px_1.5px_0px_#171717]">🎨</div>
                 <div className="text-xs font-black uppercase text-[#171717]">Canvas Sync</div>
-                <div className="text-[10px] text-[#6B7280] font-bold">&lt;50ms latency</div>
+                <div className="text-[10.5px] text-[#6B7280] font-bold">&lt;50ms latency</div>
               </div>
 
-              <div className="p-3 bg-[#DCCBFF] border-2 border-[#171717] shadow-[3px_3px_0px_#171717] text-center flex flex-col items-center justify-center gap-0.5">
-                <div className="text-xl sm:text-2xl mb-0.5">✋</div>
+              <div className="p-3.5 sm:p-4 bg-[#DCCBFF] border-2 border-[#171717] shadow-[3.5px_3.5px_0px_#171717] rounded-sm text-center flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 transition-transform">
+                <div className="w-10 h-10 rounded-md bg-white border-2 border-[#171717] flex items-center justify-center text-xl mb-1 shadow-[1.5px_1.5px_0px_#171717]">✋</div>
                 <div className="text-xs font-black uppercase text-[#171717]">Air Gesture</div>
-                <div className="text-[10px] text-[#454545] font-bold">MediaPipe AI</div>
+                <div className="text-[10.5px] text-[#454545] font-bold">MediaPipe AI</div>
               </div>
 
-              <div className="p-3 bg-[#B7F56A] border-2 border-[#171717] shadow-[3px_3px_0px_#171717] text-center flex flex-col items-center justify-center gap-0.5">
-                <div className="text-xl sm:text-2xl mb-0.5">⚡</div>
+              <div className="p-3.5 sm:p-4 bg-[#B7F56A] border-2 border-[#171717] shadow-[3.5px_3.5px_0px_#171717] rounded-sm text-center flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 transition-transform">
+                <div className="w-10 h-10 rounded-md bg-white border-2 border-[#171717] flex items-center justify-center text-xl mb-1 shadow-[1.5px_1.5px_0px_#171717]">⚡</div>
                 <div className="text-xs font-black uppercase text-[#171717]">Live Chat</div>
-                <div className="text-[10px] text-[#454545] font-bold">Instant detection</div>
+                <div className="text-[10.5px] text-[#454545] font-bold">Instant detection</div>
               </div>
 
-              <div className="p-3 bg-[#FF6B6B] border-2 border-[#171717] shadow-[3px_3px_0px_#171717] text-center text-white flex flex-col items-center justify-center gap-0.5">
-                <div className="text-xl sm:text-2xl mb-0.5">🏆</div>
-                <div className="text-xs font-black uppercase">Scoreboard</div>
-                <div className="text-[10px] text-white/90 font-bold">Dynamic points</div>
+              <div className="p-3.5 sm:p-4 bg-[#FF6B6B] border-2 border-[#171717] shadow-[3.5px_3.5px_0px_#171717] rounded-sm text-center text-white flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 transition-transform">
+                <div className="w-10 h-10 rounded-md bg-white border-2 border-[#171717] flex items-center justify-center text-xl mb-1 shadow-[1.5px_1.5px_0px_#171717]">🏆</div>
+                <div className="text-xs font-black uppercase text-white">Scoreboard</div>
+                <div className="text-[10.5px] text-white/90 font-bold">Dynamic points</div>
               </div>
             </div>
 
@@ -265,24 +265,24 @@ export default function HomePage() {
             <div className="home-card">
               
               {/* Terminal Title Bar */}
-              <div className="bg-[#FFD84D] border-b-[3px] border-[#171717] px-5 py-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
+              <div className="bg-[#FFD84D] border-b-[3px] border-[#171717] px-6 py-3.5 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
                   <span className="w-3.5 h-3.5 rounded-full bg-[#FF6B6B] border-2 border-black inline-block" />
                   <span className="w-3.5 h-3.5 rounded-full bg-white border-2 border-black inline-block" />
                   <span className="w-3.5 h-3.5 rounded-full bg-[#B7F56A] border-2 border-black inline-block" />
-                  <span className="font-black text-xs uppercase tracking-wider ml-1">GAME ENTRY TERMINAL</span>
+                  <span className="font-black text-xs uppercase tracking-wider ml-1 text-[#171717]">GAME ENTRY TERMINAL</span>
                 </div>
-                <span className="neo-badge neo-badge-white text-[10px] py-0.5">READY</span>
+                <span className="neo-badge neo-badge-white text-[10px] py-0.5 px-2 font-black">READY</span>
               </div>
 
               {/* Form Content */}
-              <div className="p-4 sm:p-6 lg:p-7 flex flex-col gap-4 sm:gap-6">
+              <div className="p-6 sm:p-8 lg:p-9 flex flex-col gap-5 sm:gap-7">
 
                 {/* Section 1: Player Name */}
                 <div className="home-section">
                   <div className="home-label-container">
                     <label className="home-label">1. ENTER YOUR CODENAME</label>
-                    <span className="text-[11px] font-bold text-[#454545] uppercase">
+                    <span className="text-[11px] font-bold text-[#6B7280] uppercase tracking-wide">
                       {playerName.length}/16 CHARS
                     </span>
                   </div>
@@ -312,7 +312,7 @@ export default function HomePage() {
                 <div className="home-section">
                   <div className="home-label-container">
                     <label className="home-label">2. CHOOSE YOUR AVATAR</label>
-                    <span className="neo-badge neo-badge-lavender text-[10px]">
+                    <span className="neo-badge neo-badge-lavender text-[10.5px] py-0.5 px-2 font-black">
                       {selectedAvatar.emoji} {selectedAvatar.label}
                     </span>
                   </div>
@@ -331,7 +331,7 @@ export default function HomePage() {
                           <span className="avatar-emoji">{avatar.emoji}</span>
                           <span className="avatar-label">{avatar.label}</span>
                           {isSelected && (
-                            <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[#B7F56A] border-2 border-[#171717] rounded-full flex items-center justify-center text-[9px] font-black">
+                            <span className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 bg-[#B7F56A] border-2 border-[#171717] rounded-full flex items-center justify-center text-[10px] font-black shadow-[1px_1px_0px_#171717]">
                               ✓
                             </span>
                           )}
@@ -358,7 +358,7 @@ export default function HomePage() {
                       <div className="room-option-icon">⚡</div>
                       <div className="room-option-meta">
                         <span className="room-option-title">Quick Play</span>
-                        <span className="room-option-desc">Auto-generate room</span>
+                        <span className="room-option-desc">Auto-match lobby</span>
                       </div>
                     </button>
 
@@ -384,7 +384,7 @@ export default function HomePage() {
                         exit={{ opacity: 0, y: -4 }}
                         className="quick-play-box"
                       >
-                        <span className="text-base">🎲</span>
+                        <span className="text-lg">🎲</span>
                         <span>A fresh high-speed lobby will be created automatically.</span>
                       </motion.div>
                     ) : (
@@ -393,7 +393,7 @@ export default function HomePage() {
                         initial={{ opacity: 0, y: 4 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -4 }}
-                        className="flex flex-col gap-1.5"
+                        className="flex flex-col gap-2 mt-1"
                       >
                         <input
                           type="text"
@@ -405,7 +405,7 @@ export default function HomePage() {
                           className="room-code-input"
                         />
                         <span className="text-[11px] text-[#6B7280] font-bold text-center">
-                          Ask your room host for the 5-character code
+                          Ask your room host for the 5-character room code
                         </span>
                       </motion.div>
                     )}
@@ -434,23 +434,23 @@ export default function HomePage() {
                   disabled={isLoading}
                   whileHover={{ scale: isLoading ? 1 : 1.01 }}
                   whileTap={{ scale: isLoading ? 1 : 0.98 }}
-                  className="neo-btn neo-btn-lg neo-btn-primary w-full"
+                  className="neo-btn neo-btn-lg neo-btn-primary w-full mt-4 sm:mt-6 py-4 text-base font-black tracking-wider"
                   style={{
                     backgroundColor: joinMode === 'quick' ? 'var(--yellow)' : 'var(--coral)',
                     color: joinMode === 'quick' ? 'var(--ink)' : '#FFFFFF',
                   }}
                 >
                   {isLoading ? (
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center justify-center gap-2">
                       <span className="animate-spin inline-block">⚡</span>
                       CONNECTING TO LOBBY...
                     </span>
                   ) : joinMode === 'quick' ? (
-                    <span className="flex items-center gap-2 text-base font-black">
+                    <span className="flex items-center justify-center gap-2 text-base font-black">
                       🎯 START PLAYING NOW
                     </span>
                   ) : (
-                    <span className="flex items-center gap-2 text-base font-black">
+                    <span className="flex items-center justify-center gap-2 text-base font-black">
                       🚀 JOIN PRIVATE ROOM
                     </span>
                   )}
@@ -463,43 +463,43 @@ export default function HomePage() {
         </div>
 
         {/* ── Interactive How-to-Play & Gesture AI Guide Section ───────────── */}
-        <div className="neo-card p-4 sm:p-7 lg:p-8 bg-white mt-2 sm:mt-4">
+        <div className="neo-card p-6 sm:p-8 lg:p-10 bg-white mt-10 sm:mt-16">
           
-          <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 gap-3 sm:gap-4 border-b-[2.5px] border-[#171717]">
-            <div className="flex items-center gap-2.5 sm:gap-3">
-              <span className="text-xl sm:text-2xl">📖</span>
+          <div className="flex flex-col md:flex-row md:items-center justify-between pb-5 gap-4 border-b-[2.5px] border-[#171717]">
+            <div className="flex items-center gap-3.5">
+              <span className="text-2xl sm:text-3xl">📖</span>
               <div>
-                <h2 className="text-lg sm:text-xl font-black uppercase">Game Manual & AI Controls</h2>
-                <p className="text-[11px] sm:text-xs text-[#454545] font-semibold">Everything you need to dominate the leaderboard</p>
+                <h2 className="text-lg sm:text-xl font-black uppercase tracking-tight">Game Manual & AI Controls</h2>
+                <p className="text-xs text-[#6B7280] font-semibold mt-0.5">Everything you need to master SketchRush and climb the leaderboard</p>
               </div>
             </div>
 
-            <div className="flex flex-wrap sm:flex-nowrap gap-1.5 sm:gap-2">
+            <div className="flex flex-wrap sm:flex-nowrap gap-2">
               <button
                 type="button"
                 onClick={() => setInfoTab('how-to-play')}
-                className={`info-tab-btn text-[11px] sm:text-xs py-1.5 px-2.5 sm:px-3 ${infoTab === 'how-to-play' ? 'active' : ''}`}
+                className={`info-tab-btn ${infoTab === 'how-to-play' ? 'active' : ''}`}
               >
                 🎮 How to Play
               </button>
               <button
                 type="button"
                 onClick={() => setInfoTab('gestures')}
-                className={`info-tab-btn text-[11px] sm:text-xs py-1.5 px-2.5 sm:px-3 ${infoTab === 'gestures' ? 'active' : ''}`}
+                className={`info-tab-btn ${infoTab === 'gestures' ? 'active' : ''}`}
               >
                 ✋ Air Canvas Gestures
               </button>
               <button
                 type="button"
                 onClick={() => setInfoTab('about')}
-                className={`info-tab-btn text-[11px] sm:text-xs py-1.5 px-2.5 sm:px-3 ${infoTab === 'about' ? 'active' : ''}`}
+                className={`info-tab-btn ${infoTab === 'about' ? 'active' : ''}`}
               >
                 ⚡ Architecture
               </button>
             </div>
           </div>
 
-          <div className="pt-6">
+          <div className="pt-7 sm:pt-8">
             <AnimatePresence mode="wait">
               {infoTab === 'how-to-play' && (
                 <motion.div
@@ -507,44 +507,44 @@ export default function HomePage() {
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
-                  className="grid grid-cols-1 md:grid-cols-4 gap-4"
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5"
                 >
-                  <div className="p-4 bg-[#FFD84D]/30 border-2 border-[#171717] shadow-[3px_3px_0px_#171717]">
-                    <div className="w-8 h-8 rounded bg-[#FFD84D] border-2 border-[#171717] flex items-center justify-center font-black text-sm mb-2">
+                  <div className="p-5 sm:p-6 bg-[#FFD84D]/25 border-2 border-[#171717] shadow-[3.5px_3.5px_0px_#171717] rounded-sm flex flex-col gap-2.5">
+                    <div className="w-9 h-9 rounded-md bg-[#FFD84D] border-2 border-[#171717] flex items-center justify-center font-black text-sm shadow-[2px_2px_0px_#171717]">
                       01
                     </div>
-                    <h3 className="font-black text-sm uppercase mb-1">Pick Identity</h3>
-                    <p className="text-xs text-[#454545] font-medium leading-relaxed">
+                    <h3 className="font-black text-sm sm:text-base uppercase tracking-tight text-[#171717]">Pick Identity</h3>
+                    <p className="text-xs sm:text-sm text-[#454545] font-medium leading-relaxed">
                       Choose your player codename and character avatar. Your profile is automatically saved for future matches.
                     </p>
                   </div>
 
-                  <div className="p-4 bg-[#FF6B6B]/20 border-2 border-[#171717] shadow-[3px_3px_0px_#171717]">
-                    <div className="w-8 h-8 rounded bg-[#FF6B6B] text-white border-2 border-[#171717] flex items-center justify-center font-black text-sm mb-2">
+                  <div className="p-5 sm:p-6 bg-[#FF6B6B]/20 border-2 border-[#171717] shadow-[3.5px_3.5px_0px_#171717] rounded-sm flex flex-col gap-2.5">
+                    <div className="w-9 h-9 rounded-md bg-[#FF6B6B] text-white border-2 border-[#171717] flex items-center justify-center font-black text-sm shadow-[2px_2px_0px_#171717]">
                       02
                     </div>
-                    <h3 className="font-black text-sm uppercase mb-1">Room Setup</h3>
-                    <p className="text-xs text-[#454545] font-medium leading-relaxed">
+                    <h3 className="font-black text-sm sm:text-base uppercase tracking-tight text-[#171717]">Room Setup</h3>
+                    <p className="text-xs sm:text-sm text-[#454545] font-medium leading-relaxed">
                       Launch Quick Play for fast entry, or generate a private room code to challenge up to 8 friends in a custom match.
                     </p>
                   </div>
 
-                  <div className="p-4 bg-[#7BA7FF]/20 border-2 border-[#171717] shadow-[3px_3px_0px_#171717]">
-                    <div className="w-8 h-8 rounded bg-[#7BA7FF] border-2 border-[#171717] flex items-center justify-center font-black text-sm mb-2">
+                  <div className="p-5 sm:p-6 bg-[#7BA7FF]/20 border-2 border-[#171717] shadow-[3.5px_3.5px_0px_#171717] rounded-sm flex flex-col gap-2.5">
+                    <div className="w-9 h-9 rounded-md bg-[#7BA7FF] border-2 border-[#171717] flex items-center justify-center font-black text-sm shadow-[2px_2px_0px_#171717]">
                       03
                     </div>
-                    <h3 className="font-black text-sm uppercase mb-1">Draw The Word</h3>
-                    <p className="text-xs text-[#454545] font-medium leading-relaxed">
+                    <h3 className="font-black text-sm sm:text-base uppercase tracking-tight text-[#171717]">Draw The Word</h3>
+                    <p className="text-xs sm:text-sm text-[#454545] font-medium leading-relaxed">
                       When it is your turn, select one of three secret words. Sketch with mouse or switch on the AI Air Canvas webcam mode!
                     </p>
                   </div>
 
-                  <div className="p-4 bg-[#B7F56A]/30 border-2 border-[#171717] shadow-[3px_3px_0px_#171717]">
-                    <div className="w-8 h-8 rounded bg-[#B7F56A] border-2 border-[#171717] flex items-center justify-center font-black text-sm mb-2">
+                  <div className="p-5 sm:p-6 bg-[#B7F56A]/25 border-2 border-[#171717] shadow-[3.5px_3.5px_0px_#171717] rounded-sm flex flex-col gap-2.5">
+                    <div className="w-9 h-9 rounded-md bg-[#B7F56A] border-2 border-[#171717] flex items-center justify-center font-black text-sm shadow-[2px_2px_0px_#171717]">
                       04
                     </div>
-                    <h3 className="font-black text-sm uppercase mb-1">Guess & Win</h3>
-                    <p className="text-xs text-[#454545] font-medium leading-relaxed">
+                    <h3 className="font-black text-sm sm:text-base uppercase tracking-tight text-[#171717]">Guess & Win</h3>
+                    <p className="text-xs sm:text-sm text-[#454545] font-medium leading-relaxed">
                       Type your guesses into the chat panel. Correct guesses automatically reward points based on remaining turn time!
                     </p>
                   </div>
@@ -557,34 +557,34 @@ export default function HomePage() {
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
-                  className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5"
                 >
-                  <div className="p-4 bg-white border-2 border-[#171717] shadow-[3px_3px_0px_#171717] flex flex-col items-center text-center">
-                    <span className="text-4xl mb-2">☝️</span>
-                    <span className="neo-badge neo-badge-green text-xs mb-1.5">DRAW MODE</span>
-                    <h4 className="font-black text-sm uppercase">Index Finger Up</h4>
-                    <p className="text-xs text-[#454545] mt-1">Raises index finger only to paint strokes onto the canvas.</p>
+                  <div className="p-5 sm:p-6 bg-white border-2 border-[#171717] shadow-[3.5px_3.5px_0px_#171717] rounded-sm flex flex-col items-center text-center gap-2">
+                    <span className="text-4xl sm:text-5xl mb-1">☝️</span>
+                    <span className="neo-badge neo-badge-green text-xs font-black">DRAW MODE</span>
+                    <h4 className="font-black text-sm sm:text-base uppercase">Index Finger Up</h4>
+                    <p className="text-xs sm:text-sm text-[#454545] leading-relaxed">Raises index finger only to paint strokes onto the canvas.</p>
                   </div>
 
-                  <div className="p-4 bg-white border-2 border-[#171717] shadow-[3px_3px_0px_#171717] flex flex-col items-center text-center">
-                    <span className="text-4xl mb-2">✌️</span>
-                    <span className="neo-badge neo-badge-blue text-xs mb-1.5">HOVER / MOVE</span>
-                    <h4 className="font-black text-sm uppercase">Two Fingers Up</h4>
-                    <p className="text-xs text-[#454545] mt-1">Raises index and middle finger to relocate pointer without painting.</p>
+                  <div className="p-5 sm:p-6 bg-white border-2 border-[#171717] shadow-[3.5px_3.5px_0px_#171717] rounded-sm flex flex-col items-center text-center gap-2">
+                    <span className="text-4xl sm:text-5xl mb-1">✌️</span>
+                    <span className="neo-badge neo-badge-blue text-xs font-black">HOVER / MOVE</span>
+                    <h4 className="font-black text-sm sm:text-base uppercase">Two Fingers Up</h4>
+                    <p className="text-xs sm:text-sm text-[#454545] leading-relaxed">Raises index and middle finger to relocate pointer without painting.</p>
                   </div>
 
-                  <div className="p-4 bg-white border-2 border-[#171717] shadow-[3px_3px_0px_#171717] flex flex-col items-center text-center">
-                    <span className="text-4xl mb-2">🤏</span>
-                    <span className="neo-badge neo-badge-coral text-xs mb-1.5">ERASER MODE</span>
-                    <h4 className="font-black text-sm uppercase">Thumb & Index Pinch</h4>
-                    <p className="text-xs text-[#454545] mt-1">Pinch thumb and index together to erase unwanted strokes.</p>
+                  <div className="p-5 sm:p-6 bg-white border-2 border-[#171717] shadow-[3.5px_3.5px_0px_#171717] rounded-sm flex flex-col items-center text-center gap-2">
+                    <span className="text-4xl sm:text-5xl mb-1">🤏</span>
+                    <span className="neo-badge neo-badge-coral text-xs font-black">ERASER MODE</span>
+                    <h4 className="font-black text-sm sm:text-base uppercase">Thumb & Index Pinch</h4>
+                    <p className="text-xs sm:text-sm text-[#454545] leading-relaxed">Pinch thumb and index together to erase unwanted strokes.</p>
                   </div>
 
-                  <div className="p-4 bg-white border-2 border-[#171717] shadow-[3px_3px_0px_#171717] flex flex-col items-center text-center">
-                    <span className="text-4xl mb-2">✊</span>
-                    <span className="neo-badge neo-badge-white text-xs mb-1.5">CLEAR BOARD</span>
-                    <h4 className="font-black text-sm uppercase">Closed Fist (Hold)</h4>
-                    <p className="text-xs text-[#454545] mt-1">Make a fist for 400ms to instantly wipe and reset the canvas.</p>
+                  <div className="p-5 sm:p-6 bg-white border-2 border-[#171717] shadow-[3.5px_3.5px_0px_#171717] rounded-sm flex flex-col items-center text-center gap-2">
+                    <span className="text-4xl sm:text-5xl mb-1">✊</span>
+                    <span className="neo-badge neo-badge-white text-xs font-black">CLEAR BOARD</span>
+                    <h4 className="font-black text-sm sm:text-base uppercase">Closed Fist (Hold)</h4>
+                    <p className="text-xs sm:text-sm text-[#454545] leading-relaxed">Make a fist for 400ms to instantly wipe and reset the canvas.</p>
                   </div>
                 </motion.div>
               )}
@@ -595,7 +595,7 @@ export default function HomePage() {
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
-                  className="p-5 bg-[#DCCBFF]/30 border-2 border-[#171717] shadow-[3px_3px_0px_#171717] flex flex-col gap-3 text-xs leading-relaxed font-medium text-[#171717]"
+                  className="p-6 sm:p-8 bg-[#DCCBFF]/25 border-2 border-[#171717] shadow-[4px_4px_0px_#171717] rounded-sm flex flex-col gap-4 text-xs sm:text-sm leading-relaxed font-medium text-[#171717]"
                 >
                   <p>
                     <strong>SketchRush</strong> is a modern neo-brutalist real-time multiplayer drawing and guessing game built with <strong>React 19, Vite, Socket.IO, FastAPI</strong>, and client-side <strong>Google MediaPipe Tasks Vision</strong>.
@@ -613,17 +613,17 @@ export default function HomePage() {
       </main>
 
       {/* ── Neo-Brutalist Footer ───────────────────────────────────────────── */}
-      <footer className="w-full bg-white border-t-[3px] border-[#171717] py-6 mt-8 sm:mt-12">
-        <div className="page-container flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold text-[#454545]">
-          <div className="flex items-center gap-2">
-            <span className="font-black text-sm text-[#171717]">SKETCHRUSH</span>
+      <footer className="w-full bg-white border-t-[3px] border-[#171717] py-8 sm:py-10 mt-16 sm:mt-24">
+        <div className="page-container flex flex-col md:flex-row items-center justify-between gap-6 text-xs font-bold text-[#454545]">
+          <div className="flex items-center gap-2.5 flex-wrap justify-center">
+            <span className="font-black text-sm text-[#171717] tracking-tight">SKETCHRUSH</span>
             <span>·</span>
             <span>DRAW FAST. GUESS FASTER.</span>
             <span>·</span>
             <span>© {new Date().getFullYear()}</span>
           </div>
 
-          <div className="flex items-center gap-4 flex-wrap justify-center">
+          <div className="flex items-center gap-5 sm:gap-6 flex-wrap justify-center">
             <span>Created by <strong className="text-[#171717]">Shreedhar Khorate</strong></span>
             <span className="footer-dot" />
             <a href="https://github.com/Shreedhar-Khorate/SketchRush" target="_blank" rel="noopener noreferrer" className="footer-link">

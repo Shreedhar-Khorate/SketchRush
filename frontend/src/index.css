@@ -97,10 +97,10 @@ html {
   --space-7: 40px;
   --space-8: 48px;
   --space-9: 64px;
-  --page-gutter: clamp(16px, 3vw, 40px);
-  --section-gap: clamp(32px, 5vw, 64px);
-  --card-padding: 24px;
-  --component-gap: 16px;
+  --page-gutter: clamp(20px, 4.5vw, 56px);
+  --section-gap: clamp(48px, 6vw, 88px);
+  --card-padding: clamp(24px, 3.5vw, 36px);
+  --component-gap: 20px;
 
   /* Legacy aliases for existing components */
   --bg-deep: var(--bg);
@@ -507,15 +507,15 @@ button, input, textarea, select {
 .hero-layout-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 2rem;
+  gap: 2.5rem;
   align-items: start;
   width: 100%;
 }
 
 @media (min-width: 1024px) {
   .hero-layout-grid {
-    grid-template-columns: 1.15fr 0.95fr;
-    gap: 3rem;
+    grid-template-columns: 1.12fr 0.98fr;
+    gap: 3.5rem;
   }
 }
 
@@ -523,9 +523,9 @@ button, input, textarea, select {
   position: relative;
   background: #FFFDF7;
   border: 2.5px solid var(--ink);
-  border-radius: var(--radius-sm);
-  padding: 14px;
-  height: 200px;
+  border-radius: var(--radius-md);
+  padding: 18px;
+  min-height: 220px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -534,8 +534,8 @@ button, input, textarea, select {
 
 .preview-canvas-svg {
   width: 100%;
-  max-width: 320px;
-  height: 145px;
+  max-width: 330px;
+  height: 155px;
 }
 
 .home-root {
@@ -561,37 +561,38 @@ button, input, textarea, select {
 .neo-nav-inner {
   width: min(100% - 2 * var(--page-gutter), 1360px);
   margin-inline: auto;
-  padding-block: var(--space-3);
+  padding-block: 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
+  gap: var(--space-5);
 }
 
 .neo-nav-logo {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   text-decoration: none;
   color: var(--ink);
 }
 
 .neo-nav-icon {
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 42px;
   background: var(--yellow);
   border: 2.5px solid var(--ink);
-  box-shadow: 2.5px 2.5px 0 var(--ink);
-  border-radius: var(--radius-sm);
+  box-shadow: 3px 3px 0 var(--ink);
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 22px;
+  flex-shrink: 0;
 }
 
 .neo-nav-title {
   font-family: var(--font-heavy);
-  font-size: 22px;
+  font-size: 24px;
   letter-spacing: -0.03em;
   text-transform: uppercase;
   color: var(--ink);
@@ -605,7 +606,7 @@ button, input, textarea, select {
   color: var(--text-muted);
   background: var(--surface-paper);
   border: 1.5px solid var(--ink);
-  padding: 2px 8px;
+  padding: 4px 10px;
   border-radius: var(--radius-full);
 }
 
@@ -613,15 +614,16 @@ button, input, textarea, select {
 .home-card {
   background: var(--surface);
   border: var(--border-heavy) solid var(--ink);
-  box-shadow: var(--shadow-xl);
-  border-radius: var(--radius-md);
+  box-shadow: 8px 8px 0 var(--ink);
+  border-radius: var(--radius-lg);
   position: relative;
+  overflow: hidden;
 }
 
 .home-section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 .home-label-container {
@@ -633,18 +635,18 @@ button, input, textarea, select {
 
 .home-label {
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--ink);
 }
 
 .home-divider {
-  height: 2px;
-  background: var(--ink);
-  margin: 6px 0;
-  opacity: 0.15;
+  height: 0;
+  border: none;
+  border-top: 2px dashed rgba(23, 23, 23, 0.2);
+  margin: 20px 0;
 }
 
 /* Name input with avatar tag */
@@ -657,8 +659,8 @@ button, input, textarea, select {
 .name-input-avatar-badge {
   position: absolute;
   left: 10px;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   background: var(--yellow);
   border: 2px solid var(--ink);
   box-shadow: 2px 2px 0 var(--ink);
@@ -672,9 +674,9 @@ button, input, textarea, select {
 
 .name-input-field {
   width: 100%;
-  height: 48px;
-  min-height: 48px;
-  padding: 0 54px 0 56px !important;
+  height: 52px;
+  min-height: 52px;
+  padding: 0 56px 0 58px !important;
   font-family: var(--font-display);
   font-size: 15px;
   font-weight: 700;
@@ -682,7 +684,7 @@ button, input, textarea, select {
   background: #FFFFFF;
   border: var(--border-heavy) solid var(--ink);
   box-shadow: var(--shadow-sm);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   outline: none;
   transition: all 0.15s ease;
 }
@@ -705,36 +707,43 @@ button, input, textarea, select {
 .avatar-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: 8px;
+  gap: 10px;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .avatar-grid {
     grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+}
+
+@media (max-width: 380px) {
+  .avatar-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
 .avatar-card {
-  aspect-ratio: 1;
+  min-height: 68px;
   background: #FFFFFF;
-  border: 2px solid var(--ink);
+  border: 2.5px solid var(--ink);
   box-shadow: 3px 3px 0 var(--ink);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  padding: 6px 2px;
+  gap: 4px;
+  padding: 8px 4px;
   cursor: pointer;
   position: relative;
-  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+  transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.15s cubic-bezier(0.2, 0, 0, 1), background 0.15s ease;
 }
 
 .avatar-card:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 4px 4px 0 var(--ink);
-  background: var(--surface-hover);
+  box-shadow: 5px 5px 0 var(--ink);
+  background: #FFF9E6;
 }
 
 .avatar-card.active {
@@ -745,13 +754,14 @@ button, input, textarea, select {
 }
 
 .avatar-emoji {
-  font-size: 24px;
+  font-size: 26px;
   line-height: 1;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));
 }
 
 .avatar-label {
   font-family: var(--font-display);
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 800;
   text-transform: uppercase;
   color: var(--ink);
@@ -766,24 +776,25 @@ button, input, textarea, select {
 .room-options-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 12px;
 }
 
 @media (max-width: 440px) {
   .room-options-grid {
     grid-template-columns: 1fr;
+    gap: 10px;
   }
 }
 
 .room-option-card {
-  padding: 12px 14px;
+  padding: 14px 16px;
   background: #FFFFFF;
   border: var(--border-heavy) solid var(--ink);
   box-shadow: var(--shadow-sm);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   cursor: pointer;
   text-align: left;
   transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.12s ease;
@@ -802,55 +813,57 @@ button, input, textarea, select {
 }
 
 .room-option-icon {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   background: #FFFFFF;
   border: 2px solid var(--ink);
   box-shadow: 2px 2px 0 var(--ink);
-  border-radius: var(--radius-xs);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 18px;
   flex-shrink: 0;
 }
 
 .room-option-meta {
   display: flex;
   flex-direction: column;
+  gap: 2px;
 }
 
 .room-option-title {
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 800;
   text-transform: uppercase;
   color: var(--ink);
 }
 
 .room-option-desc {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--text-muted);
 }
 
 .room-code-input {
   width: 100%;
-  height: 48px;
-  min-height: 48px;
-  padding: 0 var(--space-3);
+  height: 52px;
+  min-height: 52px;
+  padding: 0 var(--space-4);
   font-family: var(--font-mono);
-  font-size: 18px;
-  font-weight: 800;
+  font-size: 20px;
+  font-weight: 900;
   text-align: center;
-  letter-spacing: 0.25em;
+  letter-spacing: 0.3em;
   color: var(--ink);
   background: #FFFFFF;
   border: var(--border-heavy) solid var(--ink);
   box-shadow: var(--shadow-sm);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   outline: none;
   text-transform: uppercase;
+  margin-top: 6px;
 }
 
 .room-code-input:focus {
@@ -859,25 +872,25 @@ button, input, textarea, select {
 }
 
 .quick-play-box {
-  padding: 10px 14px;
+  padding: 12px 16px;
   background: var(--lavender);
   border: 2px solid var(--ink);
   box-shadow: 2px 2px 0 var(--ink);
-  border-radius: var(--radius-sm);
-  font-size: 12px;
+  border-radius: var(--radius-md);
+  font-size: 12.5px;
   font-weight: 600;
   color: var(--ink);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  margin-top: 6px;
 }
 
 /* Info tabs */
 .info-tab-btn {
-  flex: 1;
-  padding: 8px 12px;
+  padding: 10px 16px;
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 800;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -886,14 +899,21 @@ button, input, textarea, select {
   cursor: pointer;
   position: relative;
   transition: all 0.15s ease;
+  border-radius: var(--radius-sm);
+}
+
+.info-tab-btn:hover:not(.active) {
+  background: rgba(23, 23, 23, 0.06);
+  color: var(--ink);
 }
 
 .info-tab-btn.active {
   color: var(--ink);
   background: var(--yellow);
-  border: 2px solid var(--ink);
+  border: 2.5px solid var(--ink);
   box-shadow: 3px 3px 0 var(--ink);
   border-radius: var(--radius-sm);
+  transform: translate(-1px, -1px);
 }
 
 .info-step {

@@ -8,7 +8,6 @@ export default function DrawingCanvas({
   clearSignal = 0,
   isDrawing = false,          // true = this client is the drawer
   onDraw = null,              // (strokeData) → void sent to server
-  onClearCanvas = null,       // () → void sent to server
   onRemoteDraw = null,        // ref — set to the remote-draw handler
   onRemoteClear = null,       // ref — set to the remote-clear handler
 }) {
@@ -118,7 +117,10 @@ export default function DrawingCanvas({
 
   // ── Register remote draw/clear handlers ────────────────────────────────────
   useEffect(() => {
+    // Refs passed from useSocket hook to bind canvas methods
+    // eslint-disable-next-line react-hooks/immutability
     if (onRemoteDraw)  onRemoteDraw.current  = _applyRemoteDraw
+    // eslint-disable-next-line react-hooks/immutability
     if (onRemoteClear) onRemoteClear.current = _clearCanvas
   }, [onRemoteDraw, onRemoteClear, _applyRemoteDraw, _clearCanvas])
 
@@ -267,8 +269,8 @@ export default function DrawingCanvas({
 
         {/* Spectator Overlay Banner */}
         {!isDrawing && (
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
-            <div className="neo-badge neo-badge-lavender text-xs py-1 px-3 shadow-[2px_2px_0px_#171717]">
+          <div className="absolute bottom-4 sm:bottom-5 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+            <div className="neo-badge neo-badge-lavender text-xs sm:text-sm py-1.5 px-3.5 sm:px-4 shadow-[3px_3px_0px_#171717] tracking-wide font-black">
               👀 WATCH & GUESS THE WORD IN THE CHAT
             </div>
           </div>

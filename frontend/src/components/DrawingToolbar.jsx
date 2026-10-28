@@ -1,5 +1,3 @@
-import { motion } from 'framer-motion'
-
 const COLORS = [
   { name: 'Pitch Black', hex: '#171717' },
   { name: 'Pure White', hex: '#FFFFFF' },
@@ -34,8 +32,8 @@ export default function DrawingToolbar({
   onToggleGesture = () => {},
 }) {
   return (
-    <div className="w-full bg-white border-b-[2.5px] border-[#171717] px-2.5 sm:px-5 py-2 shadow-[0_2px_0px_rgba(23,23,23,0.06)] flex-shrink-0">
-      <div className="w-full max-w-[1600px] mx-auto flex items-center justify-between gap-2 sm:gap-4 overflow-x-auto">
+    <div className="w-full bg-white border-b-[2.5px] border-[#171717] px-3 sm:px-6 py-2.5 shadow-[0_2px_0px_rgba(23,23,23,0.06)] flex-shrink-0">
+      <div className="w-full max-w-[1600px] mx-auto flex items-center justify-between gap-3 sm:gap-5 overflow-x-auto">
       
       {/* ── Left: Color Palette Swatches ── */}
       <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
